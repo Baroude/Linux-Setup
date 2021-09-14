@@ -4,7 +4,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install -y vim firefox libncursesw5-dev git
+sudo apt install -y vim firefox libncursesw5-dev git zsh
 
 
 # Récupération du thème nord
@@ -26,6 +26,16 @@ git clone https://gitlab.com/jallbrit/cbonsai
 cd cbonsai
 sudo make install
 echo "cbonsai -p" >> ~/.bashrc
+echo "cbonsai -p" >> ~/.zshrc
+
+# zsh, oh my zsh
+
+chsh -s /bin/zh
+wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
+cd ~/.oh-my-zsh/plugins/
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+git clone https://github.com/zsh-users/zsh-autosuggestions
+vim ~/.zshrc
 
 #Font
 cd /tmp
@@ -41,6 +51,7 @@ fc-cache --force --verbose
 sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 mv starship.toml ~/.config/starship.toml
 echo 'eval "$(starship init bash)"' >> ~/.bashrc
+echo 'eval "$(starship init bash)"' >> ~/.zshrc
 
 # Cleaning
 
@@ -49,3 +60,4 @@ rm Nordic-darker-v40.tar.xz
 # Update shell
 
 source ~/.bashrc
+source ~/.zshrc
