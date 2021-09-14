@@ -27,6 +27,21 @@ cd cbonsai
 sudo make install
 echo "cbonsai -p" >> ~/.bashrc
 
+#Font
+cd /tmp
+git clone --depth 1 https://github.com/ryanoasis/nerd-fonts.git
+cd nerd-fonts
+./install.sh Go-Mono
+cd ..
+rm -rf nerd-fonts/
+fc-cache --force --verbose
+
+# Starship 
+
+sh -c "$(curl -fsSL https://starship.rs/install.sh)"
+mv starship.toml ~/.config/starship.toml
+echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
 # Cleaning
 
 rm Nordic-darker-v40.tar.xz 
