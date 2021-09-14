@@ -1,0 +1,111 @@
+# ~/.config/starship.toml
+[line_break]
+disabled = true
+
+
+# Remove the "❯" symbol in the prompt
+[character]                     
+success_symbol = "[➜](bold green)"       #No success_symbol
+error_symbol = " [✗](bold red)"     #error_symbol in red
+
+
+[username]
+format = "[➜ ](red)[$user]($style)[@](cyan)"
+#format ="[❯](#BF616A)[❯](#02e830)[❯](#88C0D0)[❯](#EBCB8B) "
+style_user = "#5fff5f"
+show_always = true
+
+#[[battery.display]]
+#threshold = 30
+#style = "bold red"
+
+[cmd_duration]
+show_milliseconds = true
+format = "took [$duration](bold yellow)"
+disabled = true
+
+[directory]
+truncation_length = 5
+format = "[$path]($style)[$lock_symbol]($lock_style) "
+
+[hostname]
+ssh_only = false
+format = "[$hostname]($style) "
+trim_at = "-"
+style = "#5fff5f"
+disabled = false
+
+[aws]
+symbol = " "
+
+[conda]
+symbol = " "
+
+[dart]
+symbol = " "
+
+[docker_context]
+symbol = " "
+
+[elixir]
+symbol = " "
+
+[elm]
+symbol = " "
+
+[git_branch]
+symbol = " "
+
+[golang]
+symbol = " "
+
+#[haskell]
+#symbol = " "
+
+[hg_branch]
+symbol = " "
+
+[java]
+symbol = " "
+
+[julia]
+symbol = " "
+
+[nim]
+symbol = " "
+
+[nix_shell]
+symbol = " "
+
+[nodejs]
+symbol = " "
+
+[package]
+symbol = " "
+
+[perl]
+symbol = " "
+
+[php]
+symbol = " "
+
+[python]
+symbol = " "
+
+[ruby]
+symbol = " "
+
+[rust]
+symbol = " "
+
+[swift]
+symbol = "ﯣ "
+
+[time]
+time_format = "%T"
+format = "🕙 $time($style) "
+style = "bright-white"
+disabled = false
+
+
+
