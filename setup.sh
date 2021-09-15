@@ -4,7 +4,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install -y vim firefox libncursesw5-dev git zsh
+sudo apt install vim firefox libncursesw5-dev git curl zsh -y
 
 
 # Récupération du thème nord
@@ -30,12 +30,13 @@ echo "cbonsai -p" >> ~/.zshrc
 
 # zsh, oh my zsh
 
-chsh -s /bin/zh
-wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
+chsh -s /bin/zsh
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 cd ~/.oh-my-zsh/plugins/
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
 git clone https://github.com/zsh-users/zsh-autosuggestions
 vim ~/.zshrc
+cd 
 
 #Font
 cd /tmp
@@ -49,9 +50,9 @@ fc-cache --force --verbose
 # Starship 
 
 sh -c "$(curl -fsSL https://starship.rs/install.sh)"
-mv starship.toml ~/.config/starship.toml
+cp ./starship.toml ~/.config/starship.toml
 echo 'eval "$(starship init bash)"' >> ~/.bashrc
-echo 'eval "$(starship init bash)"' >> ~/.zshrc
+echo 'eval "$(starship init zsh)"' >> ~/.zshrc
 
 # Cleaning
 
