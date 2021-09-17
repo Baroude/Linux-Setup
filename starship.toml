@@ -10,7 +10,7 @@ error_symbol = " [✗](bold red)"     #error_symbol in red
 
 
 [username]
-format = "[$user]($style)[@](cyan)"
+format = "[$user](#a3be8c)[@](#88c0d0)"
 #format ="[❯](#BF616A)[❯](#02e830)[❯](#88C0D0)[❯](#EBCB8B) "
 style_user = "#5fff5f"
 show_always = true
@@ -30,7 +30,7 @@ format = "[$path](bold #81A1C1)[$lock_symbol]($lock_style) "
 
 [hostname]
 ssh_only = false
-format = "[$hostname]($style) "
+format = "[$hostname](#a3be8c) "
 trim_at = "-"
 style = "#5fff5f"
 disabled = false
