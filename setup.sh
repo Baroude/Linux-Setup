@@ -1,10 +1,12 @@
 #!/bin/bash
 
+cd ~/
+
 # MAJ
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim firefox libncursesw5-dev git curl zsh -y
+sudo apt install vim firefox libncursesw5-dev git curl zsh vlc filezilla  -y
 
 
 # Récupération du thème nord
@@ -27,7 +29,7 @@ cd cbonsai
 sudo make install
 echo "cbonsai -p" >> ~/.bashrc
 echo "cbonsai -p" >> ~/.zshrc
-
+cd ~/
 # zsh, oh my zsh
 
 chsh -s /bin/zsh
@@ -36,7 +38,7 @@ cd ~/.oh-my-zsh/plugins/
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
 git clone https://github.com/zsh-users/zsh-autosuggestions
 vim ~/.zshrc
-cd 
+cd ~/
 
 #Font
 cd /tmp
