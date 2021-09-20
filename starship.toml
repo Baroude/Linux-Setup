@@ -1,8 +1,8 @@
 # ~/.config/starship.toml
 #
 format = """
-[┌───────────────────>](bold green)
-[│](bold green)$username$hostname$directory$rust$package$time
+[┌───────────────────](bold green)
+[│](bold green)$username$hostname$directory$git_branch$rust$package$time
 [└─>](bold green) """
 [line_break]
 disabled = true
