@@ -1,4 +1,9 @@
 # ~/.config/starship.toml
+#
+format = """
+[┌───────────────────>](bold green)
+[│](bold green)$username$hostname$directory$rust$package$time
+[└─>](bold green) """
 [line_break]
 disabled = true
 
@@ -26,7 +31,7 @@ disabled = true
 
 [directory]
 truncation_length = 5
-format = "[$path](bold #81A1C1)[$lock_symbol]($lock_style) "
+format = "[$path](#88c0d0)[$lock_symbol]($lock_style) "
 
 [hostname]
 ssh_only = false
