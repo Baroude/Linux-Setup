@@ -1,13 +1,11 @@
 #!/bin/bash
 
-cd ~/
 
 # MAJ
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim firefox libncursesw5-dev git curl zsh vlc filezilla  -y
-
+sudo apt install vim firefox libncursesw5-dev git curl zsh vlc filezilla terminator -y
 
 # Récupération du thème nord
 
@@ -27,9 +25,8 @@ gsettings get org.gnome.desktop.background picture-uri 'file:///usr/share/backgr
 git clone https://gitlab.com/jallbrit/cbonsai
 cd cbonsai
 sudo make install
-echo "cbonsai -p" >> ~/.bashrc
-echo "cbonsai -p" >> ~/.zshrc
 cd ~/
+rm cbonsai/
 # zsh, oh my zsh
 
 chsh -s /bin/zsh
@@ -37,8 +34,8 @@ sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.
 cd ~/.oh-my-zsh/plugins/
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
 git clone https://github.com/zsh-users/zsh-autosuggestions
-vim ~/.zshrc
-cd ~/
+
+cd ~/Documents/Linux-Setup/
 
 #Font
 cd /tmp
@@ -50,12 +47,13 @@ rm -rf nerd-fonts/
 fc-cache --force --verbose
 
 # Starship 
-
+cd ~/Documents/Linux-Setup/
 sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 cp ./starship.toml ~/.config/starship.toml
-echo 'eval "$(starship init bash)"' >> ~/.bashrc
-echo 'eval "$(starship init zsh)"' >> ~/.zshrc
 
+# zshrc
+
+cp ./.zshrc ~/.zshrc
 # Cleaning
 
 rm Nordic-darker-v40.tar.xz 
