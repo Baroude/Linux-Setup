@@ -58,12 +58,13 @@ cp ./.zshrc ~/.zshrc
 
 # Neovim 
 
-wget -o /usr/local/bin/nvim https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
-chmod +x /usr/local/bin/nvim
+sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
+sudo chmod +x /usr/local/bin/nvim.appimage
+sudo mv /usr/local/bin/nvim.appimage /usr/loca/bin/nvim 
 curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 curl -sL install-node.now.sh/lts | bash
-cp -r ./nvim ~/.config/nvim
-
+cp -r ./nvim/vim-plug ~/.config/nvim
+cp ./nvim/init.vim ~/.config/nvim
 
 # Cleaning
 
