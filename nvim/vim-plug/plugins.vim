@@ -5,5 +5,5 @@ call plug#begin('~/.config/nvim/autoload/plugged')
     " File Explorer
     Plug 'scrooloose/NERDTree'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
-
+    Plug 'jiangmiao/auto-pairs'
 call plug#end()

@@ -18,7 +18,7 @@ gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
 # Récupération wallpaper
 
 sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
-gsettings get org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/nord.jpg'
+gsettings get org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/gnome/nord.jpg'
 
 # Cbonsai
 
