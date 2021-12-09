@@ -18,7 +18,7 @@ gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
 # Récupération wallpaper
 
 sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
-gsettings get org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/gnome/nord.jpg'
+gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/gnome/nord.jpg'
 
 # Cbonsai
 
@@ -49,12 +49,6 @@ fc-cache --force --verbose
 # Starship 
 cd ~/Documents/Linux-Setup/
 sh -c "$(curl -fsSL https://starship.rs/install.sh)"
-cp ./starship.toml ~/.config/starship.toml
-
-# zshrc
-
-cp ./.zshrc ~/.zshrc
-
 
 # Neovim 
 
@@ -63,8 +57,6 @@ sudo mv nvim.appimage /usr/local/bin/nvim
 sudo chmod +x /usr/local/bin/nvim 
 curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 curl -sL install-node.now.sh/lts | bash
-cp -r ./nvim/ ~/.config/
-
 # Cleaning
 
 rm Nordic-darker-v40.tar.xz 
