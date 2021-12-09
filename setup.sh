@@ -5,7 +5,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator -y
+sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick-y
 
 # Récupération du thème nord
 
@@ -18,7 +18,7 @@ gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
 # Récupération wallpaper
 
 sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
-gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/gnome/nord.jpg'
+wal -i /usr/share/backgrounds/gnome/nord.jpg
 
 # Cbonsai
 
