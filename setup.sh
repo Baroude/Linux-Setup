@@ -5,7 +5,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim firefox libncursesw5-dev git curl zsh vlc filezilla terminator -y
+sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator -y
 
 # Récupération du thème nord
 
@@ -25,7 +25,7 @@ gsettings get org.gnome.desktop.background picture-uri 'file:///usr/share/backgr
 git clone https://gitlab.com/jallbrit/cbonsai
 cd cbonsai
 sudo make install
-cd ~/
+cd ..
 rm -rf cbonsai/
 # zsh, oh my zsh
 
@@ -59,12 +59,11 @@ cp ./.zshrc ~/.zshrc
 # Neovim 
 
 sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
-sudo chmod +x /usr/local/bin/nvim.appimage
-sudo mv /usr/local/bin/nvim.appimage /usr/local/bin/nvim 
+sudo mv nvim.appimage /usr/local/bin/nvim
+sudo chmod +x /usr/local/bin/nvim 
 curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 curl -sL install-node.now.sh/lts | bash
-cp -r ./nvim/vim-plug ~/.config/nvim
-cp ./nvim/init.vim ~/.config/nvim
+cp -r ./nvim/ ~/.config/
 
 # Cleaning
 
