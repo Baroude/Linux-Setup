@@ -5,7 +5,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick-y
+sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick -y
 
 # Récupération du thème nord
 
