@@ -57,7 +57,8 @@ sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimag
 sudo mv nvim.appimage /usr/local/bin/nvim
 sudo chmod +x /usr/local/bin/nvim 
 curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-curl -sL install-node.now.sh/lts | bash
+curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
+sudo apt -y install nodejs
 # Cleaning
 
 rm Nordic-darker-v40.tar.xz 
