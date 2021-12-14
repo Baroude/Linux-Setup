@@ -6,8 +6,8 @@ call plug#begin('~/.config/nvim/autoload/plugged')
     Plug 'scrooloose/NERDTree'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'jiangmiao/auto-pairs'
-    Plug 'dylanarps/wal.vim'
-
-call plug#end()
+    Plug 'folke/tokyonight.nvim', { 'branch': 'main' }
+    Plug 'dylanaraps/wal.vim'
+    call plug#end()
 
 

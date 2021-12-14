@@ -4,11 +4,13 @@
 # Path to your oh-my-zsh installation.
 export ZSH="/home/mathias/.oh-my-zsh"
 
+
+
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+ZSH_THEME="afowler"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -71,11 +73,18 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
-(cat ~/.cache/wal/sequences &)
+cbonsai -p
+# (cat ~/.cache/wal/sequences &)
 source $ZSH/oh-my-zsh.sh
 eval "$(starship init zsh)"
+export JC_HOME=/home/mathias/javaCard
+export PATH=$PATH:$JC_HOME/bin:/home/mathias/.local/bin
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
+export PATH="/home/mathias/.local/bin:$PATH"
 
-# User configuration
+#User configuration
+
+
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -100,4 +109,4 @@ eval "$(starship init zsh)"
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-cbonsai -p
+

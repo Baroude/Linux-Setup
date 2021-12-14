@@ -1,0 +1,32 @@
+[global_config]
+  enabled_plugins = LaunchpadBugURLHandler, LaunchpadCodeURLHandler, APTURLHandler, TerminatorThemes
+[keybindings]
+  split_vert = <Primary><Shift>e
+[profiles]
+  [[default]]
+    background_color = "#1a1b26"
+    background_darkness = 0.97
+    background_type = transparent
+    cursor_color = "#aaaaaa"
+    foreground_color = "#a9b1d6"
+    show_titlebar = False
+    palette = "#1a1b26:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0:#4e5173:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0"
+  [[One dark]]
+    background_color = "#1e2127"
+    cursor_color = "#676c76"
+    foreground_color = "#5c6370"
+    palette = "#000000:#e06c75:#98c379:#d19a66:#61afef:#c678dd:#56b6c2:#abb2bf:#5c6370:#e06c75:#98c379:#d19a66:#61afef:#c678dd:#56b6c2:#fffefe"
+  [[Chesterish]]
+    background_color = "#293340"
+    cursor_color = "#2c85f7"
+    foreground_color = "#cdd2e9"
+    palette = "#293340:#e17e85:#61ba86:#ffec8e:#4cb2ff:#be86e3:#2dced0:#cdd2e9:#546386:#e17e85:#61ba86:#ffec8e:#4cb2ff:#be86e3:#2dced0:#cdd2e9"
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+[plugins]

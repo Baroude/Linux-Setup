@@ -17,7 +17,9 @@ set nowritebackup
 set noswapfile
 set confirm 
 set scrolloff=8
-
+colorscheme tokyonight
+set notermguicolors
+highlight Search ctermfg=0
 
 
 
@@ -31,3 +33,5 @@ inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+map <C-n> :NERDTreeToggle<CR>
