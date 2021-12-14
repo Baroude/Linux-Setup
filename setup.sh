@@ -56,7 +56,8 @@ sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
 sudo mv nvim.appimage /usr/local/bin/nvim
 sudo chmod +x /usr/local/bin/nvim 
-curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
 sudo apt -y install nodejs
 # Cleaning
