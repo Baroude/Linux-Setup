@@ -5,7 +5,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick-y
+sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick -y
 
 # Récupération du thème nord
 
@@ -17,9 +17,12 @@ gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
 
 # Récupération wallpaper
 
-# sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
-# wal -i /usr/share/backgrounds/gnome/nord.jpg
 gsettings get org.gnome.desktop.background picture-uri 'file:///home/mathias/Documents/Linux-Setup/images/small-memory.jpg'
+
+#sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
+#pip3 install pywal
+#wal -i /usr/share/backgrounds/gnome/nord.jpg
+
 
 # Cbonsai
 
@@ -56,8 +59,10 @@ sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
 sudo mv nvim.appimage /usr/local/bin/nvim
 sudo chmod +x /usr/local/bin/nvim 
-curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-curl -sL install-node.now.sh/lts | bash
+sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
+sudo apt -y install nodejs
 # Cleaning
 
 rm Nordic-darker-v40.tar.xz 
