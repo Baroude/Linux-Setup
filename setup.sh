@@ -17,7 +17,7 @@ gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
 
 # Récupération wallpaper
 
-gsettings get org.gnome.desktop.background picture-uri 'file:///home/mathias/Documents/Linux-Setup/images/small-memory.jpg'
+gsettings get org.gnome.desktop.background picture-uri 'file://$HOME/Documents/Linux-Setup/images/small-memory.jpg'
 
 #sudo wget -O /usr/share/backgrounds/gnome/nord.jpg https://i.redd.it/4s62fcy37st61.jpg
 #pip3 install pywal
