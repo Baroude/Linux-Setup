@@ -8,6 +8,7 @@ call plug#begin('~/.config/nvim/autoload/plugged')
     Plug 'jiangmiao/auto-pairs'
     Plug 'folke/tokyonight.nvim', { 'branch': 'main' }
     Plug 'dylanaraps/wal.vim'
+    Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
     call plug#end()
 
 

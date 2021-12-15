@@ -18,11 +18,30 @@ set noswapfile
 set confirm 
 set scrolloff=8
 colorscheme tokyonight
-set notermguicolors
+set termguicolors
 highlight Search ctermfg=0
 
 
-
+" TreeSitter
+lua <<EOF
+  require'nvim-treesitter.configs'.setup {
+    highlight = {
+      enable = true,
+    },
+    indent = {
+      enable = false,
+    },
+    rainbow = {
+      enable = true,
+      -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
+      extended_mode = true,
+    },
+    context_commentstring = {
+      enable = true,
+      enable_autocmd = true,
+    }
+  }
+EOF
 
 function! s:check_back_space() abort
   let col = col('.') - 1
