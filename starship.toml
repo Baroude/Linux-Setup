@@ -1,9 +1,9 @@
 # ~/.config/starship.toml
 #
 format = """
-[┌───────────────────](bold green)
-[│](bold green)$username$hostname$directory$git_branch$rust$package$time
-[└─>](bold green) """
+[┌───────────────────](#7aa2f)
+[│](#7aa2f)$username$hostname$directory$git_branch$rust$package$time
+[└─>](#7aa2f) """
 [line_break]
 disabled = true
 
@@ -15,7 +15,7 @@ error_symbol = " [✗](bold red)"     #error_symbol in red
 
 
 [username]
-format = "[$user](#a3be8c)[@](#88c0d0)"
+format = "[$user](#96c466)[@](#88c0d0)"
 #format ="[❯](#BF616A)[❯](#02e830)[❯](#88C0D0)[❯](#EBCB8B) "
 style_user = "#5fff5f"
 show_always = true
@@ -35,7 +35,7 @@ format = "[$path](#88c0d0)[$lock_symbol]($lock_style) "
 
 [hostname]
 ssh_only = false
-format = "[$hostname](#a3be8c) "
+format = "[$hostname](#96c466) "
 trim_at = "-"
 style = "#5fff5f"
 disabled = false
