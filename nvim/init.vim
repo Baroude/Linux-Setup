@@ -17,6 +17,8 @@ set nowritebackup
 set noswapfile
 set confirm 
 set scrolloff=8
+
+let g:tokyonight_style = "night"
 colorscheme tokyonight
 set termguicolors
 highlight Search ctermfg=0
