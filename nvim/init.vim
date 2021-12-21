@@ -17,7 +17,7 @@ set nowritebackup
 set noswapfile
 set confirm 
 set scrolloff=8
-set termguicolors 
+set termguicolors
 
 let g:tokyonight_style = "night"
 colorscheme tokyonight
@@ -51,6 +51,14 @@ require'lualine'.setup {
   options = {
     icons_enabled = true,
     theme = 'tokyonight',
+require'lualine'.setup {
+  options = {
+    icons_enabled = true,
+    theme = 'auto',
+    component_separators = { left = '', right = ''},
+    section_separators = { left = '', right = ''},
+    disabled_filetypes = {},
+    always_divide_middle = true,
   },
   sections = {
     lualine_a = {'mode'},
