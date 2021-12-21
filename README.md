@@ -10,11 +10,13 @@ In order to use the installation script you need :
 ## Installation
 
 ```bash 
-$ ./setup.sh```
+$ ./setup.sh
+```
 
 Once everything is finished, you need to symlink your dotfiles.
 
 ```bash
-$ .\install```
+$ .\install
+```
 
 If you get errors, remove the files which cause problem in your ~/.config folder and try again.
