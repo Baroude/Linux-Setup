@@ -43,11 +43,11 @@ cd ~/Documents/Linux-Setup/
 
 #Font
 cd /tmp
-git clone --depth 1 https://github.com/ryanoasis/nerd-fonts.git
-cd nerd-fonts
-./install.sh Go-Mono
-cd ..
-rm -rf nerd-fonts/
+wget https://github.com/be5invis/Iosevka/releases/download/v11.2.2/super-ttc-iosevka-11.2.2.zip
+unzip super-ttc-iosevka-11.2.2.zip
+sudo mkdir /usr/share/fonts/ioveska 
+mv ioveska.ttc /usr/share/fonts/ioveska/iosevka.ttc
+rm super-ttc-iosevka-11.2.2.zip
 fc-cache --force --verbose
 
 # Starship 

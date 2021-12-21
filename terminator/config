@@ -1,5 +1,7 @@
 [global_config]
   enabled_plugins = LaunchpadBugURLHandler, LaunchpadCodeURLHandler, APTURLHandler, TerminatorThemes
+  title_use_system_font = False
+  title_font = Iosevka 9
 [keybindings]
   split_vert = <Primary><Shift>e
 [profiles]
