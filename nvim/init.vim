@@ -1,5 +1,12 @@
-source $HOME/.config/nvim/vim-plug/plugins.vim
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
 
 set tabstop=4
 set smarttab
@@ -18,6 +25,8 @@ set noswapfile
 set confirm 
 set scrolloff=8
 set termguicolors
+
+source $HOME/.config/nvim/vim-plug/plugins.vim
 
 let g:tokyonight_style = "night"
 colorscheme tokyonight
