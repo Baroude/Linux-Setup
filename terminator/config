@@ -13,6 +13,14 @@
     foreground_color = "#a9b1d6"
     show_titlebar = False
     palette = "#1a1b26:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0:#4e5173:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0"
+  [[everforest]]
+    background_color = "#2b3339"
+    cursor_color = "#aaaaaa"
+    foreground_color = "#d8caac"
+    show_titlebar = False
+    palette = "#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa:#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa"
+    bold_is_bright = True
+
 [layouts]
   [[default]]
     [[[window0]]]
