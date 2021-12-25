@@ -8,6 +8,8 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
   \| PlugInstall --sync | source $MYVIMRC
 \| endif
 
+source $HOME/.config/nvim/vim-plug/plugins.vim
+
 set tabstop=4
 set smarttab
 set expandtab
@@ -25,11 +27,12 @@ set noswapfile
 set confirm 
 set scrolloff=8
 set termguicolors
+set background=dark
+let g:everforest_background='dark'
+colorscheme everforest
 
-source $HOME/.config/nvim/vim-plug/plugins.vim
-
-let g:tokyonight_style = "night"
-colorscheme tokyonight
+" let g:tokyonight_style = "night"
+" colorscheme tokyonight
 highlight Search ctermfg=0
 
 
@@ -59,7 +62,7 @@ lua << EOF
 require'lualine'.setup {
   options = {
     icons_enabled = true,
-    theme = 'tokyonight',
+    theme = 'everforest',
     component_separators = { left = '', right = ''},
     section_separators = { left = '', right = ''},
     disabled_filetypes = {},
