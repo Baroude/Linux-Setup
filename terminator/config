@@ -5,7 +5,7 @@
 [keybindings]
   split_vert = <Primary><Shift>e
 [profiles]
-  [[default]]
+  [[tokyo-night]]
     background_color = "#1a1b26"
     background_darkness = 0.97
     background_type = transparent
@@ -13,7 +13,11 @@
     foreground_color = "#a9b1d6"
     show_titlebar = False
     palette = "#1a1b26:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0:#4e5173:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0"
-  [[everforest]]
+  [[default]]
+    background_darkness = 0.97
+    background_type = transparent
+    font = Iosevka Term 12
+    use_system_font= False
     background_color = "#2b3339"
     cursor_color = "#aaaaaa"
     foreground_color = "#d8caac"
