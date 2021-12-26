@@ -35,6 +35,10 @@ colorscheme everforest
 " colorscheme tokyonight
 highlight Search ctermfg=0
 
+" set background transparency
+hi Normal guibg=NONE ctermbg=NONE
+hi LineNr guibg=NONE ctermbg=NONE
+hi NonText guibg=NONE ctermbg=NONE
 
 " TreeSitter
 lua <<EOF
