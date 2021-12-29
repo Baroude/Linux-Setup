@@ -45,7 +45,7 @@ cd ~/Documents/Linux-Setup/
 cd /tmp
 wget https://github.com/be5invis/Iosevka/releases/download/v11.2.2/super-ttc-iosevka-11.2.2.zip
 unzip super-ttc-iosevka-11.2.2.zip
-sudo mkdir /usr/share/fonts/ioveska 
+sudo mkdir /usr/share/fonts/iosevka 
 mv iosevka.ttc /usr/share/fonts/ioveska/iosevka.ttc
 rm super-ttc-iosevka-11.2.2.zip
 fc-cache --force --verbose
@@ -67,7 +67,3 @@ sudo apt -y install nodejs
 
 rm Nordic-darker-v40.tar.xz 
 
-# Update shell
-
-source ~/.bashrc
-source ~/.zshrc
