@@ -46,7 +46,7 @@ cd /tmp
 wget https://github.com/be5invis/Iosevka/releases/download/v11.2.2/super-ttc-iosevka-11.2.2.zip
 unzip super-ttc-iosevka-11.2.2.zip
 sudo mkdir /usr/share/fonts/ioveska 
-mv ioveska.ttc /usr/share/fonts/ioveska/iosevka.ttc
+mv iosevka.ttc /usr/share/fonts/ioveska/iosevka.ttc
 rm super-ttc-iosevka-11.2.2.zip
 fc-cache --force --verbose
 
