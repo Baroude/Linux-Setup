@@ -29,16 +29,9 @@ set scrolloff=8
 set termguicolors
 set background=dark
 let g:everforest_background='dark'
+let g:everforest_transparent_background = 1
 colorscheme everforest
-
-" let g:tokyonight_style = "night"
-" colorscheme tokyonight
 highlight Search ctermfg=0
-
-" set background transparency
-hi Normal guibg=NONE ctermbg=NONE
-hi LineNr guibg=NONE ctermbg=NONE
-hi NonText guibg=NONE ctermbg=NONE
 
 " TreeSitter
 lua <<EOF

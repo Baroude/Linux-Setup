@@ -5,6 +5,17 @@
 [keybindings]
   split_vert = <Primary><Shift>e
 [profiles]
+  [[default]]
+    background_color = "#2b3339"
+    background_darkness = 0.97
+    background_type = transparent
+    cursor_color = "#aaaaaa"
+    font = Iosevka Term 12
+    foreground_color = "#d8caac"
+    show_titlebar = False
+    palette = "#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa:#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa"
+    use_system_font = False
+    bold_is_bright = True
   [[tokyo-night]]
     background_color = "#1a1b26"
     background_darkness = 0.97
@@ -13,18 +24,6 @@
     foreground_color = "#a9b1d6"
     show_titlebar = False
     palette = "#1a1b26:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0:#4e5173:#f7768e:#9ece6a:#e0af68:#7aa2f7:#9a7ecc:#4abaaf:#acb0d0"
-  [[default]]
-    background_darkness = 0.97
-    background_type = transparent
-    font = Iosevka Term 12
-    use_system_font= False
-    background_color = "#2b3339"
-    cursor_color = "#aaaaaa"
-    foreground_color = "#d8caac"
-    show_titlebar = False
-    palette = "#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa:#4b565c:#e67e80:#a7c080:#dbbc7f:#7fbbb3:#d699b6:#83c092:#d3c6aa"
-    bold_is_bright = True
-
 [layouts]
   [[default]]
     [[[window0]]]

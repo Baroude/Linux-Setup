@@ -110,3 +110,4 @@ export PATH="/home/mathias/.local/bin:$PATH"
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+PATH=$PATH:~/Development-tools/tools/arm-bcm2708/arm-linux-gnueabihf/bin
