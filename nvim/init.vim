@@ -32,11 +32,12 @@ let g:everforest_background='dark'
 let g:everforest_transparent_background = 1
 colorscheme everforest
 highlight Search ctermfg=0
-
-
-
+let mapleader = " "
 set completeopt=menu,menuone,noselect
 
+nnoremap <C-n> :NvimTreeToggle<CR>
+nnoremap <leader>r :NvimTreeRefresh<CR>
+nnoremap <leader>n :NvimTreeFindFile<CR>e
 lua <<  EOF
 
 --TreeSitter
@@ -77,9 +78,9 @@ local on_attach = function(client, bufnr)
   vim.keymap.set("n", "K", vim.lsp.buf.hover, {buffer=0})
   vim.keymap.set("n", "gd", vim.lsp.buf.definition, {buffer=0})
   vim.keymap.set("n", "gD", vim.lsp.buf.declaration, {buffer=0})
-  vim.keymap.set("n", "en", vim.diagnostic.goto_next, {buffer=0})
-  vim.keymap.set("n", "ep", vim.diagnostic.goto_prev, {buffer=0})
-  vim.keymap.set("n", "nn", vim.lsp.buf.rename, {buffer=0})
+  vim.keymap.set("n", "<leader>dn", vim.diagnostic.goto_next, {buffer=0})
+  vim.keymap.set("n", "<leader>dp", vim.diagnostic.goto_prev, {buffer=0})
+  vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {buffer=0})
 end
 
 for _, lsp in ipairs(servers) do
@@ -114,14 +115,15 @@ cmp.setup({
     }),
     ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
   },
-  sources = cmp.config.sources({
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' }, -- For luasnip users.
-  }, {
-    { name = 'buffer' },
-  })
+sources = {
+  { name = 'luasnip' };
+  { name = 'nvim_lsp' },
+  { name = 'buffer' },
+  { name = 'path' },
+  }
 })
 
+require'nvim-tree'.setup{}
  
 require'lualine'.setup {
   options = {
