@@ -33,14 +33,28 @@ let g:everforest_transparent_background = 1
 colorscheme everforest
 highlight Search ctermfg=0
 
-" TreeSitter
-lua <<EOF
+
+
+set completeopt=menu,menuone,noselect
+
+lua <<  EOF
+
+--TreeSitter
+
   require'nvim-treesitter.configs'.setup {
     highlight = {
       enable = true,
     },
     indent = {
       enable = false,
+    },
+    ensure_installed = {
+      "c",
+      "javascript",
+      "python",
+      "json",
+      "bash",
+      "cpp"
     },
     rainbow = {
       enable = true,
@@ -52,10 +66,63 @@ lua <<EOF
       enable_autocmd = true,
     }
   }
-EOF
 
-lua << EOF
+-- LSP 
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+local servers = {'pyright','tsserver','bashls'}
+local nvim_lsp=require('lspconfig')
 
+
+local on_attach = function(client, bufnr)
+  vim.keymap.set("n", "K", vim.lsp.buf.hover, {buffer=0})
+  vim.keymap.set("n", "gd", vim.lsp.buf.definition, {buffer=0})
+  vim.keymap.set("n", "gD", vim.lsp.buf.declaration, {buffer=0})
+  vim.keymap.set("n", "en", vim.diagnostic.goto_next, {buffer=0})
+  vim.keymap.set("n", "ep", vim.diagnostic.goto_prev, {buffer=0})
+  vim.keymap.set("n", "nn", vim.lsp.buf.rename, {buffer=0})
+end
+
+for _, lsp in ipairs(servers) do
+
+  nvim_lsp[lsp].setup{
+    capabilities = capabilities,
+    on_attach = on_attach
+  }
+
+end
+
+
+
+-- Setup nvi-cmp.
+local cmp = require'cmp'
+
+cmp.setup({
+  snippet = {
+    -- REQUIRED - you must specify a snippet engine
+    expand = function(args)
+      require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+    end,
+  },
+  mapping = {
+    ['<C-b>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
+    ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
+    ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
+    ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
+    ['<C-e>'] = cmp.mapping({
+      i = cmp.mapping.abort(),
+      c = cmp.mapping.close(),
+    }),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+  },
+  sources = cmp.config.sources({
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' }, -- For luasnip users.
+  }, {
+    { name = 'buffer' },
+  })
+})
+
+ 
 require'lualine'.setup {
   options = {
     icons_enabled = true,
@@ -86,14 +153,3 @@ require'lualine'.setup {
 }
 EOF
 
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~ '\s'
-endfunction
-
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-
-map <C-n> :NERDTreeToggle<CR>
