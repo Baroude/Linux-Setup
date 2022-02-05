@@ -5,7 +5,7 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick build-essential clangd -y
+sudo apt install vim libncursesw5-dev git curl zsh vlc filezilla terminator python3-pip imagemagick build-essential clangd ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip  doxygen -y
 
 # Récupération du thème nord
 
@@ -14,7 +14,7 @@ tar xf Nordic-darker-v40.tar.xz
 sudo mv Nordic-darker-v40 /usr/share/themes/
 gsettings set org.gnome.desktop.interface gtk-theme "Nordic-darker-v40"
 gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
-
+rm Nordic-darker-v40.tar.xz 
 # Récupération wallpaper
 
 gsettings set org.gnome.desktop.background picture-uri 'file:///home/mathias/Documents/Linux-Setup/images/forest.jpg'
@@ -56,15 +56,15 @@ sh -c "$(curl -fsSL https://starship.rs/install.sh)"
 
 # Neovim 
 
-sudo wget https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
-sudo mv nvim.appimage /usr/local/bin/nvim
-sudo chmod +x /usr/local/bin/nvim 
+cd ~
+git clone https://github.com/neovim/neovim
+cd neovim && make 
+sudo make install
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
 sudo apt -y install nodejs
 sudo npm i -g typescript typescript-language-server bash-language-server pyright
-# Cleaning
 
-rm Nordic-darker-v40.tar.xz 
+
 
