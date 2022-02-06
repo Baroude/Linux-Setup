@@ -30,6 +30,7 @@ set termguicolors
 set background=dark
 let g:everforest_background='dark'
 let g:everforest_transparent_background = 1
+let g:everforest_diagnostic_virtual_text = 'colored'
 colorscheme everforest
 highlight Search ctermfg=0
 let mapleader = " "
