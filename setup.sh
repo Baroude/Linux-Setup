@@ -66,5 +66,8 @@ curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
 sudo apt -y install nodejs
 sudo npm i -g typescript typescript-language-server bash-language-server pyright
 
-
+# Auto update nvim 
+cd ~/Documents/Linux-Setup/
+chmod +x nvimUpdate.sh
+(crontab -l 2>/dev/null; echo "0 12 * * 1 /home/mathias/Documents/Linux-Setup/nvimUpdate.sh ") | crontab -
 
