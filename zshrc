@@ -77,9 +77,6 @@ cbonsai -p
 # (cat ~/.cache/wal/sequences &)
 source $ZSH/oh-my-zsh.sh
 eval "$(starship init zsh)"
-export JC_HOME=/home/mathias/javaCard
-export PATH=$PATH:$JC_HOME/bin:/home/mathias/.local/bin
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
 export PATH="/home/mathias/.local/bin:$PATH"
 
 #User configuration
@@ -110,4 +107,3 @@ export PATH="/home/mathias/.local/bin:$PATH"
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-PATH=$PATH:~/Development-tools/tools/arm-bcm2708/arm-linux-gnueabihf/bin
