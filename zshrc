@@ -78,7 +78,9 @@ cbonsai -p
 source $ZSH/oh-my-zsh.sh
 eval "$(starship init zsh)"
 export PATH="/home/mathias/.local/bin:$PATH"
-
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=~/.go
+export PATH=$PATH:$GOPATH/bin/
 #User configuration
 
 
