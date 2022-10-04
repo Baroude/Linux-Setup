@@ -5,8 +5,9 @@
 
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install vim libncursesw6-dev git curl zsh vlc filezilla terminator python3-pip imagemagick build-essential clangd ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip doxygen -y
-
+sudo apt install vim libncursesw5-dev git curl zsh python3-pip imagemagick build-essential clangd ninja-build gettext libtool libtool-bin autoconf automake g++ pkg-config unzip doxygen
+pip3 install --upgrade pip
+sudo pip3-install cmake
 
 chsh -s /bin/zsh
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
