@@ -13,7 +13,13 @@ Last reviewed: 2026-02-24
 
 - Keep Dotbot as the dotfile linker/orchestrator.
 - Upgrade Dotbot submodule to a current release before applying config changes.
+- Keep bootstrap scripts non-interactive and rerunnable (idempotent).
+- Track stable channels (updatable), not hard-pinned versions.
+- Do not lock Neovim plugin versions in-repo (`lazy-lock.json` not committed).
 - Use Catppuccin Mocha as the single default flavor for terminal, shell prompt, and Neovim.
+- Use `Papirus-Dark` icons with Catppuccin folder accents.
+- Use Catppuccin cursor theme (Mocha variant).
+- Use Catppuccin Mocha theme in Firefox for browser consistency.
 - Stay on GNOME (Debian 13) as the desktop environment.
 - Customize top bar/dock/workflow through GNOME extensions, managed by scripts where possible.
 
@@ -35,8 +41,8 @@ Use supported channels, not frozen old branches:
 | Node.js | `v24` Active LTS (or `setup_lts.x`) |
 | Neovim | Stable release line (`v0.11.x`, currently `0.11.6`) |
 | npm global LSP tools | `typescript`, `typescript-language-server`, `bash-language-server`, `pyright` |
-| Starship | Latest stable release (`v1.24.2` at review time) |
-| Kitty | Latest stable release (`0.45.0` at review time) |
+| Starship | Latest stable release channel |
+| Kitty | Latest stable release channel |
 | zsh | distro-supported stable (minimum `5.9+`) |
 | Theme flavor | Catppuccin `mocha` |
 
@@ -51,6 +57,9 @@ Use supported channels, not frozen old branches:
 ### Phase 1: Installer Modernization (`setup.sh`, `wsl.sh`)
 
 - Keep Dotbot bootstrap in `install` and update submodule revision (`dotbot/`) to latest stable tag.
+- Make bootstrap fully non-interactive by default:
+  - Avoid commands that prompt during install.
+  - Support unattended runs on fresh machines and reruns.
 - Replace Node 16 block with LTS install flow:
   - `curl -fsSL https://deb.nodesource.com/setup_lts.x -o nodesource_setup.sh`
   - `sudo -E bash nodesource_setup.sh`
@@ -88,16 +97,22 @@ Use supported channels, not frozen old branches:
   - top bar customization
   - dock behavior (auto-hide, position, icon sizing)
   - application launcher/search UX
+- Install/apply desktop icon and cursor themes:
+  - icon theme: `Papirus-Dark` with Catppuccin folder accents
+  - cursor theme: Catppuccin cursors (Mocha)
 - Script GNOME settings with `gsettings`/`dconf` where stable.
 - For extensions, script install/enable/disable where possible and keep a documented fallback manual step.
 - Export and version control a baseline GNOME settings dump for repeatable restore on new machines.
+- Add browser theming step for Firefox:
+  - install Catppuccin Mocha theme from Firefox Add-ons
+  - keep this as a documented manual step (sync-friendly)
 
 ### Phase 3: vim-plug -> lazy.nvim
 
 - Replace `init.vim` entrypoint with `init.lua`.
 - Bootstrap lazy.nvim using stable branch per docs.
 - Move plugin specs into `lua/plugins/*.lua`.
-- Commit `lazy-lock.json` to pin plugin versions.
+- Keep plugins updatable (no repository lockfile commit for plugin versions).
 
 Required plugin/repo updates:
 
@@ -137,6 +152,8 @@ LSP modernization (Neovim 0.11+):
   - `zsh --version` works and Starship renders
   - Kitty colors match Catppuccin Mocha reference palette
   - Neovim uses Catppuccin Mocha (`:colorscheme` check)
+  - GNOME icon/cursor themes are applied (`Papirus-Dark` + Catppuccin cursor)
+  - Firefox theme is Catppuccin Mocha
   - `:checkhealth` and `:checkhealth lazy` pass in Neovim
   - LSP attach for Python/TS/Bash/C/Go works
 
@@ -144,11 +161,15 @@ LSP modernization (Neovim 0.11+):
 
 - [ ] Updated `setup.sh`
 - [ ] Updated `wsl.sh`
+- [ ] Bootstrap scripts run non-interactively and are idempotent
 - [ ] Updated `install.conf.yaml`
 - [ ] New `kitty/kitty.conf`
 - [ ] Updated `starship.toml` (Catppuccin Mocha)
 - [ ] Added GNOME extension customization profile (top bar + dock)
 - [ ] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
+- [ ] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)
+- [ ] Added cursor theme install/apply step (Catppuccin cursors, Mocha)
+- [ ] Added Firefox Catppuccin Mocha theme step (documented/manual)
 - [ ] New Lua-based Neovim config with lazy.nvim
 - [ ] Removed/retired `vim-plug` files
 - [ ] Updated plugin names and `ts_ls`
@@ -175,3 +196,6 @@ LSP modernization (Neovim 0.11+):
 - Catppuccin for Kitty: https://github.com/catppuccin/kitty
 - Catppuccin for Neovim: https://github.com/catppuccin/nvim
 - Catppuccin GTK Theme: https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
+- Catppuccin for Firefox: https://github.com/catppuccin/firefox
+- Catppuccin Cursors: https://github.com/catppuccin/cursors
+- Papirus icon theme: https://github.com/PapirusDevelopmentTeam/papirus-icon-theme
