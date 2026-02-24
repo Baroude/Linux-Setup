@@ -32,6 +32,7 @@ APT_PACKAGES=(
   gtk2-engines-murrine
   gnome-themes-extra
   papirus-icon-theme
+  libncursesw5-dev
 )
 
 LSP_NPM_PACKAGES=(
