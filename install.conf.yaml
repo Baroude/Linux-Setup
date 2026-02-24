@@ -1,11 +1,12 @@
 - clean: ['~']
 
-- link:
-      ~/.zshrc:
-          path: zshrc
-          force: true
-      ~/.config/nvim : nvim
-      ~/.config/starship.toml : starship.toml
-      ~/.config/kitty : kitty
-      ~/.gitconfig : gitconfig
+- defaults:
+    link:
+      force: true
 
+- link:
+    ~/.zshrc : zshrc
+    ~/.config/nvim : nvim
+    ~/.config/starship.toml : starship.toml
+    ~/.config/kitty : kitty
+    ~/.gitconfig : gitconfig
