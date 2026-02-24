@@ -2,6 +2,28 @@
 
 Last reviewed: 2026-02-24
 
+## Progress Log
+
+### 2026-02-24 (Implementation Started)
+
+- Created branch `migration/2026-modernize`.
+- Updated `dotbot` submodule pointer from `ac5793c` to `v1.24.0` (`08ba8ac`).
+- Rewrote `setup.sh` and `wsl.sh` for non-interactive/idempotent bootstrap:
+  - Node.js moved to NodeSource `setup_lts.x`.
+  - Neovim now installs from latest stable release artifacts (no source build from `master`).
+  - Removed automatic `nvimUpdate.sh` cron wiring from bootstrap path.
+  - Replaced hard-coded repo paths with dynamic `SCRIPT_DIR`.
+  - Added Catppuccin GTK/icon/cursor apply flow in GNOME path.
+- Updated Dotbot links to use Kitty instead of Terminator and added `kitty/kitty.conf` (Catppuccin Mocha + Iosevka).
+- Replaced `starship.toml` palette with Catppuccin Mocha colors.
+- Migrated Neovim config from vim-plug to `lazy.nvim`:
+  - Added `nvim/init.lua` entrypoint.
+  - Added modular `lua/config/*.lua` + `lua/plugins/*.lua`.
+  - Removed legacy vim-plug files.
+  - Updated LSP config to `vim.lsp.config` / `vim.lsp.enable` and renamed `tsserver` -> `ts_ls`.
+  - Switched colorscheme to Catppuccin Mocha.
+- Validation note: `bash install -n` is currently blocked in this Windows checkout by CRLF line endings in `install`; Dotbot functional validation is still pending on a Linux/WSL shell with LF scripts.
+
 ## Goals
 
 1. Move installers to currently supported software versions (Node.js, Neovim, language servers).
@@ -24,6 +46,8 @@ Last reviewed: 2026-02-24
 - Customize top bar/dock/workflow through GNOME extensions, managed by scripts where possible.
 
 ## Current State (Repo Snapshot)
+
+Baseline captured before the 2026-02-24 implementation pass.
 
 - Node install is pinned to `setup_16.x` in [`setup.sh`](./setup.sh) and [`wsl.sh`](./wsl.sh), which is EOL.
 - Neovim is built from `master` source and updated by cron (`nvimUpdate.sh`), which is non-deterministic.
@@ -159,23 +183,23 @@ LSP modernization (Neovim 0.11+):
 
 ## Deliverables Checklist
 
-- [ ] Updated `setup.sh`
-- [ ] Updated `wsl.sh`
-- [ ] Bootstrap scripts run non-interactively and are idempotent
-- [ ] Updated `install.conf.yaml`
-- [ ] New `kitty/kitty.conf`
-- [ ] Updated `starship.toml` (Catppuccin Mocha)
+- [x] Updated `setup.sh`
+- [x] Updated `wsl.sh`
+- [x] Bootstrap scripts run non-interactively and are idempotent
+- [x] Updated `install.conf.yaml`
+- [x] New `kitty/kitty.conf`
+- [x] Updated `starship.toml` (Catppuccin Mocha)
 - [ ] Added GNOME extension customization profile (top bar + dock)
-- [ ] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
-- [ ] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)
-- [ ] Added cursor theme install/apply step (Catppuccin cursors, Mocha)
-- [ ] Added Firefox Catppuccin Mocha theme step (documented/manual)
-- [ ] New Lua-based Neovim config with lazy.nvim
-- [ ] Removed/retired `vim-plug` files
-- [ ] Updated plugin names and `ts_ls`
-- [ ] Updated Neovim colorscheme to Catppuccin Mocha
+- [x] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
+- [x] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)
+- [x] Added cursor theme install/apply step (Catppuccin cursors, Mocha)
+- [x] Added Firefox Catppuccin Mocha theme step (documented/manual)
+- [x] New Lua-based Neovim config with lazy.nvim
+- [x] Removed/retired `vim-plug` files
+- [x] Updated plugin names and `ts_ls`
+- [x] Updated Neovim colorscheme to Catppuccin Mocha
 - [ ] Updated Dotbot submodule revision and validated `./install`
-- [ ] Updated README migration/install notes
+- [x] Updated README migration/install notes
 
 ## References
 

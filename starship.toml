@@ -1,120 +1,73 @@
-# ~/.config/starship.toml
-#
-format = """
-(#7aa2f7)$username$hostname$directory$git_branch$rust$package$time
-[➜](#7aa2f7) """
-[line_break]
-disabled = true
+add_newline = false
+palette = "catppuccin_mocha"
 
-#format = """
-#[┌───────────────────](#7aa2f7)
-#[│](#7aa2f7)$username$hostname$directory$git_branch$rust$package$time
-#[└─>](#7aa2f7) """
-#[line_break]
-#disabled = true
+format = "$username$hostname$directory$git_branch$git_status$nodejs$python$golang$rust$time$line_break$character"
 
-# Remove the "❯" symbol in the prompt
-[character]                     
-success_symbol = "[➜](bold green)"       #No success_symbol
-error_symbol = " [✗](bold red)"     #error_symbol in red
-
+[character]
+success_symbol = "[>](green)"
+error_symbol = "[>](red)"
 
 [username]
-format = "[$user](#96c466)[@](#88c0d0)"
-#format ="[❯](#BF616A)[❯](#02e830)[❯](#88C0D0)[❯](#EBCB8B) "
-style_user = "#5fff5f"
 show_always = true
-
-#[[battery.display]]
-#threshold = 30
-#style = "bold red"
-
-[cmd_duration]
-show_milliseconds = true
-format = "took [$duration](bold yellow)"
-disabled = true
-
-[directory]
-truncation_length = 5
-format = "[$path](#88c0d0)[$lock_symbol]($lock_style) "
+format = "[$user](rosewater)[@](overlay0)"
 
 [hostname]
 ssh_only = false
-format = "[$hostname](#96c466) "
+format = "[$hostname](mauve) "
 trim_at = "-"
-style = "#5fff5f"
 disabled = false
 
-[aws]
-symbol = " "
-
-[conda]
-symbol = " "
-
-[dart]
-symbol = " "
-
-[docker_context]
-symbol = " "
-
-[elixir]
-symbol = " "
-
-[elm]
-symbol = " "
+[directory]
+truncation_length = 5
+format = "[$path](blue)[$read_only](red) "
 
 [git_branch]
-symbol = " "
+symbol = "git:"
+format = "[$symbol$branch](lavender) "
 
-[golang]
-symbol = " "
-
-#[haskell]
-#symbol = " "
-
-[hg_branch]
-symbol = " "
-
-[java]
-symbol = " "
-
-[julia]
-symbol = " "
-
-[nim]
-symbol = " "
-
-[nix_shell]
-symbol = " "
+[git_status]
+format = "([$all_status$ahead_behind](yellow) )"
 
 [nodejs]
-symbol = " "
-
-[package]
-symbol = " "
-
-[perl]
-symbol = " "
-
-[php]
-symbol = " "
+symbol = "node:"
+format = "[$symbol($version )](green)"
 
 [python]
-symbol = " "
+symbol = "py:"
+format = "[$symbol$version](yellow) "
 
-[ruby]
-symbol = " "
+[golang]
+symbol = "go:"
+format = "[$symbol$version](teal) "
 
 [rust]
-symbol = " "
-
-[swift]
-symbol = "ﯣ "
+symbol = "rs:"
+format = "[$symbol$version](peach) "
 
 [time]
-time_format = "%T"
-format = "🕙 [$time](bold #D08770)"
-disabled = true
+disabled = false
+time_format = "%H:%M"
+format = "[$time](subtext0) "
 
-
-
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext0 = "#a6adc8"
+overlay0 = "#6c7086"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"

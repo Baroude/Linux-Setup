@@ -1,0 +1,7 @@
+vim.keymap.set("n", "<C-n>", "<cmd>NvimTreeToggle<CR>", { desc = "Toggle file tree" })
+vim.keymap.set("n", "<leader>r", "<cmd>NvimTreeRefresh<CR>", { desc = "Refresh file tree" })
+vim.keymap.set("n", "<leader>n", "<cmd>NvimTreeFindFile<CR>", { desc = "Reveal current file in tree" })
+vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = "Find files" })
+vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<CR>", { desc = "Live grep" })
+vim.keymap.set("n", "<leader>af", "<C-^>", { desc = "Alternate file" })
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { silent = true, desc = "Clear search highlight" })

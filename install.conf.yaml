@@ -4,6 +4,6 @@
       ~/.zshrc : zshrc
       ~/.config/nvim : nvim
       ~/.config/starship.toml : starship.toml
-      ~/.config/terminator : terminator
+      ~/.config/kitty : kitty
       ~/.gitconfig : gitconfig
 
