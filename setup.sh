@@ -221,6 +221,35 @@ install_iosevka_font() {
   fc-cache -f
 }
 
+install_symbols_nerd_font() {
+  log "Installing Symbols Nerd Font Mono"
+
+  local font_dir="$HOME/.local/share/fonts/nerd-fonts"
+  if [ -f "$font_dir/SymbolsNerdFontMono-Regular.ttf" ]; then
+    return
+  fi
+
+  local latest_tag tmp_dir
+  latest_tag="$(curl -fsSI https://github.com/ryanoasis/nerd-fonts/releases/latest \
+    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
+
+  if [ -z "$latest_tag" ]; then
+    echo "Failed to resolve latest Nerd Fonts release tag" >&2
+    return 1
+  fi
+
+  tmp_dir="$(mktemp -d)"
+  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/NerdFontsSymbolsOnly.zip" \
+    -o "$tmp_dir/symbols.zip"
+  unzip -q "$tmp_dir/symbols.zip" -d "$tmp_dir"
+
+  mkdir -p "$font_dir"
+  mv "$tmp_dir"/SymbolsNerdFont*.ttf "$font_dir/"
+  rm -rf "$tmp_dir"
+
+  fc-cache -f
+}
+
 apply_catppuccin_theme() {
   if ! command_exists gsettings; then
     return
@@ -296,6 +325,7 @@ main() {
   install_oh_my_zsh
   install_starship
   install_iosevka_font
+  install_symbols_nerd_font
   apply_catppuccin_theme
   remove_legacy_nvim_cron
 

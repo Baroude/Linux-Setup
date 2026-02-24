@@ -19,7 +19,7 @@
         },
         {
             "type": "title",
-            "key": " PC",
+            "key": "\uF109 PC",
             "keyColor": "green"
         },
         {
@@ -52,12 +52,12 @@
         },
         {
             "type": "os",
-            "key": " OS",
+            "key": "\uF17C OS",
             "keyColor": "yellow"
         },
         {
             "type": "kernel",
-            "key": "│ ├ Kernel",
+            "key": "│ ├\uF17C Kernel",
             "keyColor": "yellow"
         },
         {
@@ -67,18 +67,18 @@
         },
         {
             "type": "shell",
-            "key": "│ ├ Shell",
+            "key": "│ ├\uF120 Shell",
             "keyColor": "yellow"
         },
         {
             "type": "command",
-            "key": "│ ├ OS Age",
+            "key": "│ ├\uF073 OS Age",
             "keyColor": "yellow",
             "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
         },
         {
             "type": "uptime",
-            "key": "└ └ Uptime",
+            "key": "└ └\uF017 Uptime",
             "keyColor": "yellow"
         },
         {
@@ -94,12 +94,12 @@
         },
         {
             "type": "de",
-            "key": " DE",
+            "key": "\uF108 DE",
             "keyColor": "blue"
         },
         {
             "type": "wm",
-            "key": "│ ├ WM",
+            "key": "│ ├\uF2D0 WM",
             "keyColor": "blue"
         },
         {
@@ -109,22 +109,22 @@
         },
         {
             "type": "icons",
-            "key": "│ ├ Icons",
+            "key": "│ ├\uF1C5 Icons",
             "keyColor": "blue"
         },
         {
             "type": "cursor",
-            "key": "│ ├ Cursor",
+            "key": "│ ├\uF245 Cursor",
             "keyColor": "blue"
         },
         {
             "type": "terminal",
-            "key": "│ ├ Terminal",
+            "key": "│ ├\uF120 Terminal",
             "keyColor": "blue"
         },
         {
             "type": "font",
-            "key": "└ └ Font",
+            "key": "└ └\uF031 Font",
             "keyColor": "blue"
         },
         {
