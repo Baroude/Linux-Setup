@@ -9,4 +9,5 @@
     ~/.config/nvim : nvim
     ~/.config/starship.toml : starship.toml
     ~/.config/kitty : kitty
+    ~/.config/fastfetch : fastfetch
     ~/.gitconfig : gitconfig

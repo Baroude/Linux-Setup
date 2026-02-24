@@ -257,8 +257,9 @@ apply_catppuccin_theme() {
 
   gsettings set org.gnome.desktop.interface cursor-theme "catppuccin-mocha-blue-cursors"
 
-  if [ -f "$SCRIPT_DIR/images/forest.jpg" ]; then
-    gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/forest.jpg"
+  if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
+    gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://$SCRIPT_DIR/images/evening-sky.png"
   fi
 }
 
