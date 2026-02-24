@@ -1,7 +1,9 @@
 - clean: ['~']
 
 - link:
-      ~/.zshrc : zshrc
+      ~/.zshrc:
+          path: zshrc
+          force: true
       ~/.config/nvim : nvim
       ~/.config/starship.toml : starship.toml
       ~/.config/kitty : kitty

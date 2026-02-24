@@ -18,8 +18,6 @@ return {
       highlight = { enable = true },
       indent = { enable = false },
     },
-    config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
-    end,
+    main = "nvim-treesitter.configs",
   },
 }
