@@ -75,9 +75,9 @@ ZSH_THEME="afowler"
 plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
 cbonsai -p
 # (cat ~/.cache/wal/sequences &)
+export PATH="/home/mathias/.local/bin:$PATH"
 source $ZSH/oh-my-zsh.sh
 eval "$(starship init zsh)"
-export PATH="/home/mathias/.local/bin:$PATH"
 export PATH=$PATH:/usr/local/go/bin
 export GOPATH=~/.go
 export PATH=$PATH:$GOPATH/bin/
