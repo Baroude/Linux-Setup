@@ -310,6 +310,43 @@ apply_catppuccin_theme() {
   gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
 }
 
+set_user_avatar() {
+  local avatar_src="$SCRIPT_DIR/fastfetch/debian-cattpuccin.png"
+
+  if [ ! -f "$avatar_src" ]; then
+    return
+  fi
+
+  log "Setting user avatar (Catppuccin Debian logo)"
+
+  local accounts_icon="/var/lib/AccountsService/icons/$USER"
+  local accounts_conf="/var/lib/AccountsService/users/$USER"
+
+  sudo mkdir -p "/var/lib/AccountsService/icons" "/var/lib/AccountsService/users"
+  sudo cp "$avatar_src" "$accounts_icon"
+  sudo chmod 644 "$accounts_icon"
+
+  local tmp_conf
+  tmp_conf="$(mktemp)"
+
+  if sudo test -f "$accounts_conf"; then
+    # Preserve existing entries, remove any stale Icon= line
+    sudo grep -v "^Icon=" "$accounts_conf" > "$tmp_conf" 2>/dev/null || true
+    if ! grep -q "^\[User\]" "$tmp_conf"; then
+      printf '[User]\n' >> "$tmp_conf"
+    fi
+    sed -i "/^\[User\]/a Icon=$accounts_icon" "$tmp_conf"
+  else
+    printf '[User]\nIcon=%s\n' "$accounts_icon" > "$tmp_conf"
+  fi
+
+  sudo cp "$tmp_conf" "$accounts_conf"
+  sudo chmod 644 "$accounts_conf"
+  rm -f "$tmp_conf"
+
+  # ~/.face for apps that read it directly (e.g. some display managers)
+  cp "$avatar_src" "$HOME/.face"
+}
 
 install_swayidle() {
   if ! command_exists swayidle; then
@@ -370,6 +407,7 @@ main() {
   install_iosevka_font
   install_symbols_nerd_font
   apply_catppuccin_theme
+  set_user_avatar
   install_swayidle
   remove_legacy_nvim_cron
 
