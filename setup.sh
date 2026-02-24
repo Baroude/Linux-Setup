@@ -194,8 +194,8 @@ install_starship() {
 install_iosevka_font() {
   log "Installing Iosevka font"
 
-  local target_font="/usr/share/fonts/iosevka/iosevka.ttc"
-  if [ -f "$target_font" ]; then
+  local font_dir="/usr/share/fonts/iosevka"
+  if [ -f "$font_dir/Iosevka-Regular.ttc" ]; then
     return
   fi
 
@@ -211,11 +211,11 @@ install_iosevka_font() {
 
   tmp_dir="$(mktemp -d)"
 
-  curl -fL "https://github.com/be5invis/Iosevka/releases/download/${latest_tag}/super-ttc-iosevka-${version}.zip" -o "$tmp_dir/iosevka.zip"
+  curl -fL "https://github.com/be5invis/Iosevka/releases/download/${latest_tag}/PkgTTC-Iosevka-${version}.zip" -o "$tmp_dir/iosevka.zip"
   unzip -q "$tmp_dir/iosevka.zip" -d "$tmp_dir"
 
-  sudo mkdir -p /usr/share/fonts/iosevka
-  sudo mv "$tmp_dir/iosevka.ttc" "$target_font"
+  sudo mkdir -p "$font_dir"
+  sudo mv "$tmp_dir"/Iosevka-*.ttc "$font_dir/"
   rm -rf "$tmp_dir"
 
   fc-cache -f
