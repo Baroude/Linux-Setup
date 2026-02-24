@@ -28,6 +28,8 @@ APT_PACKAGES=(
   unzip
   doxygen
   kitty
+  swaylock
+  swayidle
   ca-certificates
   gtk2-engines-murrine
   gnome-themes-extra
@@ -289,6 +291,78 @@ apply_catppuccin_theme() {
   if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
     gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
     gsettings set org.gnome.desktop.background picture-uri-dark "file://$SCRIPT_DIR/images/evening-sky.png"
+    gsettings set org.gnome.desktop.screensaver picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
+  fi
+
+  if command_exists swaylock; then
+    # Redirect Super+L from GNOME's built-in locker to swaylock
+    gsettings set org.gnome.settings-daemon.plugins.media-keys screensaver "[]"
+
+    local kb_path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom-lockscreen/"
+    local existing
+    existing="$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings 2>/dev/null || true)"
+
+    if ! printf '%s' "$existing" | grep -q "custom-lockscreen"; then
+      # Append to existing custom keybindings list (or create fresh if empty)
+      if [ "$existing" = "@as []" ] || [ "$existing" = "[]" ]; then
+        gsettings set org.gnome.settings-daemon.plugins.media-keys \
+          custom-keybindings "['$kb_path']"
+      else
+        local trimmed="${existing%]}"
+        gsettings set org.gnome.settings-daemon.plugins.media-keys \
+          custom-keybindings "${trimmed}, '$kb_path']"
+      fi
+    fi
+
+    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
+      name 'Lock Screen'
+    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
+      command 'swaylock'
+    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
+      binding '<Super>l'
+  fi
+}
+
+install_swaylock_bg() {
+  if ! command_exists convert; then
+    return
+  fi
+
+  log "Generating swaylock blurred background"
+
+  local bg_dir="$HOME/.local/share/swaylock"
+  mkdir -p "$bg_dir"
+
+  if [ -f "$bg_dir/lock-bg.png" ]; then
+    return
+  fi
+
+  if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
+    convert "$SCRIPT_DIR/images/evening-sky.png" \
+      -filter Gaussian -blur 0x20 \
+      "$bg_dir/lock-bg.png"
+  fi
+}
+
+install_swayidle() {
+  if ! command_exists swayidle; then
+    return
+  fi
+
+  log "Configuring swayidle idle lock"
+
+  local service_dir="$HOME/.config/systemd/user"
+  mkdir -p "$service_dir"
+
+  cp "$SCRIPT_DIR/swayidle/swayidle.service" "$service_dir/swayidle.service"
+
+  systemctl --user daemon-reload
+  systemctl --user enable swayidle.service || true
+  systemctl --user restart swayidle.service || true
+
+  # Disable GNOME's built-in auto-lock so swayidle+swaylock own the idle lock
+  if command_exists gsettings; then
+    gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
   fi
 }
 
@@ -327,6 +401,8 @@ main() {
   install_iosevka_font
   install_symbols_nerd_font
   apply_catppuccin_theme
+  install_swaylock_bg
+  install_swayidle
   remove_legacy_nvim_cron
 
   log "Setup complete. Run '$SCRIPT_DIR/install' to apply dotfiles."
