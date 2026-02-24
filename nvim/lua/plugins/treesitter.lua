@@ -18,6 +18,6 @@ return {
       highlight = { enable = true },
       indent = { enable = false },
     },
-    main = "nvim-treesitter.configs",
+    main = "nvim-treesitter",
   },
 }
