@@ -6,8 +6,8 @@ After=graphical-session.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/swayidle -w \
-    timeout 300 'swaylock -f' \
-    before-sleep 'swaylock -f'
+    timeout 300 'loginctl lock-session' \
+    before-sleep 'loginctl lock-session'
 Restart=on-failure
 RestartSec=3
 

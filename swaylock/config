@@ -1,4 +1,10 @@
 # swaylock config — Catppuccin Mocha
+#
+# NOTE: Debian 13's mutter package does not compile ext-session-lock-v1,
+# so swaylock cannot run on Debian GNOME. This config is kept for reference
+# and for distros/builds where ext-session-lock-v1 is available.
+# Active lock screen: GNOME's built-in locker (triggered via loginctl lock-session)
+# styled by the Catppuccin GNOME Shell theme.
 
 # Background
 image=~/.local/share/swaylock/lock-bg.png

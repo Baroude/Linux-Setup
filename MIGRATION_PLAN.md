@@ -127,14 +127,12 @@ Use supported channels, not frozen old branches:
 - Script GNOME settings with `gsettings`/`dconf` where stable.
 - For extensions, script install/enable/disable where possible and keep a documented fallback manual step.
 - Export and version control a baseline GNOME settings dump for repeatable restore on new machines.
-- Add lock screen via `swaylock` (Wayland, `ext-session-lock-v1`):
-  - Install `swaylock` via apt.
-  - Generate blurred lock background (`images/evening-sky.png` → `~/.local/share/swaylock/lock-bg.png`) using ImageMagick.
-  - Link `~/.config/swaylock` via Dotbot (`swaylock/config` in repo).
-  - Redirect Super+L from GNOME's built-in locker to `swaylock` via custom GNOME keybinding.
-  - Install `swayidle` via apt; run as a systemd user service (`swayidle/swayidle.service` in repo, copied to `~/.config/systemd/user/` by `setup.sh`).
-  - Idle timeout: lock after 300 s; lock immediately `before-sleep`.
-  - Disable GNOME's built-in auto-lock (`org.gnome.desktop.screensaver lock-enabled false`) so swayidle owns idle locking.
+- Lock screen setup:
+  - **Note**: Debian 13's mutter does not compile `ext-session-lock-v1`, so `swaylock` cannot run on Debian GNOME. `swaylock/config` is kept in the repo for future reference or other distros.
+  - Active lock screen: GNOME's built-in locker, triggered via `loginctl lock-session`.
+  - Visual theming: Catppuccin GNOME Shell theme (`Catppuccin-Blue-Dark`) via the `user-theme` extension — styles the lock screen, top bar, and notification shade.
+  - `swayidle` runs as a systemd user service; calls `loginctl lock-session` after 300 s idle and `before-sleep`.
+  - GNOME idle auto-lock disabled (`lock-enabled false`, `idle-delay 0`); swayidle is the sole idle lock trigger.
 - Add browser theming step for Firefox:
   - install Catppuccin Mocha theme from Firefox Add-ons
   - keep this as a documented manual step (sync-friendly)

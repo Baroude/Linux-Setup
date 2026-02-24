@@ -28,8 +28,8 @@ APT_PACKAGES=(
   unzip
   doxygen
   kitty
-  swaylock
   swayidle
+  gnome-shell-extensions
   ca-certificates
   gtk2-engines-murrine
   gnome-themes-extra
@@ -294,55 +294,22 @@ apply_catppuccin_theme() {
     gsettings set org.gnome.desktop.screensaver picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
   fi
 
-  if command_exists swaylock; then
-    # Redirect Super+L from GNOME's built-in locker to swaylock
-    gsettings set org.gnome.settings-daemon.plugins.media-keys screensaver "[]"
-
-    local kb_path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom-lockscreen/"
-    local existing
-    existing="$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings 2>/dev/null || true)"
-
-    if ! printf '%s' "$existing" | grep -q "custom-lockscreen"; then
-      # Append to existing custom keybindings list (or create fresh if empty)
-      if [ "$existing" = "@as []" ] || [ "$existing" = "[]" ]; then
-        gsettings set org.gnome.settings-daemon.plugins.media-keys \
-          custom-keybindings "['$kb_path']"
-      else
-        local trimmed="${existing%]}"
-        gsettings set org.gnome.settings-daemon.plugins.media-keys \
-          custom-keybindings "${trimmed}, '$kb_path']"
-      fi
+  # Enable the User Themes GNOME Shell extension and apply Catppuccin shell theme
+  # (styles the lock screen, top bar, and notification shade)
+  local user_theme_ext="user-theme@gnome-shell-extensions.gcampax.github.com"
+  local current_exts
+  current_exts="$(gsettings get org.gnome.shell enabled-extensions 2>/dev/null || echo "@as []")"
+  if ! printf '%s' "$current_exts" | grep -q "$user_theme_ext"; then
+    if [ "$current_exts" = "@as []" ] || [ "$current_exts" = "[]" ]; then
+      gsettings set org.gnome.shell enabled-extensions "['$user_theme_ext']"
+    else
+      local trimmed="${current_exts%]}"
+      gsettings set org.gnome.shell enabled-extensions "${trimmed}, '$user_theme_ext']"
     fi
-
-    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
-      name 'Lock Screen'
-    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
-      command 'swaylock'
-    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$kb_path" \
-      binding '<Super>l'
   fi
+  gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
 }
 
-install_swaylock_bg() {
-  if ! command_exists convert; then
-    return
-  fi
-
-  log "Generating swaylock blurred background"
-
-  local bg_dir="$HOME/.local/share/swaylock"
-  mkdir -p "$bg_dir"
-
-  if [ -f "$bg_dir/lock-bg.png" ]; then
-    return
-  fi
-
-  if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
-    convert "$SCRIPT_DIR/images/evening-sky.png" \
-      -filter Gaussian -blur 0x20 \
-      "$bg_dir/lock-bg.png"
-  fi
-}
 
 install_swayidle() {
   if ! command_exists swayidle; then
@@ -360,9 +327,11 @@ install_swayidle() {
   systemctl --user enable swayidle.service || true
   systemctl --user restart swayidle.service || true
 
-  # Disable GNOME's built-in auto-lock so swayidle+swaylock own the idle lock
+  # Disable GNOME's own idle-triggered auto-lock; swayidle owns idle detection
+  # and calls loginctl lock-session which triggers GNOME's lock screen directly.
   if command_exists gsettings; then
     gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
+    gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
   fi
 }
 
@@ -401,7 +370,6 @@ main() {
   install_iosevka_font
   install_symbols_nerd_font
   apply_catppuccin_theme
-  install_swaylock_bg
   install_swayidle
   remove_legacy_nvim_cron
 
