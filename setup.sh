@@ -84,8 +84,9 @@ install_node_lts() {
 install_neovim_stable() {
   log "Installing Neovim stable release"
 
-  local latest_tag
-  latest_tag="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
+  local api_json latest_tag
+  api_json="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest)"
+  latest_tag="$(printf '%s' "$api_json" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
 
   if [ -z "$latest_tag" ]; then
     echo "Failed to resolve latest Neovim release tag" >&2
