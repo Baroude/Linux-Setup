@@ -199,9 +199,9 @@ install_iosevka_font() {
     return
   fi
 
-  local api_json latest_tag version tmp_dir
-  api_json="$(curl -fsSL https://api.github.com/repos/be5invis/Iosevka/releases/latest)"
-  latest_tag="$(printf '%s' "$api_json" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
+  local latest_tag version tmp_dir
+  latest_tag="$(curl -fsSI https://github.com/be5invis/Iosevka/releases/latest \
+    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
   version="${latest_tag#v}"
 
   if [ -z "$version" ]; then
