@@ -199,10 +199,19 @@ install_iosevka_font() {
     return
   fi
 
-  local tmp_dir
+  local api_json latest_tag version tmp_dir
+  api_json="$(curl -fsSL https://api.github.com/repos/be5invis/Iosevka/releases/latest)"
+  latest_tag="$(printf '%s' "$api_json" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
+  version="${latest_tag#v}"
+
+  if [ -z "$version" ]; then
+    echo "Failed to resolve latest Iosevka release tag" >&2
+    return 1
+  fi
+
   tmp_dir="$(mktemp -d)"
 
-  curl -fL https://github.com/be5invis/Iosevka/releases/download/v32.3.1/super-ttc-iosevka-32.3.1.zip -o "$tmp_dir/iosevka.zip"
+  curl -fL "https://github.com/be5invis/Iosevka/releases/download/${latest_tag}/super-ttc-iosevka-${version}.zip" -o "$tmp_dir/iosevka.zip"
   unzip -q "$tmp_dir/iosevka.zip" -d "$tmp_dir"
 
   sudo mkdir -p /usr/share/fonts/iosevka
