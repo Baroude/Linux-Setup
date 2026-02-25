@@ -68,18 +68,12 @@ install_extension() {
   local id="$1"
   local uuid="$2"
 
-  if gnome-extensions list | grep -qxF "$uuid"; then
+  if gext list | grep -qxF "$uuid"; then
     log "Extension already installed: $uuid"
+    gext enable "$uuid" 2>/dev/null || true
   else
     log "Installing extension: $uuid (ID: $id)"
     gext install "$id"
-  fi
-
-  if gnome-extensions list --enabled | grep -qxF "$uuid"; then
-    log "Extension already enabled: $uuid"
-  else
-    log "Enabling extension: $uuid"
-    gnome-extensions enable "$uuid"
   fi
 }
 
