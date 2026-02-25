@@ -34,6 +34,12 @@ APT_PACKAGES=(
   gnome-themes-extra
   papirus-icon-theme
   libncursesw5-dev
+  # Modern CLI replacements
+  bat
+  fd-find
+  ripgrep
+  fzf
+  eza
 )
 
 LSP_NPM_PACKAGES=(
@@ -251,6 +257,53 @@ install_symbols_nerd_font() {
   fc-cache -f
 }
 
+install_papirus_folders() {
+  if command_exists papirus-folders; then
+    return
+  fi
+
+  log "Installing papirus-folders"
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+  curl -fsSL https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/install.sh \
+    | sh -s -- --prefix "$tmp_dir/usr"
+  sudo cp "$tmp_dir/usr/bin/papirus-folders" /usr/local/bin/papirus-folders
+  rm -rf "$tmp_dir"
+}
+
+install_zoxide() {
+  if command_exists zoxide; then
+    return
+  fi
+
+  log "Installing zoxide"
+  curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+}
+
+install_delta() {
+  if command_exists delta; then
+    return
+  fi
+
+  log "Installing delta (git pager)"
+  local latest_tag tmp_dir arch
+  latest_tag="$(curl -fsSI https://github.com/dandavison/delta/releases/latest \
+    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
+
+  case "$(uname -m)" in
+    x86_64)  arch="x86_64" ;;
+    aarch64) arch="aarch64" ;;
+    *) echo "Unsupported arch for delta: $(uname -m)" >&2; return 1 ;;
+  esac
+
+  tmp_dir="$(mktemp -d)"
+  curl -fL "https://github.com/dandavison/delta/releases/download/${latest_tag}/delta-${latest_tag}-${arch}-unknown-linux-gnu.tar.gz" \
+    -o "$tmp_dir/delta.tar.gz"
+  tar -xzf "$tmp_dir/delta.tar.gz" -C "$tmp_dir" --strip-components=1
+  sudo mv "$tmp_dir/delta" /usr/local/bin/delta
+  rm -rf "$tmp_dir"
+}
+
 apply_catppuccin_theme() {
   if ! command_exists gsettings; then
     return
@@ -396,6 +449,9 @@ main() {
   install_starship
   install_iosevka_font
   install_symbols_nerd_font
+  install_papirus_folders
+  install_zoxide
+  install_delta
   apply_catppuccin_theme
   set_user_avatar
   remove_legacy_nvim_cron

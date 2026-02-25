@@ -216,7 +216,7 @@ LSP modernization (Neovim 0.11+):
 - [x] Removed/retired `vim-plug` files
 - [x] Updated plugin names and `ts_ls`
 - [x] Updated Neovim colorscheme to Catppuccin Mocha
-- [ ] Updated Dotbot submodule revision and validated `./install`
+- [x] Updated Dotbot submodule revision and validated `./install` (symlinks required `force: true`; GNOME extension step untested — requires live session)
 - [x] Updated README migration/install notes
 
 ## References
