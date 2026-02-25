@@ -346,7 +346,7 @@ apply_catppuccin_theme() {
 
   gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
   if command_exists papirus-folders; then
-    papirus-folders -C cat-mocha-blue --theme Papirus-Dark
+    papirus-folders -C blue --theme Papirus-Dark
   else
     echo "WARNING: papirus-folders not found — run install_papirus_folders() first" >&2
   fi
