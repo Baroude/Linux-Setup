@@ -1,0 +1,141 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "source": "~/.config/fastfetch/debian-cattpuccin.png",
+        "type": "kitty-direct",
+        "height": 16,
+        "width": 34,
+        "padding": {
+            "top": 4,
+            "left": 4
+        }
+    },
+    "modules": [
+        "break",
+        {
+            "type": "custom",
+            "format": "┌────────────────────── Hardware ──────────────────────┐",
+            "outputColor": "red"
+        },
+        {
+            "type": "title",
+            "key": "\uF109 PC",
+            "keyColor": "green"
+        },
+        {
+            "type": "cpu",
+            "key": "│ ├󰍛 CPU",
+            "showPeCoreCount": true,
+            "format": "{1}",
+            "keyColor": "green"
+        },
+        {
+            "type": "gpu",
+            "key": "│ ├󰍛 GPU",
+            "keyColor": "green"
+        },
+        {
+            "type": "memory",
+            "key": "└ └󰾆 Memory",
+            "keyColor": "green"
+        },
+        {
+            "type": "custom",
+            "format": "└──────────────────────────────────────────────────────┘",
+            "outputColor": "red"
+        },
+        "break",
+        {
+            "type": "custom",
+            "format": "┌────────────────────── Software ──────────────────────┐",
+            "outputColor": "red"
+        },
+        {
+            "type": "os",
+            "key": "\uF17C OS",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "kernel",
+            "key": "│ ├\uF17C Kernel",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "packages",
+            "key": "│ ├󰏖 Packages",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "shell",
+            "key": "│ ├\uF120 Shell",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "command",
+            "key": "│ ├\uF073 OS Age",
+            "keyColor": "yellow",
+            "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
+        },
+        {
+            "type": "uptime",
+            "key": "└ └\uF017 Uptime",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "custom",
+            "format": "└──────────────────────────────────────────────────────┘",
+            "outputColor": "red"
+        },
+        "break",
+        {
+            "type": "custom",
+            "format": "┌──────────────────────── Desktop ─────────────────────┐",
+            "outputColor": "red"
+        },
+        {
+            "type": "de",
+            "key": "\uF108 DE",
+            "keyColor": "blue"
+        },
+        {
+            "type": "wm",
+            "key": "│ ├\uF2D0 WM",
+            "keyColor": "blue"
+        },
+        {
+            "type": "wmtheme",
+            "key": "│ ├󰉼 Theme",
+            "keyColor": "blue"
+        },
+        {
+            "type": "icons",
+            "key": "│ ├\uF1C5 Icons",
+            "keyColor": "blue"
+        },
+        {
+            "type": "cursor",
+            "key": "│ ├\uF245 Cursor",
+            "keyColor": "blue"
+        },
+        {
+            "type": "terminal",
+            "key": "│ ├\uF120 Terminal",
+            "keyColor": "blue"
+        },
+        {
+            "type": "font",
+            "key": "└ └\uF031 Font",
+            "keyColor": "blue"
+        },
+        {
+            "type": "custom",
+            "format": "└──────────────────────────────────────────────────────┘",
+            "outputColor": "red"
+        },
+        {
+            "type": "custom",
+            "format": "               \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m "
+        },
+        "break"
+    ]
+}

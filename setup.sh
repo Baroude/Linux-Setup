@@ -28,10 +28,13 @@ APT_PACKAGES=(
   unzip
   doxygen
   kitty
+  swayidle
+  gnome-shell-extensions
   ca-certificates
   gtk2-engines-murrine
   gnome-themes-extra
   papirus-icon-theme
+  libncursesw5-dev
 )
 
 LSP_NPM_PACKAGES=(
@@ -84,8 +87,9 @@ install_node_lts() {
 install_neovim_stable() {
   log "Installing Neovim stable release"
 
-  local latest_tag
-  latest_tag="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
+  local api_json latest_tag
+  api_json="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest)"
+  latest_tag="$(printf '%s' "$api_json" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')"
 
   if [ -z "$latest_tag" ]; then
     echo "Failed to resolve latest Neovim release tag" >&2
@@ -192,19 +196,57 @@ install_starship() {
 install_iosevka_font() {
   log "Installing Iosevka font"
 
-  local target_font="/usr/share/fonts/iosevka/iosevka.ttc"
-  if [ -f "$target_font" ]; then
+  local font_dir="/usr/share/fonts/iosevka"
+  if [ -f "$font_dir/Iosevka-Regular.ttc" ]; then
     return
   fi
 
-  local tmp_dir
+  local latest_tag version tmp_dir
+  latest_tag="$(curl -fsSI https://github.com/be5invis/Iosevka/releases/latest \
+    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
+  version="${latest_tag#v}"
+
+  if [ -z "$version" ]; then
+    echo "Failed to resolve latest Iosevka release tag" >&2
+    return 1
+  fi
+
   tmp_dir="$(mktemp -d)"
 
-  curl -fL https://github.com/be5invis/Iosevka/releases/download/v32.3.1/super-ttc-iosevka-32.3.1.zip -o "$tmp_dir/iosevka.zip"
+  curl -fL "https://github.com/be5invis/Iosevka/releases/download/${latest_tag}/PkgTTC-Iosevka-${version}.zip" -o "$tmp_dir/iosevka.zip"
   unzip -q "$tmp_dir/iosevka.zip" -d "$tmp_dir"
 
-  sudo mkdir -p /usr/share/fonts/iosevka
-  sudo mv "$tmp_dir/iosevka.ttc" "$target_font"
+  sudo mkdir -p "$font_dir"
+  sudo mv "$tmp_dir"/Iosevka-*.ttc "$font_dir/"
+  rm -rf "$tmp_dir"
+
+  fc-cache -f
+}
+
+install_symbols_nerd_font() {
+  log "Installing Symbols Nerd Font Mono"
+
+  local font_dir="$HOME/.local/share/fonts/nerd-fonts"
+  if [ -f "$font_dir/SymbolsNerdFontMono-Regular.ttf" ]; then
+    return
+  fi
+
+  local latest_tag tmp_dir
+  latest_tag="$(curl -fsSI https://github.com/ryanoasis/nerd-fonts/releases/latest \
+    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
+
+  if [ -z "$latest_tag" ]; then
+    echo "Failed to resolve latest Nerd Fonts release tag" >&2
+    return 1
+  fi
+
+  tmp_dir="$(mktemp -d)"
+  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/NerdFontsSymbolsOnly.zip" \
+    -o "$tmp_dir/symbols.zip"
+  unzip -q "$tmp_dir/symbols.zip" -d "$tmp_dir"
+
+  mkdir -p "$font_dir"
+  mv "$tmp_dir"/SymbolsNerdFont*.ttf "$font_dir/"
   rm -rf "$tmp_dir"
 
   fc-cache -f
@@ -246,8 +288,87 @@ apply_catppuccin_theme() {
 
   gsettings set org.gnome.desktop.interface cursor-theme "catppuccin-mocha-blue-cursors"
 
-  if [ -f "$SCRIPT_DIR/images/forest.jpg" ]; then
-    gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/forest.jpg"
+  if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
+    gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://$SCRIPT_DIR/images/evening-sky.png"
+    gsettings set org.gnome.desktop.screensaver picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
+  fi
+
+  # Enable the User Themes GNOME Shell extension and apply Catppuccin shell theme
+  # (styles the lock screen, top bar, and notification shade)
+  local user_theme_ext="user-theme@gnome-shell-extensions.gcampax.github.com"
+  local current_exts
+  current_exts="$(gsettings get org.gnome.shell enabled-extensions 2>/dev/null || echo "@as []")"
+  if ! printf '%s' "$current_exts" | grep -q "$user_theme_ext"; then
+    if [ "$current_exts" = "@as []" ] || [ "$current_exts" = "[]" ]; then
+      gsettings set org.gnome.shell enabled-extensions "['$user_theme_ext']"
+    else
+      local trimmed="${current_exts%]}"
+      gsettings set org.gnome.shell enabled-extensions "${trimmed}, '$user_theme_ext']"
+    fi
+  fi
+  gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
+}
+
+set_user_avatar() {
+  local avatar_src="$SCRIPT_DIR/fastfetch/debian-cattpuccin.png"
+
+  if [ ! -f "$avatar_src" ]; then
+    return
+  fi
+
+  log "Setting user avatar (Catppuccin Debian logo)"
+
+  local accounts_icon="/var/lib/AccountsService/icons/$USER"
+  local accounts_conf="/var/lib/AccountsService/users/$USER"
+
+  sudo mkdir -p "/var/lib/AccountsService/icons" "/var/lib/AccountsService/users"
+  sudo cp "$avatar_src" "$accounts_icon"
+  sudo chmod 644 "$accounts_icon"
+
+  local tmp_conf
+  tmp_conf="$(mktemp)"
+
+  if sudo test -f "$accounts_conf"; then
+    # Preserve existing entries, remove any stale Icon= line
+    sudo grep -v "^Icon=" "$accounts_conf" > "$tmp_conf" 2>/dev/null || true
+    if ! grep -q "^\[User\]" "$tmp_conf"; then
+      printf '[User]\n' >> "$tmp_conf"
+    fi
+    sed -i "/^\[User\]/a Icon=$accounts_icon" "$tmp_conf"
+  else
+    printf '[User]\nIcon=%s\n' "$accounts_icon" > "$tmp_conf"
+  fi
+
+  sudo cp "$tmp_conf" "$accounts_conf"
+  sudo chmod 644 "$accounts_conf"
+  rm -f "$tmp_conf"
+
+  # ~/.face for apps that read it directly (e.g. some display managers)
+  cp "$avatar_src" "$HOME/.face"
+}
+
+install_swayidle() {
+  if ! command_exists swayidle; then
+    return
+  fi
+
+  log "Configuring swayidle idle lock"
+
+  local service_dir="$HOME/.config/systemd/user"
+  mkdir -p "$service_dir"
+
+  cp "$SCRIPT_DIR/swayidle/swayidle.service" "$service_dir/swayidle.service"
+
+  systemctl --user daemon-reload
+  systemctl --user enable swayidle.service || true
+  systemctl --user restart swayidle.service || true
+
+  # Disable GNOME's own idle-triggered auto-lock; swayidle owns idle detection
+  # and calls loginctl lock-session which triggers GNOME's lock screen directly.
+  if command_exists gsettings; then
+    gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
+    gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
   fi
 
   # Install and configure GNOME Shell extensions (requires live session)
@@ -294,7 +415,10 @@ main() {
   install_oh_my_zsh
   install_starship
   install_iosevka_font
+  install_symbols_nerd_font
   apply_catppuccin_theme
+  set_user_avatar
+  install_swayidle
   remove_legacy_nvim_cron
 
   log "Setup complete. Run '$SCRIPT_DIR/install' to apply dotfiles."

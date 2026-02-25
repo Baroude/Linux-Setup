@@ -133,6 +133,12 @@ Use supported channels, not frozen old branches:
 - Script GNOME settings with `gsettings`/`dconf` where stable.
 - For extensions, script install/enable/disable where possible and keep a documented fallback manual step.
 - Export and version control a baseline GNOME settings dump for repeatable restore on new machines.
+- Lock screen setup:
+  - **Note**: Debian 13's mutter does not compile `ext-session-lock-v1`, so `swaylock` cannot run on Debian GNOME. `swaylock/config` is kept in the repo for future reference or other distros.
+  - Active lock screen: GNOME's built-in locker, triggered via `loginctl lock-session`.
+  - Visual theming: Catppuccin GNOME Shell theme (`Catppuccin-Blue-Dark`) via the `user-theme` extension — styles the lock screen, top bar, and notification shade.
+  - `swayidle` runs as a systemd user service; calls `loginctl lock-session` after 300 s idle and `before-sleep`.
+  - GNOME idle auto-lock disabled (`lock-enabled false`, `idle-delay 0`); swayidle is the sole idle lock trigger.
 - Add browser theming step for Firefox:
   - install Catppuccin Mocha theme from Firefox Add-ons
   - keep this as a documented manual step (sync-friendly)
@@ -195,6 +201,8 @@ LSP modernization (Neovim 0.11+):
 - [x] Updated `install.conf.yaml`
 - [x] New `kitty/kitty.conf`
 - [x] Updated `starship.toml` (Catppuccin Mocha)
+- [x] Added swaylock with Catppuccin Mocha config and blurred lock background
+- [x] Added swayidle systemd user service for idle lock (300 s timeout + before-sleep)
 - [x] Added GNOME extension customization profile (Open Bar, Blur my Shell, Dash to Dock, Tiling Shell)
 - [x] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
 - [x] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)

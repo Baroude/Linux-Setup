@@ -1,0 +1,15 @@
+[Unit]
+Description=Idle manager (swaylock integration)
+Documentation=man:swayidle(1)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/swayidle -w \
+    timeout 300 'loginctl lock-session' \
+    before-sleep 'loginctl lock-session'
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
