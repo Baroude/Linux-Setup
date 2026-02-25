@@ -70,13 +70,18 @@ clone_if_missing() {
 
 install_apt_packages() {
   log "Updating package index"
-  sudo apt update -y
+  sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
 
   log "Upgrading installed packages"
-  sudo apt upgrade -y
+  sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold"
 
   log "Installing base packages"
-  sudo apt install -y "${APT_PACKAGES[@]}"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" \
+    "${APT_PACKAGES[@]}"
 }
 
 install_node_lts() {
@@ -88,7 +93,7 @@ install_node_lts() {
   sudo -E bash "$node_setup_script"
   rm -f "$node_setup_script"
 
-  sudo apt install -y nodejs
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 }
 
 install_neovim_stable() {
@@ -178,7 +183,7 @@ install_oh_my_zsh() {
   log "Configuring zsh + oh-my-zsh"
 
   if command_exists zsh && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
-    chsh -s "$(command -v zsh)" "$USER" || true
+    sudo usermod -s "$(command -v zsh)" "$USER" || true
   fi
 
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
@@ -267,7 +272,10 @@ install_papirus_folders() {
 
   git clone --depth 1 https://github.com/PapirusDevelopmentTeam/papirus-folders \
     "$tmp_dir/papirus-folders"
-  sudo install -Dm755 "$tmp_dir/papirus-folders/papirus-folders" /usr/local/bin/papirus-folders
+  (
+    cd "$tmp_dir/papirus-folders"
+    sudo make install
+  )
 
   rm -rf "$tmp_dir"
 }
