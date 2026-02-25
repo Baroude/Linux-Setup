@@ -53,11 +53,14 @@ install_tidal_hifi() {
 
   # Electron on Wayland requires GPU acceleration; force X11 fallback so
   # the app works in environments without a GPU (VMs, no Mesa/Vulkan, etc.).
-  # Removing --socket=wayland is required — env-var hints are ignored when
-  # the Wayland socket is still exposed by Flatpak.
+  # --nosocket=wayland alone is not enough: WAYLAND_DISPLAY is still
+  # inherited from the host session, so Electron tries Wayland, fails to
+  # connect (socket was removed), and crashes. Unsetting WAYLAND_DISPLAY
+  # inside the sandbox forces the X11 path.
   flatpak override --user \
     --nosocket=wayland \
     --socket=x11 \
+    --unset-env=WAYLAND_DISPLAY \
     --env=ELECTRON_OZONE_PLATFORM_HINT=x11 \
     "$APP_ID"
 }
