@@ -51,17 +51,19 @@ install_tidal_hifi() {
   log "Installing tidal-hifi from Flathub"
   flatpak install --user --noninteractive flathub "$APP_ID"
 
-  # Electron on Wayland requires GPU acceleration; force X11 fallback so
-  # the app works in environments without a GPU (VMs, no Mesa/Vulkan, etc.).
-  # --nosocket=wayland alone is not enough: WAYLAND_DISPLAY is still
-  # inherited from the host session, so Electron tries Wayland, fails to
-  # connect (socket was removed), and crashes. Unsetting WAYLAND_DISPLAY
-  # inside the sandbox forces the X11 path.
+  # tidal-hifi 6.0+ runs Electron 39, which dropped ELECTRON_OZONE_PLATFORM_HINT.
+  # The run.sh wrapper inside the Flatpak reads XDG_SESSION_TYPE to decide
+  # whether to pass --ozone-platform=wayland to Electron. Overriding it to
+  # "x11" prevents the Wayland path from being selected.
+  # Flatpak 1.16+ (Debian 13) properly scrubs WAYLAND_DISPLAY from the
+  # sandbox when --nosocket=wayland is granted, so no manual unset needed.
+  # LIBGL_ALWAYS_SOFTWARE=1 is required in VMware VMs where the SVGA driver
+  # cannot satisfy Chromium's EGL/DMABuf requirements (VMware: No 3D enabled).
   flatpak override --user \
     --nosocket=wayland \
     --socket=x11 \
-    --unset-env=WAYLAND_DISPLAY \
-    --env=ELECTRON_OZONE_PLATFORM_HINT=x11 \
+    --env=XDG_SESSION_TYPE=x11 \
+    --env=LIBGL_ALWAYS_SOFTWARE=1 \
     "$APP_ID"
 }
 
