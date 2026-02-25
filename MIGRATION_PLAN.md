@@ -4,6 +4,13 @@ Last reviewed: 2026-02-25
 
 ## Progress Log
 
+### 2026-02-25 (Cleanup: remove swaylock/swayidle)
+
+- Removed `swayidle` from apt packages and deleted `swayidle/` and `swaylock/` directories.
+- Removed `install_swayidle()` from `setup.sh`; moved GNOME extension call back into `apply_catppuccin_theme()`.
+- Re-enabled GNOME native idle lock (`lock-enabled true`, `idle-delay 300`) replacing the swayidle workaround.
+- Updated MIGRATION_PLAN.md to document the decision (swaylock broken on Debian 13 mutter; GNOME native is sufficient).
+
 ### 2026-02-25 (Phase 2.5: GNOME Extensions)
 
 - Added `gnome/gnome-extensions.sh` — installs and enables Open Bar, Blur my Shell, Dash to Dock, Tiling Shell via `gext` (gnome-extensions-cli); loads dconf settings from baseline file.
@@ -134,11 +141,9 @@ Use supported channels, not frozen old branches:
 - For extensions, script install/enable/disable where possible and keep a documented fallback manual step.
 - Export and version control a baseline GNOME settings dump for repeatable restore on new machines.
 - Lock screen setup:
-  - **Note**: Debian 13's mutter does not compile `ext-session-lock-v1`, so `swaylock` cannot run on Debian GNOME. `swaylock/config` is kept in the repo for future reference or other distros.
-  - Active lock screen: GNOME's built-in locker, triggered via `loginctl lock-session`.
+  - Use GNOME's built-in locker exclusively (`loginctl lock-session` / `Super+L`).
   - Visual theming: Catppuccin GNOME Shell theme (`Catppuccin-Blue-Dark`) via the `user-theme` extension — styles the lock screen, top bar, and notification shade.
-  - `swayidle` runs as a systemd user service; calls `loginctl lock-session` after 300 s idle and `before-sleep`.
-  - GNOME idle auto-lock disabled (`lock-enabled false`, `idle-delay 0`); swayidle is the sole idle lock trigger.
+  - Idle lock: GNOME native idle pipeline (lock after 300 s, `lock-enabled true`). swaylock and swayidle were tested and removed — Debian 13 mutter does not compile `ext-session-lock-v1`, making swaylock permanently broken on GNOME/Debian.
 - Add browser theming step for Firefox:
   - install Catppuccin Mocha theme from Firefox Add-ons
   - keep this as a documented manual step (sync-friendly)
@@ -201,8 +206,7 @@ LSP modernization (Neovim 0.11+):
 - [x] Updated `install.conf.yaml`
 - [x] New `kitty/kitty.conf`
 - [x] Updated `starship.toml` (Catppuccin Mocha)
-- [x] Added swaylock with Catppuccin Mocha config and blurred lock background
-- [x] Added swayidle systemd user service for idle lock (300 s timeout + before-sleep)
+- [x] Lock screen: GNOME native idle lock (300 s), Catppuccin Shell theme via user-theme extension (swaylock/swayidle removed — broken on Debian 13 GNOME)
 - [x] Added GNOME extension customization profile (Open Bar, Blur my Shell, Dash to Dock, Tiling Shell)
 - [x] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
 - [x] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)

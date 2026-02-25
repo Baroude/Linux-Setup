@@ -28,7 +28,6 @@ APT_PACKAGES=(
   unzip
   doxygen
   kitty
-  swayidle
   gnome-shell-extensions
   ca-certificates
   gtk2-engines-murrine
@@ -308,6 +307,20 @@ apply_catppuccin_theme() {
     fi
   fi
   gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
+
+  # Re-enable GNOME native idle lock (lock after 5 min, screen blank after 10 min)
+  gsettings set org.gnome.desktop.screensaver lock-enabled true
+  gsettings set org.gnome.desktop.session idle-delay 300
+
+  # Install and configure GNOME Shell extensions (requires live session)
+  local ext_script="$SCRIPT_DIR/gnome/gnome-extensions.sh"
+  if [ -f "$ext_script" ] && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    log "Running GNOME extension setup"
+    bash "$ext_script"
+  else
+    log "Skipping GNOME extensions (no display session or script missing)"
+    log "Run manually after login: bash $ext_script"
+  fi
 }
 
 set_user_avatar() {
@@ -348,39 +361,6 @@ set_user_avatar() {
   cp "$avatar_src" "$HOME/.face"
 }
 
-install_swayidle() {
-  if ! command_exists swayidle; then
-    return
-  fi
-
-  log "Configuring swayidle idle lock"
-
-  local service_dir="$HOME/.config/systemd/user"
-  mkdir -p "$service_dir"
-
-  cp "$SCRIPT_DIR/swayidle/swayidle.service" "$service_dir/swayidle.service"
-
-  systemctl --user daemon-reload
-  systemctl --user enable swayidle.service || true
-  systemctl --user restart swayidle.service || true
-
-  # Disable GNOME's own idle-triggered auto-lock; swayidle owns idle detection
-  # and calls loginctl lock-session which triggers GNOME's lock screen directly.
-  if command_exists gsettings; then
-    gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
-    gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
-  fi
-
-  # Install and configure GNOME Shell extensions (requires live session)
-  local ext_script="$SCRIPT_DIR/gnome/gnome-extensions.sh"
-  if [ -f "$ext_script" ] && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
-    log "Running GNOME extension setup"
-    bash "$ext_script"
-  else
-    log "Skipping GNOME extensions (no display session or script missing)"
-    log "Run manually after login: bash $ext_script"
-  fi
-}
 
 remove_legacy_nvim_cron() {
   log "Removing legacy Neovim auto-build cron job"
@@ -418,7 +398,6 @@ main() {
   install_symbols_nerd_font
   apply_catppuccin_theme
   set_user_avatar
-  install_swayidle
   remove_legacy_nvim_cron
 
   log "Setup complete. Run '$SCRIPT_DIR/install' to apply dotfiles."
