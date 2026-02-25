@@ -33,6 +33,7 @@ APT_PACKAGES=(
   gtk2-engines-murrine
   gnome-themes-extra
   sassc
+  pipx
   libncursesw5-dev
   # Modern CLI replacements
   bat

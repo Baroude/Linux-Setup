@@ -44,7 +44,7 @@ install_gext() {
     return
   fi
   log "Installing gnome-extensions-cli (gext)"
-  pip3 install --user --quiet gnome-extensions-cli
+  pipx install gnome-extensions-cli
   # Ensure ~/.local/bin is on PATH for this session
   export PATH="$HOME/.local/bin:$PATH"
 }
@@ -57,7 +57,7 @@ install_dconf_cli() {
     return
   fi
   log "Installing dconf-cli"
-  sudo apt install -y dconf-cli
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y dconf-cli
 }
 
 # ---------------------------------------------------------------------------
