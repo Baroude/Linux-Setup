@@ -1,8 +1,14 @@
 # Linux-Setup Migration Plan (2026)
 
-Last reviewed: 2026-02-24
+Last reviewed: 2026-02-25
 
 ## Progress Log
+
+### 2026-02-25 (Phase 2.5: GNOME Extensions)
+
+- Added `gnome/gnome-extensions.sh` — installs and enables Open Bar, Blur my Shell, Dash to Dock, Tiling Shell via `gext` (gnome-extensions-cli); loads dconf settings from baseline file.
+- Added `gnome/dconf/extensions.conf` — version-controlled dconf baseline for all four extensions (Catppuccin Mocha color values baked in).
+- Wired extension script into `setup.sh` `apply_catppuccin_theme()` with live-session guard (skips gracefully when no display, prints manual run hint).
 
 ### 2026-02-24 (Implementation Started)
 
@@ -189,7 +195,7 @@ LSP modernization (Neovim 0.11+):
 - [x] Updated `install.conf.yaml`
 - [x] New `kitty/kitty.conf`
 - [x] Updated `starship.toml` (Catppuccin Mocha)
-- [ ] Added GNOME extension customization profile (top bar + dock)
+- [x] Added GNOME extension customization profile (Open Bar, Blur my Shell, Dash to Dock, Tiling Shell)
 - [x] Added scripted GNOME settings apply step (`gsettings`/`dconf`)
 - [x] Added icon theme install/apply step (`Papirus-Dark` + Catppuccin folders)
 - [x] Added cursor theme install/apply step (Catppuccin cursors, Mocha)

@@ -249,6 +249,16 @@ apply_catppuccin_theme() {
   if [ -f "$SCRIPT_DIR/images/forest.jpg" ]; then
     gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/forest.jpg"
   fi
+
+  # Install and configure GNOME Shell extensions (requires live session)
+  local ext_script="$SCRIPT_DIR/gnome/gnome-extensions.sh"
+  if [ -f "$ext_script" ] && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    log "Running GNOME extension setup"
+    bash "$ext_script"
+  else
+    log "Skipping GNOME extensions (no display session or script missing)"
+    log "Run manually after login: bash $ext_script"
+  fi
 }
 
 remove_legacy_nvim_cron() {
