@@ -32,7 +32,7 @@ APT_PACKAGES=(
   ca-certificates
   gtk2-engines-murrine
   gnome-themes-extra
-  papirus-icon-theme
+  sassc
   libncursesw5-dev
   # Modern CLI replacements
   bat
@@ -42,8 +42,6 @@ APT_PACKAGES=(
   eza
   # System monitoring
   btop
-  # Required by Catppuccin GTK theme installer
-  sassc
 )
 
 LSP_NPM_PACKAGES=(
@@ -265,6 +263,16 @@ install_symbols_nerd_font() {
   rm -rf "$tmp_dir"
 
   fc-cache -f
+}
+
+install_papirus_icon_theme() {
+  log "Installing latest papirus-icon-theme from GitHub"
+  local install_script
+  install_script="$(mktemp)"
+  curl -fsSL https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-icon-theme/master/install.sh \
+    -o "$install_script"
+  sh "$install_script"
+  rm -f "$install_script"
 }
 
 install_papirus_folders() {
@@ -496,6 +504,7 @@ main() {
   install_starship
   install_iosevka_font
   install_symbols_nerd_font
+  install_papirus_icon_theme
   install_papirus_folders
   install_zoxide
   install_delta
