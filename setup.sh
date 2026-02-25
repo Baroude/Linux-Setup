@@ -40,6 +40,8 @@ APT_PACKAGES=(
   ripgrep
   fzf
   eza
+  # System monitoring
+  btop
 )
 
 LSP_NPM_PACKAGES=(
@@ -186,6 +188,7 @@ install_oh_my_zsh() {
   mkdir -p "$HOME/.oh-my-zsh/plugins"
   clone_if_missing https://github.com/zsh-users/zsh-syntax-highlighting.git "$HOME/.oh-my-zsh/plugins/zsh-syntax-highlighting"
   clone_if_missing https://github.com/zsh-users/zsh-autosuggestions "$HOME/.oh-my-zsh/plugins/zsh-autosuggestions"
+  clone_if_missing https://github.com/MichaelAquilina/zsh-you-should-use.git "$HOME/.oh-my-zsh/plugins/you-should-use"
 }
 
 install_starship() {
@@ -258,16 +261,14 @@ install_symbols_nerd_font() {
 }
 
 install_papirus_folders() {
-  if command_exists papirus-folders; then
-    return
-  fi
-
-  log "Installing papirus-folders"
+  log "Installing/updating papirus-folders"
   local tmp_dir
   tmp_dir="$(mktemp -d)"
-  curl -fsSL https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/install.sh \
-    | sh -s -- --prefix "$tmp_dir/usr"
-  sudo cp "$tmp_dir/usr/bin/papirus-folders" /usr/local/bin/papirus-folders
+
+  git clone --depth 1 https://github.com/PapirusDevelopmentTeam/papirus-folders \
+    "$tmp_dir/papirus-folders"
+  sudo install -Dm755 "$tmp_dir/papirus-folders/papirus-folders" /usr/local/bin/papirus-folders
+
   rm -rf "$tmp_dir"
 }
 
@@ -327,7 +328,9 @@ apply_catppuccin_theme() {
 
   gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
   if command_exists papirus-folders; then
-    papirus-folders -C cat-mocha-blue --theme Papirus-Dark || true
+    papirus-folders -C cat-mocha-blue --theme Papirus-Dark
+  else
+    echo "WARNING: papirus-folders not found — run install_papirus_folders() first" >&2
   fi
 
   mkdir -p "$HOME/.icons"
@@ -374,6 +377,40 @@ apply_catppuccin_theme() {
     log "Skipping GNOME extensions (no display session or script missing)"
     log "Run manually after login: bash $ext_script"
   fi
+}
+
+apply_gnome_defaults() {
+  if ! command_exists gsettings; then
+    return
+  fi
+
+  log "Applying GNOME default applications and input settings"
+
+  # Default terminal: Kitty
+  if command_exists kitty; then
+    # GNOME Terminal settings-daemon key (used by keyboard shortcut and file manager)
+    gsettings set org.gnome.desktop.default-applications.terminal exec 'kitty'
+    gsettings set org.gnome.desktop.default-applications.terminal exec-arg ''
+
+    # xdg-terminal-exec preference file (used by many modern apps)
+    local xdg_terminal_dir="$HOME/.config"
+    mkdir -p "$xdg_terminal_dir"
+    printf '[Default Terminal]\nExec=kitty\n' > "$xdg_terminal_dir/xdg-terminals.list"
+
+    # Update xdg mime default for x-terminal-emulator
+    if command_exists xdg-mime; then
+      xdg-mime default kitty.desktop x-scheme-handler/terminal 2>/dev/null || true
+    fi
+
+    # GNOME's own terminal handler used by Nautilus "Open Terminal"
+    if command_exists update-alternatives; then
+      sudo update-alternatives --set x-terminal-emulator "$(command -v kitty)" 2>/dev/null || true
+    fi
+  fi
+
+  # Keyboard: faster repeat rate (useful for vim navigation)
+  gsettings set org.gnome.desktop.peripherals.keyboard repeat-interval 20
+  gsettings set org.gnome.desktop.peripherals.keyboard delay 250
 }
 
 set_user_avatar() {
@@ -453,6 +490,7 @@ main() {
   install_zoxide
   install_delta
   apply_catppuccin_theme
+  apply_gnome_defaults
   set_user_avatar
   remove_legacy_nvim_cron
 

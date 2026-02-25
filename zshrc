@@ -3,7 +3,11 @@ export ZSH="$HOME/.oh-my-zsh"
 # Starship handles the prompt; no oh-my-zsh theme needed
 ZSH_THEME=""
 
-plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+plugins=(git zsh-syntax-highlighting zsh-autosuggestions you-should-use)
+
+# you-should-use: show reminder when a command has an alias
+YSU_MESSAGE_POSITION="after"
+YSU_MODE=ALL
 
 source "$ZSH/oh-my-zsh.sh"
 
