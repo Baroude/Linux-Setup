@@ -10,5 +10,4 @@
     ~/.config/starship.toml : starship.toml
     ~/.config/kitty : kitty
     ~/.config/fastfetch : fastfetch
-    ~/.config/swaylock : swaylock
     ~/.gitconfig : gitconfig

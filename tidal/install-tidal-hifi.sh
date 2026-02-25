@@ -26,23 +26,30 @@ install_flatpak() {
   fi
 
   log "Installing Flatpak"
-  sudo apt install -y flatpak
-  sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y flatpak
   log "Flatpak installed. A reboot may be needed before running apps."
+}
+
+ensure_flathub_remote() {
+  if ! flatpak remote-list --user | grep -q "^flathub"; then
+    log "Adding Flathub remote (user scope)"
+    flatpak remote-add --user --if-not-exists flathub \
+      https://dl.flathub.org/repo/flathub.flatpakrepo
+  fi
 }
 
 # ---------------------------------------------------------------------------
 # Install tidal-hifi from Flathub
 # ---------------------------------------------------------------------------
 install_tidal_hifi() {
-  if flatpak list --app | grep -q "$APP_ID"; then
+  if flatpak list --user --app | grep -q "$APP_ID"; then
     log "tidal-hifi already installed — updating"
-    flatpak update -y "$APP_ID" || true
+    flatpak update --user --noninteractive "$APP_ID" || true
     return
   fi
 
   log "Installing tidal-hifi from Flathub"
-  flatpak install -y flathub "$APP_ID"
+  flatpak install --user --noninteractive flathub "$APP_ID"
 }
 
 # ---------------------------------------------------------------------------
@@ -117,6 +124,7 @@ JSONEOF
 # ---------------------------------------------------------------------------
 main() {
   install_flatpak
+  ensure_flathub_remote
   install_tidal_hifi
   apply_theme
 
