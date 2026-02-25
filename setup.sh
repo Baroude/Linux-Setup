@@ -42,6 +42,8 @@ APT_PACKAGES=(
   eza
   # System monitoring
   btop
+  # Required by Catppuccin GTK theme installer
+  sassc
 )
 
 LSP_NPM_PACKAGES=(
