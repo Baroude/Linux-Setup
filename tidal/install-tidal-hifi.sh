@@ -50,6 +50,10 @@ install_tidal_hifi() {
 
   log "Installing tidal-hifi from Flathub"
   flatpak install --user --noninteractive flathub "$APP_ID"
+
+  # Electron on Wayland requires GPU acceleration; force X11 fallback so
+  # the app works in environments without a GPU (VMs, no Mesa/Vulkan, etc.)
+  flatpak override --user --env=ELECTRON_OZONE_PLATFORM_HINT=x11 "$APP_ID"
 }
 
 # ---------------------------------------------------------------------------
