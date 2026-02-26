@@ -111,8 +111,8 @@ with open(css_path, "r") as f:
     css_lines = f.read().splitlines()
 
 config["customCSS"] = css_lines
-# Point the theme selector to "Custom" so tidal-hifi uses our CSS
-config["theme"] = "Custom"
+# "none" skips the theme file lookup; customCSS is applied on top regardless
+config["theme"] = "none"
 
 with open(config_path, "w") as f:
     json.dump(config, f, indent=2)
@@ -123,7 +123,7 @@ PYEOF
     # No existing config — write a minimal one
     cat > "$CONFIG_FILE" <<JSONEOF
 {
-  "theme": "Custom",
+  "theme": "none",
   "customCSS": [
 $css_lines_json
   ],
