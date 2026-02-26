@@ -5,6 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DEBIAN_FRONTEND=noninteractive
 
+# Catppuccin variant to apply. Override by exporting this variable before running.
+# Valid values: mocha-blue, mocha-mauve, mocha-teal,
+#               macchiato-blue, macchiato-mauve, macchiato-teal
+CATPPUCCIN_VARIANT="${CATPPUCCIN_VARIANT:-mocha-blue}"
+
 APT_PACKAGES=(
   vim
   git
@@ -329,47 +334,97 @@ apply_catppuccin_theme() {
     return
   fi
 
-  log "Applying Catppuccin Mocha GTK theme"
+  log "Applying Catppuccin theme (variant: ${CATPPUCCIN_VARIANT})"
 
+  # ── Variant lookup ────────────────────────────────────────────────────────
+  # Sets: FLAVOR  (mocha|macchiato)
+  #       ACCENT  (Blue|Mauve|Teal)          — capitalised, for theme dir names
+  #       ACCENT_LOWER (blue|mauve|teal)     — lower-case, for install.sh -t flag
+  #                                            and papirus-folders -C
+  #       ACCENT_HEX  (#rrggbb)              — GTK accent colour
+  #       BORDER_HEX  (#rrggbb)              — dock neon-border colour (same hue)
+  #       GTK_THEME_NAME                     — directory name under ~/.themes
+  #       INSTALL_TWEAKS                     — extra flags for install.sh (empty or --tweaks macchiato)
+  local FLAVOR ACCENT ACCENT_LOWER ACCENT_HEX BORDER_HEX GTK_THEME_NAME INSTALL_TWEAKS
+  case "${CATPPUCCIN_VARIANT}" in
+    mocha-blue)
+      FLAVOR="mocha";      ACCENT="Blue";  ACCENT_LOWER="blue";
+      ACCENT_HEX="#89b4fa"; BORDER_HEX="#89b4fa"
+      GTK_THEME_NAME="Catppuccin-Blue-Dark"; INSTALL_TWEAKS="" ;;
+    mocha-mauve)
+      FLAVOR="mocha";      ACCENT="Mauve"; ACCENT_LOWER="mauve";
+      ACCENT_HEX="#cba6f7"; BORDER_HEX="#cba6f7"
+      GTK_THEME_NAME="Catppuccin-Mauve-Dark"; INSTALL_TWEAKS="" ;;
+    mocha-teal)
+      FLAVOR="mocha";      ACCENT="Teal";  ACCENT_LOWER="teal";
+      ACCENT_HEX="#94e2d5"; BORDER_HEX="#94e2d5"
+      GTK_THEME_NAME="Catppuccin-Teal-Dark"; INSTALL_TWEAKS="" ;;
+    macchiato-blue)
+      FLAVOR="macchiato";  ACCENT="Blue";  ACCENT_LOWER="blue";
+      ACCENT_HEX="#8aadf4"; BORDER_HEX="#8aadf4"
+      GTK_THEME_NAME="Catppuccin-Blue-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+    macchiato-mauve)
+      FLAVOR="macchiato";  ACCENT="Mauve"; ACCENT_LOWER="mauve";
+      ACCENT_HEX="#c6a0f6"; BORDER_HEX="#c6a0f6"
+      GTK_THEME_NAME="Catppuccin-Mauve-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+    macchiato-teal)
+      FLAVOR="macchiato";  ACCENT="Teal";  ACCENT_LOWER="teal";
+      ACCENT_HEX="#8bd5ca"; BORDER_HEX="#8bd5ca"
+      GTK_THEME_NAME="Catppuccin-Teal-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+    *)
+      echo "ERROR: Unknown CATPPUCCIN_VARIANT '${CATPPUCCIN_VARIANT}'." >&2
+      echo "       Valid values: mocha-blue, mocha-mauve, mocha-teal," >&2
+      echo "                     macchiato-blue, macchiato-mauve, macchiato-teal" >&2
+      exit 1 ;;
+  esac
+
+  # ── GTK theme ─────────────────────────────────────────────────────────────
   local tmp_dir
   tmp_dir="$(mktemp -d)"
 
   git clone --depth 1 https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme "$tmp_dir/Catppuccin-GTK-Theme"
   (
     cd "$tmp_dir/Catppuccin-GTK-Theme/themes"
-    ./install.sh -t blue -c dark -s standard -l
+    # shellcheck disable=SC2086  — INSTALL_TWEAKS is intentionally word-split
+    ./install.sh -t "${ACCENT_LOWER}" -c dark -s standard -l ${INSTALL_TWEAKS}
   )
 
   rm -rf "$tmp_dir"
 
-  gsettings set org.gnome.desktop.interface gtk-theme "Catppuccin-Blue-Dark"
-  gsettings set org.gnome.desktop.wm.preferences theme "Catppuccin-Blue-Dark"
+  gsettings set org.gnome.desktop.interface gtk-theme "${GTK_THEME_NAME}"
+  gsettings set org.gnome.desktop.wm.preferences theme "${GTK_THEME_NAME}"
 
+  # ── Icon theme ────────────────────────────────────────────────────────────
   gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
   if command_exists papirus-folders; then
-    papirus-folders -C blue --theme Papirus-Dark
+    papirus-folders -C "${ACCENT_LOWER}" --theme Papirus-Dark
   else
     echo "WARNING: papirus-folders not found — run install_papirus_folders() first" >&2
   fi
 
+  # ── Cursor theme ──────────────────────────────────────────────────────────
+  local cursor_name="catppuccin-${FLAVOR}-${ACCENT_LOWER}-cursors"
   mkdir -p "$HOME/.icons"
-  local cursor_zip="$HOME/.icons/catppuccin-mocha-blue-cursors.zip"
-  if [ ! -d "$HOME/.icons/catppuccin-mocha-blue-cursors" ]; then
-    curl -fL https://github.com/catppuccin/cursors/releases/download/v2.0.0/catppuccin-mocha-blue-cursors.zip -o "$cursor_zip"
+  local cursor_zip="$HOME/.icons/${cursor_name}.zip"
+  if [ ! -d "$HOME/.icons/${cursor_name}" ]; then
+    curl -fL "https://github.com/catppuccin/cursors/releases/download/v2.0.0/${cursor_name}.zip" \
+      -o "$cursor_zip"
     unzip -q "$cursor_zip" -d "$HOME/.icons"
     rm -f "$cursor_zip"
   fi
 
-  gsettings set org.gnome.desktop.interface cursor-theme "catppuccin-mocha-blue-cursors"
+  gsettings set org.gnome.desktop.interface cursor-theme "${cursor_name}"
 
+  # ── Wallpaper ─────────────────────────────────────────────────────────────
   if [ -f "$SCRIPT_DIR/images/evening-sky.png" ]; then
     gsettings set org.gnome.desktop.background picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
     gsettings set org.gnome.desktop.background picture-uri-dark "file://$SCRIPT_DIR/images/evening-sky.png"
     gsettings set org.gnome.desktop.screensaver picture-uri "file://$SCRIPT_DIR/images/evening-sky.png"
   fi
 
-  # Enable the User Themes GNOME Shell extension and apply Catppuccin shell theme
-  # (styles the lock screen, top bar, and notification shade)
+  # ── User Themes extension ─────────────────────────────────────────────────
+  # Enables the User Themes GNOME Shell extension and applies the Catppuccin
+  # shell theme (styles the lock screen, top bar, and notification shade).
   local user_theme_ext="user-theme@gnome-shell-extensions.gcampax.github.com"
   local current_exts
   current_exts="$(gsettings get org.gnome.shell enabled-extensions 2>/dev/null || echo "@as []")"
@@ -381,12 +436,16 @@ apply_catppuccin_theme() {
       gsettings set org.gnome.shell enabled-extensions "${trimmed}, '$user_theme_ext']"
     fi
   fi
-  gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
+  gsettings set org.gnome.shell.extensions.user-theme name "${GTK_THEME_NAME}" 2>/dev/null || true
 
-  # Inject custom CSS (dock neon border) into the active GNOME Shell theme.
-  # The Catppuccin install script places the theme in ~/.themes (not ~/.local/share/themes).
-  local theme_css="$HOME/.themes/Catppuccin-Blue-Dark/gnome-shell/gnome-shell.css"
+  # ── Dock neon-border CSS ──────────────────────────────────────────────────
+  # Generate dock-neon-border.css with the correct border colour for this
+  # variant, then inject it into the active GNOME Shell theme.
+  # The Catppuccin install script places the theme in ~/.themes.
   local custom_css="$SCRIPT_DIR/gnome/dock-neon-border.css"
+  _write_dock_neon_border_css "${BORDER_HEX}" "${CATPPUCCIN_VARIANT}" "$custom_css"
+
+  local theme_css="$HOME/.themes/${GTK_THEME_NAME}/gnome-shell/gnome-shell.css"
   local marker="/* dock-neon-border */"
   if [ -f "$theme_css" ] && [ -f "$custom_css" ]; then
     if ! grep -qF "$marker" "$theme_css"; then
@@ -395,11 +454,12 @@ apply_catppuccin_theme() {
     fi
   fi
 
+  # ── Idle / lock ───────────────────────────────────────────────────────────
   # Re-enable GNOME native idle lock (lock after 5 min, screen blank after 10 min)
   gsettings set org.gnome.desktop.screensaver lock-enabled true
   gsettings set org.gnome.desktop.session idle-delay 300
 
-  # Install and configure GNOME Shell extensions (requires live session)
+  # ── GNOME Shell extensions ────────────────────────────────────────────────
   local ext_script="$SCRIPT_DIR/gnome/gnome-extensions.sh"
   if [ -f "$ext_script" ] && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     log "Running GNOME extension setup"
@@ -408,6 +468,52 @@ apply_catppuccin_theme() {
     log "Skipping GNOME extensions (no display session or script missing)"
     log "Run manually after login: bash $ext_script"
   fi
+}
+
+# Write gnome/dock-neon-border.css with the given hex colour.
+# Usage: _write_dock_neon_border_css <hex> <variant_name> <output_path>
+_write_dock_neon_border_css() {
+  local hex="$1"    # e.g. #89b4fa
+  local variant="$2"
+  local dest="$3"
+
+  # Convert #rrggbb → decimal r, g, b for rgba() values in the CSS.
+  local r g b
+  r="$((16#${hex:1:2}))"
+  g="$((16#${hex:3:2}))"
+  b="$((16#${hex:5:2}))"
+
+  cat > "$dest" <<CSS
+/* gnome/dock-neon-border.css
+ * Generated by setup.sh for variant: ${variant}
+ * Appended to the active GNOME Shell theme by setup.sh.
+ * Adds a Catppuccin neon border glow to Dash to Dock.
+ *
+ * Colour: ${hex}  rgb(${r}, ${g}, ${b})
+ */
+
+/* Dock background pill — neon border + glow layers
+ * NOTE: #dash must be in the chain; skipping it silently breaks the
+ * rule in GNOME Shell's CSS engine. */
+#dashtodockContainer #dash .dash-background,
+#dashtodockContainer.dashtodock #dash .dash-background {
+  border: 1.5px solid rgba(${r}, ${g}, ${b}, 0.65);
+  box-shadow:
+    0 0  6px rgba(${r}, ${g}, ${b}, 0.55),
+    0 0 14px rgba(${r}, ${g}, ${b}, 0.30),
+    0 0 24px rgba(${r}, ${g}, ${b}, 0.12);
+  border-radius: 14px;
+}
+
+/* Extended mode: dock spans full edge — remove border */
+#dashtodockContainer.bottom.extended #dash .dash-background,
+#dashtodockContainer.top.extended #dash .dash-background,
+#dashtodockContainer.left.extended #dash .dash-background,
+#dashtodockContainer.right.extended #dash .dash-background {
+  border: none;
+  box-shadow: none;
+}
+CSS
 }
 
 apply_gnome_defaults() {
