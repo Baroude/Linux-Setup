@@ -48,6 +48,7 @@ APT_PACKAGES=(
   eza
   # System monitoring
   btop
+  fastfetch
 )
 
 LSP_NPM_PACKAGES=(
@@ -428,10 +429,14 @@ apply_catppuccin_theme() {
   local theme_css="$HOME/.themes/${GTK_THEME_NAME}/gnome-shell/gnome-shell.css"
   local marker="/* dock-neon-border */"
   if [ -f "$theme_css" ] && [ -f "$custom_css" ]; then
-    if ! grep -qF "$marker" "$theme_css"; then
-      log "Injecting dock neon border CSS into GNOME Shell theme"
-      { echo "$marker"; cat "$custom_css"; } >> "$theme_css"
+    # Always replace any previously injected block so variant switches update
+    # the colour.  The block is always appended at EOF, so deleting from the
+    # marker to end-of-file cleanly removes the old version.
+    if grep -qF "$marker" "$theme_css"; then
+      sed -i '/\/\* dock-neon-border \*\//,$d' "$theme_css"
     fi
+    log "Injecting dock neon border CSS into GNOME Shell theme"
+    { echo "$marker"; cat "$custom_css"; } >> "$theme_css"
   fi
 
   # ── Idle / lock ───────────────────────────────────────────────────────────
@@ -473,15 +478,20 @@ _apply_variant_gsettings() {
 
   log "Applying variant color overrides for ${CATPPUCCIN_VARIANT}"
 
-  # Helper: apply gsettings only if the extension schema is registered.
-  # New extensions require a GNOME Shell restart before their schema is live;
-  # this prevents hard failures on first install.
+  # Helper: run gsettings set and soft-warn when the schema is not yet registered.
+  # Attempting the command directly (rather than pre-checking the schema list) is
+  # more reliable: gsettings list-schemas can return partial results mid-session.
+  # Any error OTHER than "No such schema" is still surfaced as a real failure.
   _gs() {
     local schema="$1"; shift
-    if gsettings list-schemas 2>/dev/null | grep -qx "$schema"; then
-      gsettings set "$schema" "$@"
-    else
-      echo "  (skipping $schema — schema not yet registered; rerun after re-login)" >&2
+    local out
+    if ! out=$(gsettings set "$schema" "$@" 2>&1); then
+      if printf '%s' "$out" | grep -q 'No such schema'; then
+        echo "  (skipping $schema — schema not yet registered; rerun after re-login)" >&2
+      else
+        echo "  ERROR: gsettings set $schema $* — $out" >&2
+        return 1
+      fi
     fi
   }
 
