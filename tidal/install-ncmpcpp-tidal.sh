@@ -98,6 +98,21 @@ install_gstreamer() {
 }
 
 # ---------------------------------------------------------------------------
+# Install mopidy-mpd — exposes the MPD protocol on port 6600 so ncmpcpp
+# can connect. This is a separate package from mopidy core.
+# ---------------------------------------------------------------------------
+install_mopidy_mpd() {
+  if python3 -c "import mopidy_mpd" 2>/dev/null; then
+    log "mopidy-mpd already installed"
+    return
+  fi
+
+  log "Installing mopidy-mpd"
+  sudo pip3 install --break-system-packages Mopidy-MPD 2>/dev/null \
+    || pip3 install --user Mopidy-MPD
+}
+
+# ---------------------------------------------------------------------------
 # Install mopidy-tidal (EbbLabs fork, supports PKCE + lossless)
 #
 # Must land in the same Python environment as mopidy.
@@ -199,6 +214,7 @@ main() {
   install_setuptools
   install_mopidy
   install_gstreamer
+  install_mopidy_mpd
   install_mopidy_tidal
   install_ncmpcpp
   disable_system_mopidy
