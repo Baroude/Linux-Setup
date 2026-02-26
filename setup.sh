@@ -512,7 +512,7 @@ main() {
   apply_catppuccin_theme
   apply_gnome_defaults
   set_user_avatar
-  bash "$SCRIPT_DIR/tidal/install-tidal-hifi.sh"
+  bash "$SCRIPT_DIR/tidal/install-ncmpcpp-tidal.sh"
   remove_legacy_nvim_cron
 
   log "Setup complete. Run '$SCRIPT_DIR/install' to apply dotfiles."
