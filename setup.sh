@@ -472,10 +472,54 @@ apply_catppuccin_theme() {
   if [ -f "$ext_script" ] && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     log "Running GNOME extension setup"
     bash "$ext_script"
+    # Apply variant-specific color overrides AFTER dconf load (which writes
+    # hardcoded Mocha-Blue values from extensions.conf).
+    _apply_variant_gsettings
   else
     log "Skipping GNOME extensions (no display session or script missing)"
     log "Run manually after login: bash $ext_script"
   fi
+}
+
+# Apply gsettings that depend on the selected Catppuccin variant.
+# Called after gnome-extensions.sh so variant colors override the
+# hardcoded defaults that extensions.conf loads via dconf.
+_apply_variant_gsettings() {
+  # Convert ACCENT_HEX (#rrggbb) to 0.000–1.000 floats for Open Bar's
+  # array-of-strings color format.
+  local r_int g_int b_int
+  r_int=$((16#${ACCENT_HEX:1:2}))
+  g_int=$((16#${ACCENT_HEX:3:2}))
+  b_int=$((16#${ACCENT_HEX:5:2}))
+  local r_f g_f b_f
+  r_f=$(awk "BEGIN { printf \"%.3f\", ${r_int}/255 }")
+  g_f=$(awk "BEGIN { printf \"%.3f\", ${g_int}/255 }")
+  b_f=$(awk "BEGIN { printf \"%.3f\", ${b_int}/255 }")
+  local rgb_arr="['${r_f}','${g_f}','${b_f}']"
+
+  log "Applying variant color overrides for ${CATPPUCCIN_VARIANT}"
+
+  # Tiling Shell: window border
+  gsettings set org.gnome.shell.extensions.tilingshell window-border-color "${ACCENT_HEX}"
+
+  # Dash to Dock: use GNOME Shell theme for background (no inline style override);
+  # running indicator dots use the accent color
+  gsettings set org.gnome.shell.extensions.dash-to-dock custom-background-color false
+  gsettings set org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-color "${ACCENT_HEX}"
+  gsettings set org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-border-color "${ACCENT_HEX}"
+
+  # Open Bar: border color (used for both top bar pills and dock border)
+  gsettings set org.gnome.shell.extensions.openbar bcolor       "${rgb_arr}"
+  gsettings set org.gnome.shell.extensions.openbar dark-bcolor  "${rgb_arr}"
+  gsettings set org.gnome.shell.extensions.openbar light-bcolor "${rgb_arr}"
+
+  # Open Bar: accent color (hover highlight, active elements)
+  gsettings set org.gnome.shell.extensions.openbar accent-color       "${rgb_arr}"
+  gsettings set org.gnome.shell.extensions.openbar dark-accent-color  "${rgb_arr}"
+  gsettings set org.gnome.shell.extensions.openbar light-accent-color "${rgb_arr}"
+
+  # Open Bar: highlight color (same hue, alpha stays at 0.25 from extensions.conf)
+  gsettings set org.gnome.shell.extensions.openbar hcolor "${rgb_arr}"
 }
 
 # Write gnome/dock-neon-border.css with the given hex colour.
