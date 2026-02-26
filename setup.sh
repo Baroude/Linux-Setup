@@ -473,27 +473,39 @@ _apply_variant_gsettings() {
 
   log "Applying variant color overrides for ${CATPPUCCIN_VARIANT}"
 
+  # Helper: apply gsettings only if the extension schema is registered.
+  # New extensions require a GNOME Shell restart before their schema is live;
+  # this prevents hard failures on first install.
+  _gs() {
+    local schema="$1"; shift
+    if gsettings list-schemas 2>/dev/null | grep -qx "$schema"; then
+      gsettings set "$schema" "$@"
+    else
+      echo "  (skipping $schema — schema not yet registered; rerun after re-login)" >&2
+    fi
+  }
+
   # Tiling Shell: window border
-  gsettings set org.gnome.shell.extensions.tilingshell window-border-color "${ACCENT_HEX}"
+  _gs org.gnome.shell.extensions.tilingshell window-border-color "${ACCENT_HEX}"
 
   # Dash to Dock: use GNOME Shell theme for background (no inline style override);
   # running indicator dots use the accent color
-  gsettings set org.gnome.shell.extensions.dash-to-dock custom-background-color false
-  gsettings set org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-color "${ACCENT_HEX}"
-  gsettings set org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-border-color "${ACCENT_HEX}"
+  _gs org.gnome.shell.extensions.dash-to-dock custom-background-color false
+  _gs org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-color "${ACCENT_HEX}"
+  _gs org.gnome.shell.extensions.dash-to-dock custom-theme-running-dots-border-color "${ACCENT_HEX}"
 
   # Open Bar: border color (used for both top bar pills and dock border)
-  gsettings set org.gnome.shell.extensions.openbar bcolor       "${rgb_arr}"
-  gsettings set org.gnome.shell.extensions.openbar dark-bcolor  "${rgb_arr}"
-  gsettings set org.gnome.shell.extensions.openbar light-bcolor "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar bcolor       "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar dark-bcolor  "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar light-bcolor "${rgb_arr}"
 
   # Open Bar: accent color (hover highlight, active elements)
-  gsettings set org.gnome.shell.extensions.openbar accent-color       "${rgb_arr}"
-  gsettings set org.gnome.shell.extensions.openbar dark-accent-color  "${rgb_arr}"
-  gsettings set org.gnome.shell.extensions.openbar light-accent-color "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar accent-color       "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar dark-accent-color  "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar light-accent-color "${rgb_arr}"
 
   # Open Bar: highlight color (same hue, alpha stays at 0.25 from extensions.conf)
-  gsettings set org.gnome.shell.extensions.openbar hcolor "${rgb_arr}"
+  _gs org.gnome.shell.extensions.openbar hcolor "${rgb_arr}"
 }
 
 # Write gnome/dock-neon-border.css with the given hex colour.
