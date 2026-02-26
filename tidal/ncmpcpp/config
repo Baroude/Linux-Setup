@@ -56,6 +56,7 @@ empty_tag_color                = yellow
 # Header / window borders
 header_window_color            = blue
 window_border_color            = black
+active_window_border           = blue
 
 # Volume / state
 volume_color                   = blue:b
@@ -84,11 +85,11 @@ selected_item_suffix           = $(end)
 
 ## ─── Behaviour ──────────────────────────────────────────────────────────────
 
-cyclic_scrolling                  = yes
-jump_to_now_playing_song_at_start = yes
-ask_before_clearing_playlists     = no
-connected_message_on_startup      = yes
-fetch_lyrics_in_background        = no
+cyclic_scrolling                            = yes
+jump_to_now_playing_song_at_start           = yes
+ask_before_clearing_playlists               = no
+connected_message_on_startup                = yes
+fetch_lyrics_for_current_song_in_background = no
 
 ## ─── Visualizer (disabled by default) ──────────────────────────────────────
 #
