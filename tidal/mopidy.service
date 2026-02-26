@@ -1,0 +1,17 @@
+# tidal/mopidy.service
+# User systemd unit for mopidy.
+# install-ncmpcpp-tidal.sh patches ExecStart and installs this to:
+#   ~/.config/systemd/user/mopidy.service
+
+[Unit]
+Description=Mopidy music server (user instance)
+After=network.target sound.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mopidy
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,56 @@
+# ~/.config/ncmpcpp/bindings
+# Vim-style key overrides for ncmpcpp.
+#
+# Uses def_key which adds bindings without clearing ncmpcpp defaults.
+# Note: "h" overrides ncmpcpp's built-in help shortcut.
+
+## ─── Navigation ─────────────────────────────────────────────────────────────
+
+def_key "j"
+  scroll_down
+
+def_key "k"
+  scroll_up
+
+def_key "g"
+  move_home
+
+def_key "G"
+  move_end
+
+def_key "ctrl-d"
+  page_down
+
+def_key "ctrl-u"
+  page_up
+
+## ─── Column / directory navigation ─────────────────────────────────────────
+
+def_key "l"
+  enter_directory
+
+def_key "h"
+  jump_to_parent_directory
+
+## ─── Queue management ───────────────────────────────────────────────────────
+
+def_key "J"
+  move_selected_items_down
+
+def_key "K"
+  move_selected_items_up
+
+## ─── Playback ───────────────────────────────────────────────────────────────
+
+def_key ">"
+  seek_forward
+
+def_key "<"
+  seek_backward
+
+## ─── Views (mirror ncmpcpp defaults, listed here for reference) ─────────────
+#
+# 1  playlist          5  tag editor
+# 2  library browser   6  outputs
+# 3  search engine     7  music visualizer
+# 4  media library     8  clock

@@ -1,0 +1,109 @@
+# ~/.config/ncmpcpp/config
+# Catppuccin Mocha color scheme for ncmpcpp.
+#
+# Named colors map to the kitty terminal palette (kitty/kitty.conf):
+#   black   #45475a  Surface1   │   green   #a6e3a1  Green
+#   red     #f38ba8  Red        │   yellow  #f9e2af  Yellow
+#   blue    #89b4fa  Blue       │   magenta #f5c2e7  Pink
+#   cyan    #94e2d5  Teal       │   white   #bac2de  Subtext1
+
+## ─── Connection ────────────────────────────────────────────────────────────
+
+mpd_host = 127.0.0.1
+mpd_port = 6600
+
+## ─── Layout ─────────────────────────────────────────────────────────────────
+
+user_interface                = alternative
+playlist_display_mode         = columns
+browser_display_mode          = columns
+search_engine_display_mode    = columns
+media_library_primary_tag     = album_artist
+
+# Left pane width as a percentage of the terminal
+locked_screen_width_part      = 55
+
+# Start with the library browser open; playlist on the right
+startup_screen                = media_library
+startup_slave_screen          = playlist
+startup_slave_screen_focus    = yes
+
+## ─── Display formats ────────────────────────────────────────────────────────
+
+# Playlist / browser list rows: artist · title (right-aligned: time)
+song_list_format              = {%a} · {%t}|{%f} $R{%l}
+
+# Now-playing line below the progress bar
+song_status_format            = $b{{%t}|{%f}}$/b{{ – %a}{ ["%b"]}}
+
+# Inline window title (alternative UI only)
+song_window_title_format      = {%a – }{%t}|{%f}
+
+# Alternative header: title (large) / artist – album (year)
+alternative_header_first_line_format  = $b{{%t}|{%f}}$/b
+alternative_header_second_line_format = {{%a}{ – "%b"}{ (%y)}}
+
+## ─── Colors ─────────────────────────────────────────────────────────────────
+
+colors_enabled = yes
+
+# General
+main_window_color              = white
+color1                         = blue
+color2                         = cyan
+empty_tag_color                = yellow
+
+# Header / window borders
+header_window_color            = blue
+active_column_color            = blue
+window_border_color            = black
+active_window_border_color     = blue
+
+# Volume / state
+volume_color                   = blue:b
+state_line_color               = blue
+state_flags_color              = blue:b
+
+# Status bar
+statusbar_color                = white
+statusbar_time_color           = blue:b
+player_state_color             = green:b
+
+# Progress bar  (black = Surface1 track, blue = elapsed fill)
+progressbar_color              = black
+progressbar_elapsed_color      = blue:b
+
+# Alternative-UI separator lines
+alternative_ui_separator_color = black
+
+# Now-playing item: bold + reverse-video highlight
+current_item_prefix            = $(cyan)$r
+current_item_suffix            = $/r$(end)
+
+# Multi-selected items
+selected_item_prefix           = $(yellow)
+selected_item_suffix           = $(end)
+
+## ─── Behaviour ──────────────────────────────────────────────────────────────
+
+cyclic_scrolling                  = yes
+jump_to_now_playing_song_at_start = yes
+ask_before_clearing_playlists     = no
+connected_message_on_startup      = yes
+fetch_lyrics_in_background        = no
+
+## ─── Visualizer (disabled by default) ──────────────────────────────────────
+#
+# To enable:
+#   1. In mopidy.conf, replace the [audio] output line with:
+#        output = tee name=t ! queue ! autoaudiosink t. ! queue ! \
+#                 audio/x-raw,rate=44100,channels=2,format=S16LE ! \
+#                 filesink location=/tmp/mopidy.fifo
+#   2. Create the FIFO:  mkfifo /tmp/mopidy.fifo
+#   3. Uncomment the lines below.
+#
+# visualizer_data_source = /tmp/mopidy.fifo
+# visualizer_output_name = visualizer
+# visualizer_in_stereo   = yes
+# visualizer_type        = wave_filled
+# visualizer_color       = blue, cyan, green, yellow, magenta
