@@ -56,7 +56,6 @@ empty_tag_color                = yellow
 # Header / window borders
 header_window_color            = blue
 window_border_color            = black
-active_window_border_color     = blue
 
 # Volume / state
 volume_color                   = blue:b
