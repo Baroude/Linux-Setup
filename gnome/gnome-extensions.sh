@@ -114,6 +114,12 @@ main() {
   # Tiling Shell — full tiling WM (snap zones, keyboard-driven layouts)
   install_extension 7065 "tilingshell@ferrarodomenico.com"
 
+  # Vitals — CPU / RAM / temp / network usage in the top bar
+  install_extension 1460 "Vitals@CoreCoding.com"
+
+  # Media Controls — now-playing track + playback controls inline in the bar
+  install_extension 4470 "mediacontrols@cliffniff.github.com"
+
   log "Applying extension dconf settings"
   load_dconf "extensions.conf"
 
