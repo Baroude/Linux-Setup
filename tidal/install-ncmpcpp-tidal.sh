@@ -72,6 +72,18 @@ https://apt.mopidy.com/ $codename main contrib non-free" \
 }
 
 # ---------------------------------------------------------------------------
+# Install python3-setuptools — required by mopidy on Python 3.12+ where
+# pkg_resources is no longer bundled in the standard library.
+# ---------------------------------------------------------------------------
+install_setuptools() {
+  if python3 -c "import pkg_resources" 2>/dev/null; then
+    return
+  fi
+  log "Installing python3-setuptools (required by mopidy)"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-setuptools
+}
+
+# ---------------------------------------------------------------------------
 # Install GStreamer plugins (audio decoding / output)
 # ---------------------------------------------------------------------------
 install_gstreamer() {
@@ -184,6 +196,7 @@ install_ncmpcpp_config() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
+  install_setuptools
   install_mopidy
   install_gstreamer
   install_mopidy_tidal
