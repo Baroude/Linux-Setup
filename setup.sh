@@ -500,26 +500,24 @@ _write_dock_neon_border_css() {
  * Colour: ${hex}  rgb(${r}, ${g}, ${b})
  */
 
-/* Dock background pill — neon border + glow layers
- * NOTE: #dash must be in the chain; skipping it silently breaks the
- * rule in GNOME Shell's CSS engine. */
-#dashtodockContainer #dash .dash-background,
-#dashtodockContainer.dashtodock #dash .dash-background {
-  border: 1.5px solid rgba(${r}, ${g}, ${b}, 0.65);
+/* Dock background pill — neon border + outer glow.
+ *
+ * Use the plain .dash-background class selector (not a descendant chain)
+ * so GNOME Shell's CSS engine always matches it regardless of actor hierarchy.
+ *
+ * !important is required on border and box-shadow because Dash to Dock's
+ * theming.js calls set_style('border-color:...') as an inline style when
+ * custom-background-color=true, which would otherwise override the border.
+ * Open Bar also injects dock border CSS with !important; both target the
+ * same colour (from bcolor/the accent), so they reinforce each other.
+ */
+.dash-background {
+  border: 1.5px solid rgba(${r}, ${g}, ${b}, 0.65) !important;
   box-shadow:
     0 0  6px rgba(${r}, ${g}, ${b}, 0.55),
     0 0 14px rgba(${r}, ${g}, ${b}, 0.30),
-    0 0 24px rgba(${r}, ${g}, ${b}, 0.12);
-  border-radius: 14px;
-}
-
-/* Extended mode: dock spans full edge — remove border */
-#dashtodockContainer.bottom.extended #dash .dash-background,
-#dashtodockContainer.top.extended #dash .dash-background,
-#dashtodockContainer.left.extended #dash .dash-background,
-#dashtodockContainer.right.extended #dash .dash-background {
-  border: none;
-  box-shadow: none;
+    0 0 24px rgba(${r}, ${g}, ${b}, 0.12) !important;
+  border-radius: 14px !important;
 }
 CSS
 }
