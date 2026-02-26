@@ -340,37 +340,45 @@ apply_catppuccin_theme() {
   # Sets: FLAVOR  (mocha|macchiato)
   #       ACCENT  (Blue|Mauve|Teal)          — capitalised, for theme dir names
   #       ACCENT_LOWER (blue|mauve|teal)     — lower-case, for install.sh -t flag
-  #                                            and papirus-folders -C
+  #       PAPIRUS_COLOR                      — nearest papirus-folders color name
   #       ACCENT_HEX  (#rrggbb)              — GTK accent colour
   #       BORDER_HEX  (#rrggbb)              — dock neon-border colour (same hue)
   #       GTK_THEME_NAME                     — directory name under ~/.themes
   #       INSTALL_TWEAKS                     — extra flags for install.sh (empty or --tweaks macchiato)
-  local FLAVOR ACCENT ACCENT_LOWER ACCENT_HEX BORDER_HEX GTK_THEME_NAME INSTALL_TWEAKS
+  local FLAVOR ACCENT ACCENT_LOWER ACCENT_HEX BORDER_HEX GTK_THEME_NAME INSTALL_TWEAKS PAPIRUS_COLOR
+  # PAPIRUS_COLOR maps Catppuccin accents to the nearest papirus-folders color.
+  # papirus-folders does not have 'mauve' — 'violet' is the closest match.
   case "${CATPPUCCIN_VARIANT}" in
     mocha-blue)
       FLAVOR="mocha";      ACCENT="Blue";  ACCENT_LOWER="blue";
       ACCENT_HEX="#89b4fa"; BORDER_HEX="#89b4fa"
-      GTK_THEME_NAME="Catppuccin-Blue-Dark"; INSTALL_TWEAKS="" ;;
+      GTK_THEME_NAME="Catppuccin-Blue-Dark"; INSTALL_TWEAKS=""
+      PAPIRUS_COLOR="blue" ;;
     mocha-mauve)
       FLAVOR="mocha";      ACCENT="Mauve"; ACCENT_LOWER="mauve";
       ACCENT_HEX="#cba6f7"; BORDER_HEX="#cba6f7"
-      GTK_THEME_NAME="Catppuccin-Mauve-Dark"; INSTALL_TWEAKS="" ;;
+      GTK_THEME_NAME="Catppuccin-Mauve-Dark"; INSTALL_TWEAKS=""
+      PAPIRUS_COLOR="violet" ;;
     mocha-teal)
       FLAVOR="mocha";      ACCENT="Teal";  ACCENT_LOWER="teal";
       ACCENT_HEX="#94e2d5"; BORDER_HEX="#94e2d5"
-      GTK_THEME_NAME="Catppuccin-Teal-Dark"; INSTALL_TWEAKS="" ;;
+      GTK_THEME_NAME="Catppuccin-Teal-Dark"; INSTALL_TWEAKS=""
+      PAPIRUS_COLOR="teal" ;;
     macchiato-blue)
       FLAVOR="macchiato";  ACCENT="Blue";  ACCENT_LOWER="blue";
       ACCENT_HEX="#8aadf4"; BORDER_HEX="#8aadf4"
-      GTK_THEME_NAME="Catppuccin-Blue-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+      GTK_THEME_NAME="Catppuccin-Blue-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato"
+      PAPIRUS_COLOR="blue" ;;
     macchiato-mauve)
       FLAVOR="macchiato";  ACCENT="Mauve"; ACCENT_LOWER="mauve";
       ACCENT_HEX="#c6a0f6"; BORDER_HEX="#c6a0f6"
-      GTK_THEME_NAME="Catppuccin-Mauve-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+      GTK_THEME_NAME="Catppuccin-Mauve-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato"
+      PAPIRUS_COLOR="violet" ;;
     macchiato-teal)
       FLAVOR="macchiato";  ACCENT="Teal";  ACCENT_LOWER="teal";
       ACCENT_HEX="#8bd5ca"; BORDER_HEX="#8bd5ca"
-      GTK_THEME_NAME="Catppuccin-Teal-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato" ;;
+      GTK_THEME_NAME="Catppuccin-Teal-Dark-Macchiato"; INSTALL_TWEAKS="--tweaks macchiato"
+      PAPIRUS_COLOR="teal" ;;
     *)
       echo "ERROR: Unknown CATPPUCCIN_VARIANT '${CATPPUCCIN_VARIANT}'." >&2
       echo "       Valid values: mocha-blue, mocha-mauve, mocha-teal," >&2
@@ -397,7 +405,7 @@ apply_catppuccin_theme() {
   # ── Icon theme ────────────────────────────────────────────────────────────
   gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
   if command_exists papirus-folders; then
-    papirus-folders -C "${ACCENT_LOWER}" --theme Papirus-Dark
+    papirus-folders -C "${PAPIRUS_COLOR}" --theme Papirus-Dark
   else
     echo "WARNING: papirus-folders not found — run install_papirus_folders() first" >&2
   fi
