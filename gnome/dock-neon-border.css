@@ -1,0 +1,16 @@
+/* gnome/dock-neon-border.css
+ * Appended to the active GNOME Shell theme by setup.sh.
+ * Adds a Catppuccin Mauve neon border glow to Dash to Dock.
+ *
+ * Mauve: #cba6f7  rgb(203, 166, 247)
+ */
+
+/* Dock background pill — neon Mauve border + glow layers */
+#dashtodockContainer .dash-background {
+  border: 1.5px solid rgba(203, 166, 247, 0.65);
+  box-shadow:
+    0 0  6px rgba(203, 166, 247, 0.55),
+    0 0 14px rgba(203, 166, 247, 0.30),
+    0 0 24px rgba(203, 166, 247, 0.12);
+  border-radius: 14px;
+}

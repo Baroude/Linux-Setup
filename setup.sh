@@ -383,6 +383,17 @@ apply_catppuccin_theme() {
   fi
   gsettings set org.gnome.shell.extensions.user-theme name "Catppuccin-Blue-Dark" 2>/dev/null || true
 
+  # Inject custom CSS (dock neon border) into the active GNOME Shell theme
+  local theme_css="$HOME/.local/share/themes/Catppuccin-Blue-Dark/gnome-shell/gnome-shell.css"
+  local custom_css="$SCRIPT_DIR/gnome/dock-neon-border.css"
+  local marker="/* dock-neon-border */"
+  if [ -f "$theme_css" ] && [ -f "$custom_css" ]; then
+    if ! grep -qF "$marker" "$theme_css"; then
+      log "Injecting dock neon border CSS into GNOME Shell theme"
+      { echo "$marker"; cat "$custom_css"; } >> "$theme_css"
+    fi
+  fi
+
   # Re-enable GNOME native idle lock (lock after 5 min, screen blank after 10 min)
   gsettings set org.gnome.desktop.screensaver lock-enabled true
   gsettings set org.gnome.desktop.session idle-delay 300
