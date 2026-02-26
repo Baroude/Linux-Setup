@@ -55,7 +55,6 @@ empty_tag_color                = yellow
 
 # Header / window borders
 header_window_color            = blue
-active_column_color            = blue
 window_border_color            = black
 active_window_border_color     = blue
 
