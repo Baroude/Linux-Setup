@@ -212,41 +212,11 @@ install_starship() {
   curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
 }
 
-install_iosevka_font() {
-  log "Installing Iosevka font"
+install_monaspace_nerd_font() {
+  log "Installing Monaspace Neon Nerd Font"
 
-  local font_dir="/usr/share/fonts/iosevka"
-  if [ -f "$font_dir/Iosevka-Regular.ttc" ]; then
-    return
-  fi
-
-  local latest_tag version tmp_dir
-  latest_tag="$(curl -fsSI https://github.com/be5invis/Iosevka/releases/latest \
-    | grep -i '^location:' | sed 's|.*/||' | tr -d '\r\n')"
-  version="${latest_tag#v}"
-
-  if [ -z "$version" ]; then
-    echo "Failed to resolve latest Iosevka release tag" >&2
-    return 1
-  fi
-
-  tmp_dir="$(mktemp -d)"
-
-  curl -fL "https://github.com/be5invis/Iosevka/releases/download/${latest_tag}/PkgTTC-Iosevka-${version}.zip" -o "$tmp_dir/iosevka.zip"
-  unzip -q "$tmp_dir/iosevka.zip" -d "$tmp_dir"
-
-  sudo mkdir -p "$font_dir"
-  sudo mv "$tmp_dir"/Iosevka-*.ttc "$font_dir/"
-  rm -rf "$tmp_dir"
-
-  fc-cache -f
-}
-
-install_symbols_nerd_font() {
-  log "Installing Symbols Nerd Font Mono"
-
-  local font_dir="$HOME/.local/share/fonts/nerd-fonts"
-  if [ -f "$font_dir/SymbolsNerdFontMono-Regular.ttf" ]; then
+  local font_dir="$HOME/.local/share/fonts/nerd-fonts/monaspace-neon"
+  if [ -f "$font_dir/MonaspaceNeonNerdFont-Regular.otf" ]; then
     return
   fi
 
@@ -260,12 +230,13 @@ install_symbols_nerd_font() {
   fi
 
   tmp_dir="$(mktemp -d)"
-  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/NerdFontsSymbolsOnly.zip" \
-    -o "$tmp_dir/symbols.zip"
-  unzip -q "$tmp_dir/symbols.zip" -d "$tmp_dir"
+  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/MonaspaceNeon.zip" \
+    -o "$tmp_dir/MonaspaceNeon.zip"
+  unzip -q "$tmp_dir/MonaspaceNeon.zip" -d "$tmp_dir/monaspace"
 
   mkdir -p "$font_dir"
-  mv "$tmp_dir"/SymbolsNerdFont*.ttf "$font_dir/"
+  # Install all weight/style variants (Regular, Bold, Italic, BoldItalic, etc.)
+  find "$tmp_dir/monaspace" -name "*.otf" -exec mv {} "$font_dir/" \;
   rm -rf "$tmp_dir"
 
   fc-cache -f
@@ -475,6 +446,8 @@ apply_catppuccin_theme() {
     # Apply variant-specific color overrides AFTER dconf load (which writes
     # hardcoded Mocha-Blue values from extensions.conf).
     _apply_variant_gsettings
+    _apply_flatpak_theming
+    _create_burn_my_windows_profile
   else
     log "Skipping GNOME extensions (no display session or script missing)"
     log "Run manually after login: bash $ext_script"
@@ -564,6 +537,52 @@ _write_dock_neon_border_css() {
   border-radius: 14px !important;
 }
 CSS
+}
+
+# Apply Catppuccin GTK theme, icon theme, and cursor theme to all Flatpak sandboxes.
+# Requires FLAVOR, ACCENT_LOWER, GTK_THEME_NAME locals (set by apply_catppuccin_theme).
+_apply_flatpak_theming() {
+  if ! command_exists flatpak; then
+    return
+  fi
+
+  log "Applying Catppuccin theme to Flatpak apps"
+
+  local cursor_name="catppuccin-${FLAVOR}-${ACCENT_LOWER}-cursors"
+
+  # Grant read access to the directories where our themes/icons/cursors live
+  sudo flatpak override --filesystem="$HOME/.themes:ro"
+  sudo flatpak override --filesystem="$HOME/.icons:ro"
+  sudo flatpak override --filesystem=/usr/share/icons/Papirus-Dark:ro
+
+  # Push GTK theme, icon theme, and cursor theme into every sandbox
+  sudo flatpak override --env=GTK_THEME="${GTK_THEME_NAME}"
+  sudo flatpak override --env=ICON_THEME=Papirus-Dark
+  sudo flatpak override --env=XCURSOR_THEME="${cursor_name}"
+}
+
+# Write a Burn My Windows profile using the glitch effect (fits the neon aesthetic)
+# and point dconf to it so it activates on next login.
+_create_burn_my_windows_profile() {
+  local profile_dir="$HOME/.config/burn-my-windows/profiles"
+  local profile_path="$profile_dir/catppuccin-neon.conf"
+
+  log "Writing Burn My Windows profile (glitch effect)"
+  mkdir -p "$profile_dir"
+
+  cat > "$profile_path" <<'CONF'
+[burn-my-windows-profile]
+profile-highrpix-effect=false
+profile-window-effect=glitch
+profile-animation-time=400
+glitch-scale=1.0
+glitch-speed=1.5
+CONF
+
+  if command_exists gsettings; then
+    gsettings set org.gnome.shell.extensions.burn-my-windows \
+      active-profile "${profile_path}" 2>/dev/null || true
+  fi
 }
 
 apply_gnome_defaults() {
@@ -671,8 +690,7 @@ main() {
   install_cbonsai
   install_oh_my_zsh
   install_starship
-  install_iosevka_font
-  install_symbols_nerd_font
+  install_monaspace_nerd_font
   install_papirus_icon_theme
   install_papirus_folders
   install_zoxide

@@ -120,6 +120,9 @@ main() {
   # Media Controls — now-playing track + playback controls inline in the bar
   install_extension 4470 "mediacontrols@cliffniff.github.com"
 
+  # Burn My Windows — animated window open/close effects (glitch profile applied by setup.sh)
+  install_extension 2594 "burn-my-windows@schneegans.github.com"
+
   log "Applying extension dconf settings"
   load_dconf "extensions.conf"
 
