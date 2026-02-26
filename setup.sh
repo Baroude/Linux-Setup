@@ -230,13 +230,14 @@ install_monaspace_nerd_font() {
   fi
 
   tmp_dir="$(mktemp -d)"
-  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/MonaspaceNeon.zip" \
-    -o "$tmp_dir/MonaspaceNeon.zip"
-  unzip -q "$tmp_dir/MonaspaceNeon.zip" -d "$tmp_dir/monaspace"
+  # nerd-fonts ships all five Monaspace variants in a single Monaspace.zip
+  curl -fL "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_tag}/Monaspace.zip" \
+    -o "$tmp_dir/Monaspace.zip"
+  unzip -q "$tmp_dir/Monaspace.zip" -d "$tmp_dir/monaspace"
 
   mkdir -p "$font_dir"
-  # Install all weight/style variants (Regular, Bold, Italic, BoldItalic, etc.)
-  find "$tmp_dir/monaspace" -name "*.otf" -exec mv {} "$font_dir/" \;
+  # Extract only the Neon variant (NF regular/bold/italic/bolditalic)
+  find "$tmp_dir/monaspace" -name "MonaspaceNeonNerdFont-*.otf" -exec mv {} "$font_dir/" \;
   rm -rf "$tmp_dir"
 
   fc-cache -f
