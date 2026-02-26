@@ -114,6 +114,13 @@ config["customCSS"] = css_lines
 # "none" skips the theme file lookup; customCSS is applied on top regardless
 config["theme"] = "none"
 
+# Disable Wayland and GPU flags — enableWaylandSupport adds
+# --ozone-platform-hint=auto which fights our XDG_SESSION_TYPE=x11 override;
+# gpuRasterization is pointless without a real GPU (VMware/no-3D).
+config.setdefault("flags", {})
+config["flags"]["enableWaylandSupport"] = False
+config["flags"]["gpuRasterization"] = False
+
 with open(config_path, "w") as f:
     json.dump(config, f, indent=2)
 
@@ -127,11 +134,39 @@ PYEOF
   "customCSS": [
 $css_lines_json
   ],
-  "settings": {}
+  "flags": {
+    "enableWaylandSupport": false,
+    "gpuRasterization": false
+  }
 }
 JSONEOF
     log "Created new config: $CONFIG_FILE"
   fi
+}
+
+# ---------------------------------------------------------------------------
+# Write a local .desktop override that appends --disable-gpu to the Exec
+# line. run.sh passes "$@" straight to the Electron binary, so this flag
+# reaches Electron and forces software compositing.
+# The user file in ~/.local/share/applications/ takes precedence over the
+# Flatpak-exported desktop entry and survives flatpak updates.
+# ---------------------------------------------------------------------------
+write_desktop_override() {
+  log "Writing .desktop override with --disable-gpu"
+  local desktop_dir="$HOME/.local/share/applications"
+  mkdir -p "$desktop_dir"
+  cat > "$desktop_dir/$APP_ID.desktop" <<EOF
+[Desktop Entry]
+Name=TIDAL Hi-Fi
+Comment=The web version of listen.tidal.com with Hi-Fi support
+Exec=flatpak run $APP_ID --disable-gpu %U
+Icon=$APP_ID
+Terminal=false
+Type=Application
+Categories=Audio;Music;Player;Network;
+StartupWMClass=tidal-hifi
+EOF
+  update-desktop-database "$desktop_dir" 2>/dev/null || true
 }
 
 # ---------------------------------------------------------------------------
@@ -142,6 +177,7 @@ main() {
   ensure_flathub_remote
   install_tidal_hifi
   apply_theme
+  write_desktop_override
 
   log "Done. Launch tidal-hifi with:"
   log "  flatpak run $APP_ID"
