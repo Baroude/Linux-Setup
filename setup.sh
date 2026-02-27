@@ -437,6 +437,16 @@ apply_catppuccin_theme() {
     fi
     log "Injecting dock neon border CSS into GNOME Shell theme"
     { echo "$marker"; cat "$custom_css"; } >> "$theme_css"
+
+    # Force GNOME Shell to reload the theme CSS immediately so the injected
+    # styles take effect without requiring a logout.
+    if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && command_exists gdbus; then
+      gdbus call --session \
+        --dest org.gnome.Shell \
+        --object-path /org/gnome/Shell \
+        --method org.gnome.Shell.Eval \
+        "Main.loadTheme()" >/dev/null 2>&1 || true
+    fi
   fi
 
   # ── Idle / lock ───────────────────────────────────────────────────────────
