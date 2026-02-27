@@ -1,16 +1,46 @@
 /* gnome/dock-neon-border.css
  * Appended to the active GNOME Shell theme by setup.sh.
- * Adds a Catppuccin Mauve neon border glow to Dash to Dock.
+ * Covers both the Dash to Dock pill and Open Bar island pills.
  *
- * Mauve: #cba6f7  rgb(203, 166, 247)
+ * This file is a placeholder — setup.sh regenerates it with the correct
+ * variant colour before injecting it into the active GNOME Shell theme.
+ * Placeholder colour: Mocha Mauve #cba6f7  rgb(203, 166, 247)
  */
 
-/* Dock background pill — neon Mauve border + glow layers */
-#dashtodockContainer .dash-background {
-  border: 1.5px solid rgba(203, 166, 247, 0.65);
+/* ── Top bar — fully transparent for Open Bar Islands mode ──────────────── */
+#panel,
+#panel.solid,
+#panel.translucent {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── Top bar island pills — neon border ─────────────────────────────────── */
+.panel-button {
+  border: 1.5px solid rgba(203, 166, 247, 0.65) !important;
+  border-radius: 12px !important;
+}
+
+.panel-button:hover,
+.panel-button:focus,
+.panel-button:active,
+.panel-button:checked {
+  border: 1.5px solid rgba(203, 166, 247, 0.85) !important;
+}
+
+/* ── Dock — transparent background, border preserved ────────────────────── */
+.dash-background {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ── Dock background pill — neon border + outer glow ────────────────────── */
+.dash-background {
+  border: 1.5px solid rgba(203, 166, 247, 0.65) !important;
   box-shadow:
     0 0  6px rgba(203, 166, 247, 0.55),
     0 0 14px rgba(203, 166, 247, 0.30),
-    0 0 24px rgba(203, 166, 247, 0.12);
-  border-radius: 14px;
+    0 0 24px rgba(203, 166, 247, 0.12) !important;
+  border-radius: 14px !important;
 }
