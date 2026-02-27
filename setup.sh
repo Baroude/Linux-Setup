@@ -478,21 +478,17 @@ _apply_variant_gsettings() {
 
   log "Applying variant color overrides for ${CATPPUCCIN_VARIANT}"
 
-  # Helper: run gsettings set and soft-warn when the schema is not yet registered.
-  # Attempting the command directly (rather than pre-checking the schema list) is
-  # more reliable: gsettings list-schemas can return partial results mid-session.
-  # Any error OTHER than "No such schema" is still surfaced as a real failure.
+  # Helper: run gsettings set, silently skipping schemas that are not yet
+  # registered (new extensions need a GNOME Shell restart before their schema
+  # appears).  Uses gsettings list-keys to test existence — locale-independent
+  # unlike checking the error message text.
   _gs() {
     local schema="$1"; shift
-    local out
-    if ! out=$(gsettings set "$schema" "$@" 2>&1); then
-      if printf '%s' "$out" | grep -q 'No such schema'; then
-        echo "  (skipping $schema — schema not yet registered; rerun after re-login)" >&2
-      else
-        echo "  ERROR: gsettings set $schema $* — $out" >&2
-        return 1
-      fi
+    if ! gsettings list-keys "$schema" >/dev/null 2>&1; then
+      echo "  (skipping $schema — schema not yet registered; rerun after re-login)" >&2
+      return 0
     fi
+    gsettings set "$schema" "$@"
   }
 
   # Tiling Shell: window border
