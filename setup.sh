@@ -538,15 +538,27 @@ _write_dock_neon_border_css() {
 /* ── Top bar — fully transparent for Open Bar Islands mode ──────────────────
  *
  * Open Bar sets bgalpha=0.0 via dconf, but the Catppuccin shell theme applies
- * its own background-color on #panel which can win on specificity.
- * The !important declarations here ensure the panel stays invisible so only
- * the island pills are rendered.
+ * its own background / background-color on #panel which can win on specificity.
+ * Both shorthand and longhand are cleared here so neither survives.
  */
 #panel,
 #panel.solid,
 #panel.translucent {
+  background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* ── Dock — transparent background, border preserved ────────────────────────
+ *
+ * Dash to Dock background-opacity=0.0 and Open Bar dbgalpha=0.0 make the
+ * dock container transparent via dconf, but Dash to Dock's theming.js may
+ * still write an inline background-color.  The override below ensures the
+ * background stays clear while leaving the border and glow intact.
+ */
+.dash-background {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* ── Dock background pill — neon border + outer glow ────────────────────────
