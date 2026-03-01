@@ -64,8 +64,8 @@ info "Phase 3 · catppuccin/kde"
 git clone --depth=1 https://github.com/catppuccin/kde /tmp/catppuccin-kde
 cd /tmp/catppuccin-kde
 # Args: Mocha=1, Mauve=4, Modern decorations=1
-# 'yes' answers the two remaining confirmation prompts non-interactively
-yes | ./install.sh 1 4 1
+# printf answers the two confirmation prompts without broken-pipe from 'yes'
+printf 'y\ny\n' | ./install.sh 1 4 1
 cd "$REPO_DIR"
 rm -rf /tmp/catppuccin-kde
 
