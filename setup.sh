@@ -80,10 +80,10 @@ info "Phase 4 · Kvantum"
 
 git clone --depth=1 https://github.com/catppuccin/kvantum.git /tmp/catppuccin-kvantum
 mkdir -p ~/.config/Kvantum
-cp -r /tmp/catppuccin-kvantum/themes/mocha/Catppuccin-Mocha-Mauve ~/.config/Kvantum/
+cp -r /tmp/catppuccin-kvantum/themes/catppuccin-mocha-mauve ~/.config/Kvantum/
 rm -rf /tmp/catppuccin-kvantum
 
-kvantummanager --set Catppuccin-Mocha-Mauve
+kvantummanager --set catppuccin-mocha-mauve
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
 ok "Kvantum configured"
 
