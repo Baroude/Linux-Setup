@@ -94,6 +94,8 @@ info "Phase 5 · GTK bridge"
 
 curl -LsSo /tmp/catppuccin-gtk-install.py \
   "https://raw.githubusercontent.com/catppuccin/gtk/v1.0.3/install.py"
+# Remove existing gtk-4.0 assets symlink to avoid FileExistsError on re-runs
+rm -rf ~/.config/gtk-4.0/assets
 python3 /tmp/catppuccin-gtk-install.py mocha mauve --link
 rm /tmp/catppuccin-gtk-install.py
 
@@ -205,10 +207,10 @@ sudo apt install -y --no-install-recommends \
   libqt6svg6
 
 cd /tmp
-curl -LOsS https://github.com/catppuccin/sddm/releases/latest/download/catppuccin-mocha-mauve.zip
-unzip -o catppuccin-mocha-mauve.zip
+curl -LOsS https://github.com/catppuccin/sddm/releases/latest/download/catppuccin-mocha-mauve-sddm.zip
+unzip -o catppuccin-mocha-mauve-sddm.zip
 sudo mv catppuccin-mocha-mauve /usr/share/sddm/themes/
-rm catppuccin-mocha-mauve.zip
+rm catppuccin-mocha-mauve-sddm.zip
 
 sudo mkdir -p /etc/sddm.conf.d
 sudo tee /etc/sddm.conf.d/10-catppuccin.conf > /dev/null << 'EOF'
