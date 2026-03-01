@@ -64,30 +64,13 @@ info "Phase 3 · catppuccin/kde"
 git clone --depth=1 https://github.com/catppuccin/kde /tmp/catppuccin-kde
 cd /tmp/catppuccin-kde
 # Args: Mocha=1, Mauve=4, Modern decorations=1
-./install.sh 1 4 1
+# 'yes' answers the two remaining confirmation prompts non-interactively
+yes | ./install.sh 1 4 1
 cd "$REPO_DIR"
 rm -rf /tmp/catppuccin-kde
 
-# Apply color scheme
 plasma-apply-colorscheme CatppuccinMochaMauve
-
-# Apply desktop (Plasma shell) theme — catppuccin/kde installs with dashes
-PLASMA_THEME=$(ls ~/.local/share/plasma/desktoptheme/ | grep -i "mocha.*mauve\|catppuccin.*mocha" | head -1)
-if [[ -n "$PLASMA_THEME" ]]; then
-  plasma-apply-desktoptheme "$PLASMA_THEME"
-else
-  warn "Could not detect installed Plasma theme name — skipping plasma-apply-desktoptheme"
-  warn "Run manually: plasma-apply-desktoptheme <name> (check ~/.local/share/plasma/desktoptheme/)"
-fi
-
-# Apply global look-and-feel (icons, cursors, splash, window decorations)
-LOOKANDFEEL=$(ls ~/.local/share/plasma/look-and-feel/ | grep -i "catppuccin.*mocha\|mocha.*mauve" | head -1)
-if [[ -n "$LOOKANDFEEL" ]]; then
-  plasma-apply-lookandfeel --apply "$LOOKANDFEEL"
-else
-  warn "Could not detect look-and-feel ID — skipping plasma-apply-lookandfeel"
-fi
-
+plasma-apply-lookandfeel --apply Catppuccin-Mocha-Mauve
 ok "catppuccin/kde applied"
 
 # ---------------------------------------------------------------------------
