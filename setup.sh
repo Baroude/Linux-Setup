@@ -94,8 +94,8 @@ info "Phase 5 · GTK bridge"
 
 curl -LsSo /tmp/catppuccin-gtk-install.py \
   "https://raw.githubusercontent.com/catppuccin/gtk/v1.0.3/install.py"
-# Remove existing gtk-4.0 assets symlink to avoid FileExistsError on re-runs
-rm -rf ~/.config/gtk-4.0/assets
+# Wipe gtk-4.0 dir to avoid FileExistsError for any pre-existing symlinks/files
+rm -rf ~/.config/gtk-4.0
 python3 /tmp/catppuccin-gtk-install.py mocha mauve --link
 rm /tmp/catppuccin-gtk-install.py
 

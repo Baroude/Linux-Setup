@@ -1,25 +1,42 @@
-- clean: ['~', '~/.config', '~/.config/plasma-workspace/env']
+- clean: ['~', '~/.config']
+
+- create:
+    - ~/.config/kitty
+    - ~/.config/plasma-workspace/env
 
 - link:
-    # Shell
-    ~/.zshrc:                     zshrc
-    ~/.zshenv:                    zsh/zshenv
+    # Shell — force: oh-my-zsh creates ~/.zshrc as a real file during install
+    ~/.zshrc:
+      path: zshrc
+      force: true
+    ~/.zshenv:
+      path: zsh/zshenv
 
     # Terminal
-    ~/.config/kitty/kitty.conf:   kitty/kitty.conf
+    ~/.config/kitty/kitty.conf:
+      path: kitty/kitty.conf
 
     # Prompt
-    ~/.config/starship.toml:      starship.toml
+    ~/.config/starship.toml:
+      path: starship.toml
 
     # Git
-    ~/.gitconfig:                 gitconfig
+    ~/.gitconfig:
+      path: gitconfig
 
-    # Qt style (Kvantum)
-    ~/.config/Kvantum/kvantum.kvconfig: kvantum/kvantum.kvconfig
+    # Qt style (Kvantum) — force: kvantummanager creates the file during Phase 4
+    ~/.config/Kvantum/kvantum.kvconfig:
+      path: kvantum/kvantum.kvconfig
+      force: true
 
-    # GTK theming
-    ~/.config/gtk-3.0/settings.ini: gtk/gtk-3.0-settings.ini
-    ~/.config/gtk-4.0/gtk.css:      gtk/gtk-4.0-gtk.css
+    # GTK theming — force: may exist from system or previous gtk install
+    ~/.config/gtk-3.0/settings.ini:
+      path: gtk/gtk-3.0-settings.ini
+      force: true
+    ~/.config/gtk-4.0/gtk.css:
+      path: gtk/gtk-4.0-gtk.css
+      force: true
 
     # Wayland / Plasma environment variables
-    ~/.config/plasma-workspace/env/envvars.sh: environment/envvars.sh
+    ~/.config/plasma-workspace/env/envvars.sh:
+      path: environment/envvars.sh
