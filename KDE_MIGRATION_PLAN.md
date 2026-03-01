@@ -3,7 +3,7 @@
 
 Branch: `migration/kde-plasma`
 Base: `main` (pre-GNOME migration)
-Status: **Architecture phase — pending decisions**
+Status: **Architecture locked — ready for implementation**
 
 ---
 
@@ -137,7 +137,7 @@ Background Contrast (Plasma ≤6.4, separate from blur):
 
 **Kitty terminal** — with KWin blur active:
 ```ini
-background_opacity 0.88   # ← TBD: 0.88 or 0.90? (see open questions)
+background_opacity 0.90   # Readable on evening-sky.png; frosted glass via KWin blur
 background_blur    64     # Requests blur from KWin via Wayland protocol. WORKS.
 ```
 
@@ -233,55 +233,73 @@ export SAL_USE_VCLPLUGIN=qt6
 
 ## Fonts
 
-> **OPEN DECISION** — see questions below.
+**Terminal/monospace:** JetBrains Mono Nerd Font (installed manually from Nerd Fonts releases)
+**UI font:** Inter (`fonts-inter-variable` in APT)
 
-### Option A: Keep Monaspace Neon Nerd Font (current)
-- Already installed and configured in Kitty + Starship
-- Unique aesthetic, variable font
-- Less ecosystem support for Nerd Font glyphs vs JBM
+```bash
+# UI font — APT
+sudo apt install -y fonts-inter-variable
 
-### Option B: JetBrains Mono Nerd Font (both KDE reports recommend)
-- Best legibility at small sizes for coding
-- Complete Nerd Font glyph coverage
-- Both KDE research reports recommend it
-- `fonts-jetbrains-mono` in Debian APT (non-Nerd variant); Nerd variant installed manually
+# JetBrains Mono Nerd Font — manual (Nerd variant not in APT)
+NERD_VERSION=$(curl -s 'https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest' \
+  | grep -Po '"tag_name": "\K[^"]*')
+curl -fLo /tmp/JetBrainsMono.zip \
+  "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_VERSION}/JetBrainsMono.zip"
+mkdir -p ~/.local/share/fonts/JetBrainsMonoNerd
+unzip /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/JetBrainsMonoNerd
+fc-cache -fv
+fc-list | grep -i "JetBrains"
+```
 
-UI font recommendation from KDE reports: **Inter** (`fonts-inter-variable` in APT).
-
-System Settings → Appearance → Fonts:
+System Settings → Appearance → Fonts (configured via `gsettings` or `kwriteconfig6`):
 
 | Setting | Font | Size |
 |---------|------|------|
 | General | Inter | 10pt |
-| Fixed-width | `[chosen NF font]` | 10pt |
+| Fixed-width | JetBrainsMono Nerd Font | 10pt |
 | Window title | Inter Bold | 10pt |
+| Hinting | Slight | — |
+| Anti-aliasing | Sub-pixel RGB | — |
 
 ---
 
 ## Shell Stack
 
-> **OPEN DECISION** — see questions below.
+**Framework:** oh-my-zsh (no change — terminal stack is DE-agnostic, avoiding scope creep)
 
-### Option A: No-framework (apt packages only)
-- `zsh-autosuggestions` + `zsh-syntax-highlighting` from APT
-- Fast startup, zero external dependencies
-- No `zsh-history-substring-search` (not in Debian repos)
-- Simpler zshrc, easier to maintain
+The `zshrc` carries over from the GNOME setup with one addition — the missing zsh options
+from the research reports are worth pulling in regardless:
 
-### Option B: zinit (kde-second.md recommendation)
-- Turbo mode: plugins load async, ~50ms visible prompt time vs ~500ms+ with OMZ
-- Includes `zsh-history-substring-search` via zinit
-- Extra moving part (zinit itself, git-cloned bootstrap)
+```zsh
+# Add to zshrc (missing from current setup)
+setopt EXTENDED_HISTORY        # Timestamp entries
+setopt HIST_IGNORE_ALL_DUPS    # No duplicates
+setopt HIST_REDUCE_BLANKS      # Clean blanks
+setopt EXTENDED_GLOB
+setopt CORRECT                 # Command correction suggestions
 
-### Option C: Keep oh-my-zsh
-- No change from current
-- ~200–400ms startup overhead
-- Familiar, well-documented
+# zstyle completions
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'   # Case-insensitive
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"   # Colorized
+zstyle ':completion:*' menu select                         # Menu selection
+```
 
-Shared regardless of framework choice:
+Also add `zsh-history-substring-search` (not in Debian repos, git clone into oh-my-zsh custom plugins):
+```bash
+git clone https://github.com/zsh-users/zsh-history-substring-search.git \
+  "$HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search"
+```
+Then add to `plugins=(... zsh-history-substring-search)` and bind:
+```zsh
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+```
+
+Shared:
 - `eval "$(zoxide init zsh --cmd cd)"`
-- fzf with Catppuccin Mocha colors
+- fzf with Catppuccin Mocha colors (already in current zshrc)
 - Starship with `palette = 'catppuccin_mocha'`
+- Font updated to JetBrains Mono in `kitty.conf`
 
 ---
 
@@ -404,35 +422,22 @@ rm ~/.config/kwinrc ~/.config/kdeglobals
 
 ---
 
-## Open Decisions
+## Locked Decisions
 
-### D1 — Accent color strategy
-**Option A:** Single accent (Mauve `#cba6f7`) — simpler, matches both KDE reports' recommendation
-**Option B:** Keep 6-variant system (mocha-blue/mauve/teal + macchiato) — more flexible, more setup code
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **D1 Accent** | Single: **Mauve** `#cba6f7` | Simpler setup, best contrast on Mocha dark surfaces, matches both KDE reports |
+| **D2 Font** | **JetBrains Mono Nerd Font** | Better Nerd Font glyph coverage, both KDE reports recommend, APT-available (base) + manual Nerd install |
+| **D3 Tiling** | **Krohnkite** (auto-tiling) | dwm-style dynamic tiling, vim keybindings (Meta+H/J/K/L), active KWin 6 fork |
+| **D4 Shell** | **Keep oh-my-zsh** | No framework change — terminal stack is DE-agnostic, avoid scope creep |
+| **D5 Opacity** | **0.90** | More readable on the `evening-sky.png` wallpaper; still clearly transparent with real KWin blur |
+| **D6 Wallpaper** | **Keep `evening-sky.png`** | Already in repo, familiar |
 
-### D2 — Font
-**Option A:** Keep Monaspace Neon Nerd Font — continuity, unique aesthetic
-**Option B:** Switch to JetBrains Mono Nerd Font — recommended by both KDE reports, better glyph coverage
-Sub-question: Add Inter as UI font (System Settings → Fonts)?
-
-### D3 — Tiling
-**Option A:** Krohnkite — auto-tiling, vim keybindings, dwm-style
-**Option B:** KZones — manual snap zones, FancyZones-style
-**Option C:** Built-in KDE tiling — zero risk, less powerful
-
-### D4 — Shell framework
-**Option A:** No-framework (apt packages only) — simple, fast
-**Option B:** zinit — 50ms startup, includes history-substring-search
-**Option C:** Keep oh-my-zsh — no change
-
-### D5 — Terminal opacity
-**Option A:** 0.88 (more transparent, more blur visible)
-**Option B:** 0.90 (more readable on busy wallpapers)
-
-### D6 — Wallpaper
-**Option A:** Keep `evening-sky.png` (current)
-**Option B:** Official Catppuccin wallpapers (catppuccin/wallpapers)
-**Option C:** Custom
+Papirus folder accent: `cat-mocha-mauve`
+catppuccin/kde install args: `./install.sh 1 4 1` (Mocha=1, Mauve=4, Modern=1)
+catppuccin/kvantum: `Catppuccin-Mocha-Mauve`
+catppuccin/sddm: `catppuccin-mocha-mauve`
+catppuccin/cursors: `catppuccin-mocha-mauve-cursors`
 
 ---
 
