@@ -1,0 +1,3 @@
+/* Force Catppuccin Mocha colors for GTK4/libadwaita apps */
+/* This file is symlinked to ~/.config/gtk-4.0/gtk.css       */
+/* catppuccin/gtk --link creates the proper imports in place  */

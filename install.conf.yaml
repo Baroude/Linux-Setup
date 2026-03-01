@@ -1,9 +1,25 @@
-- clean: ['~']
+- clean: ['~', '~/.config', '~/.config/plasma-workspace/env']
 
 - link:
-      ~/.zshrc : zshrc
-      ~/.config/nvim : nvim
-      ~/.config/starship.toml : starship.toml
-      ~/.config/terminator : terminator
-      ~/.gitconfig : gitconfig
+    # Shell
+    ~/.zshrc:                     zshrc
+    ~/.zshenv:                    zsh/zshenv
 
+    # Terminal
+    ~/.config/kitty/kitty.conf:   kitty/kitty.conf
+
+    # Prompt
+    ~/.config/starship.toml:      starship.toml
+
+    # Git
+    ~/.gitconfig:                 gitconfig
+
+    # Qt style (Kvantum)
+    ~/.config/Kvantum/kvantum.kvconfig: kvantum/kvantum.kvconfig
+
+    # GTK theming
+    ~/.config/gtk-3.0/settings.ini: gtk/gtk-3.0-settings.ini
+    ~/.config/gtk-4.0/gtk.css:      gtk/gtk-4.0-gtk.css
+
+    # Wayland / Plasma environment variables
+    ~/.config/plasma-workspace/env/envvars.sh: environment/envvars.sh

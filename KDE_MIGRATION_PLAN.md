@@ -29,7 +29,7 @@ Status: **Architecture locked — ready for implementation**
 | Compositor | KWin 6 | Plasma |
 | Terminal | Kitty | APT |
 | Shell | Zsh + Starship | APT / upstream |
-| Dotfiles | GNU Stow | APT |
+| Dotfiles | dotbot | git submodule |
 
 ---
 
@@ -344,41 +344,45 @@ sudo update-grub
 
 ---
 
-## Dotfiles Structure (GNU Stow)
+## Dotfiles Structure (dotbot)
 
 ```
 ~/dotfiles/
-├── .stow-local-ignore
-├── README.md
+├── install.conf.yaml  ← dotbot link/shell directives
+├── install            ← dotbot bootstrap script
+├── dotbot/            ← dotbot git submodule
 ├── kitty/
-│   └── .config/kitty/kitty.conf
+│   └── kitty.conf
 ├── zsh/
-│   └── .zshrc
-│   └── .zshenv        ← New: XDG vars, EDITOR, PATH
-├── starship/
-│   └── .config/starship.toml
-├── plasma/            ← KDE-sensitive configs, stowed separately
-│   └── .config/
-│       ├── kwinrc
-│       ├── kdeglobals
-│       └── kscreenlockerrc
+│   ├── zshrc
+│   └── zshenv         ← XDG vars, EDITOR, PATH
+├── plasma/            ← KDE-sensitive configs, linked separately
+│   ├── kwinrc
+│   ├── kdeglobals
+│   └── kscreenlockerrc
 ├── kvantum/
-│   └── .config/Kvantum/kvantum.kvconfig
+│   └── kvantum.kvconfig
 ├── gtk/
-│   └── .config/
-│       ├── gtk-3.0/settings.ini
-│       └── gtk-4.0/gtk.css
+│   ├── gtk-3.0-settings.ini
+│   └── gtk-4.0-gtk.css
 ├── environment/
-│   └── .config/plasma-workspace/env/envvars.sh
+│   └── envvars.sh
 └── scripts/
-    ├── stow-install.sh
     ├── backup-plasma.sh
     └── restore-plasma.sh
 ```
 
+`install.conf.yaml` maps each file to its target path. The `plasma/` links are managed as a separate dotbot profile (`install-plasma.conf.yaml`) so they can be skipped before a major KDE upgrade and re-applied after verifying compatibility.
+
+Bootstrap:
+```bash
+./install                          # links all safe configs
+./install -c install-plasma.conf.yaml  # links plasma/ configs
+```
+
 **Upgrade resilience:**
 - Safe across dist-upgrades: kitty, zsh, starship, kvantum, gtk, environment
-- Risky on major KDE bumps: `plasma/` package — unstow before `apt dist-upgrade`, re-stow after verifying compatibility
+- Risky on major KDE bumps: `plasma/` profile — run `./install -c install-plasma.conf.yaml` only after verifying compatibility with the new KDE version
 
 ---
 
@@ -456,8 +460,9 @@ catppuccin/cursors: `catppuccin-mocha-mauve-cursors`
 | `KDE_MIGRATION_PLAN.md` | This file → evolves into README sections |
 
 New files:
-- `plasma/` stow package (kwinrc, kdeglobals, kscreenlockerrc)
-- `kvantum/` stow package
-- `environment/` stow package (envvars.sh)
+- `plasma/` dotbot profile configs (kwinrc, kdeglobals, kscreenlockerrc)
+- `kvantum/kvantum.kvconfig`
+- `environment/envvars.sh`
+- `install-plasma.conf.yaml` (separate dotbot profile for KDE-sensitive links)
 - `scripts/backup-plasma.sh`
 - `scripts/restore-plasma.sh`

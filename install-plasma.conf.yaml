@@ -1,0 +1,8 @@
+# Plasma-specific dotbot profile.
+# Run separately: ./install -c install-plasma.conf.yaml
+# Skip before major KDE upgrades; re-run after verifying config compatibility.
+
+- link:
+    ~/.config/kwinrc:         plasma/kwinrc
+    ~/.config/kdeglobals:     plasma/kdeglobals
+    ~/.config/kscreenlockerrc: plasma/kscreenlockerrc

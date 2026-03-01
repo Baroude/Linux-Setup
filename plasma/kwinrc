@@ -1,0 +1,17 @@
+[Effect-blur]
+BlurStrength=9
+NoiseStrength=2
+
+[Plugins]
+blurEnabled=true
+backgroundcontrastEnabled=true
+krohnkiteEnabled=true
+
+[Script-krohnkite]
+# Krohnkite options are set via its own settings UI / kwriteconfig6
+# Inner/outer gaps: 8px each
+
+[Windows]
+# Float exceptions for Krohnkite
+# Configured in Krohnkite settings UI:
+# systemsettings, krunner, plasmashell, all dialogs
