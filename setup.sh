@@ -141,8 +141,17 @@ ok "KWin blur enabled (strength=9, noise=2)"
 # ---------------------------------------------------------------------------
 info "Phase 8 · Krohnkite tiling"
 
-wget -O /tmp/krohnkite.kwinscript \
-  "https://github.com/anametologin/krohnkite/releases/latest/download/krohnkite.kwinscript"
+# The plain krohnkite.kwinscript asset has a persistent 500 bug on GitHub.
+# Use the API to get the versioned asset URL instead.
+KROHNKITE_URL=$(curl -fsSL https://api.github.com/repos/anametologin/krohnkite/releases/latest \
+  | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+assets = [a for a in data['assets'] if a['name'].endswith('.kwinscript')]
+versioned = [a for a in assets if a['name'] != 'krohnkite.kwinscript']
+print((versioned or assets)[0]['browser_download_url'])
+")
+wget -O /tmp/krohnkite.kwinscript "$KROHNKITE_URL"
 kpackagetool6 --type=KWin/Script -i /tmp/krohnkite.kwinscript
 rm /tmp/krohnkite.kwinscript
 
