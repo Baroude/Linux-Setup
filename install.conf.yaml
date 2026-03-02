@@ -2,6 +2,7 @@
 
 - create:
     - ~/.config/kitty
+    - ~/.config/fastfetch
     - ~/.config/plasma-workspace/env
 
 - link:
@@ -27,6 +28,12 @@
     # Neovim
     ~/.config/nvim:
       path: nvim
+
+    # Fastfetch
+    ~/.config/fastfetch/config.jsonc:
+      path: fastfetch/config.jsonc
+    ~/.config/fastfetch/debian-cattpuccin.png:
+      path: fastfetch/debian-cattpuccin.png
 
     # Qt style (Kvantum) — force: kvantummanager creates the file during Phase 4
     ~/.config/Kvantum/kvantum.kvconfig:

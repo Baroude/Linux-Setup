@@ -33,7 +33,8 @@ sudo apt install -y \
   papirus-icon-theme \
   kitty \
   fzf zoxide \
-  imagemagick doxygen
+  imagemagick doxygen \
+  fastfetch
 
 ok "APT base packages installed"
 
