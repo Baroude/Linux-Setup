@@ -233,7 +233,7 @@ sudo apt install -y \
   libkf6guiaddons-dev \
   libkf6kcmutils-dev \
   libxkbcommon-dev \
-  libkdecorations2-dev
+  libkdecorations3-dev
 
 BETTERBLUR_BUILD="$(mktemp -d)"
 # Pin to v1.3.6 — last release that supports Plasma < 6.4.
