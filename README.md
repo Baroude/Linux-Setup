@@ -186,8 +186,9 @@ qdbus6 org.kde.KWin /KWin reconfigure
 1. **Dock** — Phase 9 runs automatically, but verify the floating bottom
    panel has: Icons-only Task Manager + System Tray + Digital Clock.
 2. **kwin-better-blur** — go to System Settings → Desktop Effects → Better Blur
-   → Configure. Enable "Blur windows that request blur" and add Dolphin to the
-   window list, or enable "Blur all windows" for a global frosted glass effect.
+   → Configure → enable **Blur all windows** and set blur strength to taste
+   (10–15 is a good starting point). The stock KWin blur effect is disabled
+   intentionally — better-blur replaces it entirely.
 3. **Krohnkite** — review gaps and layout keybinds in
    System Settings → KWin Scripts → Krohnkite → Configure.
 4. **Restart session** to apply SDDM theme and all environment variables.

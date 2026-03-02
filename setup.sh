@@ -189,10 +189,10 @@ ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
 # ---------------------------------------------------------------------------
 info "Phase 7 · KWin blur"
 
-kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled true
+# Stock KWin blur is DISABLED — kwin-better-blur (Phase 7b) replaces it.
+# Better-blur can blur any semi-transparent window; the stock effect cannot.
+kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled false
 kwriteconfig6 --file kwinrc --group Plugins --key backgroundcontrastEnabled true
-kwriteconfig6 --file kwinrc --group Effect-blur --key BlurStrength 9
-kwriteconfig6 --file kwinrc --group Effect-blur --key NoiseStrength 2
 
 kwriteconfig6 --file kwinrc --group Plugins --key roundedcornersEnabled true
 kwriteconfig6 --file kwinrc --group Effect-roundedcorners --key Radius 12
@@ -250,7 +250,8 @@ rm -rf /tmp/kwin-better-blur "$BETTERBLUR_BUILD"
 
 # Enable the effect — plugin ID is derived from CMakeLists project name
 kwriteconfig6 --file kwinrc --group Plugins --key kwin_better_blurEnabled true
-ok "kwin-better-blur installed and enabled (configure in System Settings → Desktop Effects)"
+ok "kwin-better-blur installed and enabled"
+warn "Manual step: System Settings → Desktop Effects → Better Blur → Configure → set 'Blur all windows' and adjust blur strength (try 10-15)."
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script

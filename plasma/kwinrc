@@ -1,9 +1,5 @@
-[Effect-blur]
-BlurStrength=9
-NoiseStrength=2
-
 [Plugins]
-blurEnabled=true
+blurEnabled=false
 backgroundcontrastEnabled=true
 krohnkiteEnabled=true
 roundedcornersEnabled=true
