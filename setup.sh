@@ -256,12 +256,47 @@ chmod +x /tmp/papirus-folders
 rm /tmp/papirus-folders
 ok "Papirus-Dark + cat-mocha-mauve folders configured"
 
-# Papirus-Dark is the active theme — it has full KDE/hicolor coverage and
-# the papirus-folders recoloring above already gives catppuccin mauve folders.
-# catppuccin-vibes (generalentropy) was removed: incomplete icon set with no
-# Inherits fallback causes missing/broken icons across KDE.
+# Papirus-Dark is the system-wide icon theme (full KDE + hicolor coverage).
+# catppuccin-vibes is NOT a full theme — it's 15 SVGs used only as custom
+# icons for pinned dock launchers (see .desktop overrides below).
 kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
 ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
+
+# catppuccin-vibes dock icons — download SVGs and create .desktop overrides
+# so the four pinned launchers show catppuccin-styled icons in the dock.
+VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
+mkdir -p "$VIBES_DIR"
+VIBES_BASE="https://raw.githubusercontent.com/generalentropy/catppuccin-vibes/main/icons/catppuccin-vibrant"
+for _icon in terminal-vibrant folder-vibrant browser-vibrant music-vibrant; do
+  curl -fLo "$VIBES_DIR/${_icon}.svg" "${VIBES_BASE}/${_icon}.svg"
+done
+ok "catppuccin-vibes SVGs downloaded to $VIBES_DIR"
+
+# .desktop overrides — freedesktop spec: ~/.local/share/applications/ takes
+# precedence over /usr/share/applications/ for icon resolution in icontasks.
+LOCAL_APPS="$HOME/.local/share/applications"
+mkdir -p "$LOCAL_APPS"
+
+# Kitty
+if [[ -f /usr/share/applications/kitty.desktop ]]; then
+  cp /usr/share/applications/kitty.desktop "$LOCAL_APPS/kitty.desktop"
+  sed -i "s|^Icon=.*|Icon=$VIBES_DIR/terminal-vibrant.svg|" "$LOCAL_APPS/kitty.desktop"
+fi
+
+# Dolphin
+if [[ -f /usr/share/applications/org.kde.dolphin.desktop ]]; then
+  cp /usr/share/applications/org.kde.dolphin.desktop "$LOCAL_APPS/org.kde.dolphin.desktop"
+  sed -i "s|^Icon=.*|Icon=$VIBES_DIR/folder-vibrant.svg|" "$LOCAL_APPS/org.kde.dolphin.desktop"
+fi
+
+# Firefox — Debian ships firefox-esr.desktop; override whichever is present
+for _ff in firefox.desktop firefox-esr.desktop; do
+  if [[ -f /usr/share/applications/$_ff ]]; then
+    cp /usr/share/applications/$_ff "$LOCAL_APPS/$_ff"
+    sed -i "s|^Icon=.*|Icon=$VIBES_DIR/browser-vibrant.svg|" "$LOCAL_APPS/$_ff"
+  fi
+done
+ok "catppuccin-vibes .desktop overrides created for Kitty / Dolphin / Firefox"
 
 # ---------------------------------------------------------------------------
 # Phase 7 — KWin blur
@@ -464,6 +499,10 @@ Type=Application
 Categories=AudioVideo;Audio;Music;Player;
 StartupWMClass=tidal-hifi
 EOF
+# Patch icon to catppuccin-vibes music SVG (Phase 6 downloads it)
+VIBES_MUSIC="$HOME/.local/share/icons/catppuccin-vibes/music-vibrant.svg"
+[[ -f "$VIBES_MUSIC" ]] && \
+  sed -i "s|^Icon=.*|Icon=$VIBES_MUSIC|" "$TIDAL_DESKTOP_DIR/com.mastermindzh.tidal-hifi.desktop"
 ok "tidal-hifi .desktop override written (Wayland flags)"
 
 # Catppuccin Mocha CSS theme for tidal-hifi
