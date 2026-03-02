@@ -6,7 +6,7 @@
 #             Media | CPU | RAM | SysTray | PanelColorizer(hidden)
 #
 # Panel Colorizer applies catppuccin Mocha pill islands — each widget gets its
-# own distinct accent colour. CPU and RAM share a unified Peach island.
+# own distinct accent colour.
 #
 # Requires a running plasmashell session. Safe to re-run.
 
@@ -101,7 +101,12 @@ top.lengthMode = 'fill';
 top.currentConfigGroup = ['General'];
 top.writeConfig('backgroundHints', '0');
 
-top.addWidget('org.kde.plasma.pager');          // far left
+var pager = top.addWidget('org.kde.plasma.pager');  // far left
+pager.currentConfigGroup = ['General'];
+pager.writeConfig('displayedText', '0');            // Number
+pager.writeConfig('showWindowOutlines', 'false');
+pager.writeConfig('showWindowIcons', 'false');
+pager.writeConfig('pagerLayout', '1');              // Horizontal
 
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
@@ -125,6 +130,7 @@ cpu.writeConfig('highPrioritySensorIds', '[\"cpu/all/usage\"]');
 cpu.writeConfig('totalSensors',          '[\"cpu/all/usage\"]');
 cpu.currentConfigGroup = ['Appearance'];
 cpu.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+cpu.writeConfig('title', 'CPU');
 
 // RAM usage — same approach, physical memory used %
 var mem = top.addWidget('org.kde.plasma.systemmonitor');
@@ -133,6 +139,7 @@ mem.writeConfig('highPrioritySensorIds', '[\"memory/physical/usedPercent\"]');
 mem.writeConfig('totalSensors',          '[\"memory/physical/usedPercent\"]');
 mem.currentConfigGroup = ['Appearance'];
 mem.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+mem.writeConfig('title', 'RAM');
 
 top.addWidget('org.kde.plasma.systemtray');
 
@@ -190,8 +197,7 @@ if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
 fi
 
 # ── Panel Colorizer: catppuccin Mocha pill islands ─────────────────────────
-# Installs the preset file and writes globalSettings (with the live CPU+RAM
-# applet IDs patched in for the unified island) directly to the applet config.
+# Installs the preset file and writes globalSettings directly to the applet config.
 if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     # Install preset file so Panel Colorizer can also load it from the UI
     PC_PRESET_DIR="$HOME/.config/panel-colorizer/presets/Catppuccin Mocha Mauve"
@@ -199,7 +205,7 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     cp "${SCRIPT_DIR}/panel-colorizer-catppuccin.json" "$PC_PRESET_DIR/settings.json"
     echo "Panel Colorizer preset installed → $PC_PRESET_DIR/settings.json"
 
-    # Discover live applet IDs, patch unifiedBackground, write config
+    # Discover live applet IDs and write config
     PANEL_ID="$TOP_ID" \
     PRESET_FILE="${SCRIPT_DIR}/panel-colorizer-catppuccin.json" \
     python3 << 'PYEOF'
@@ -237,29 +243,12 @@ if not pc_id:
 
 print(f"Panel Colorizer applet id: {pc_id}")
 
-# Systemmonitor applets in creation order (lower numeric ID = created first = CPU)
-sysmon_ids = sorted(
-    [aid for aid, p in applet_plugins.items() if p == 'org.kde.plasma.systemmonitor'],
-    key=int)
-print(f"System monitor applet ids (sorted): {sysmon_ids}")
-
-# ── Load preset and patch unifiedBackground with live applet IDs ───────────
+# ── Load preset and keep CPU/RAM visually distinct ─────────────────────────
 with open(preset_file) as f:
     preset = json.load(f)
 
 gs = preset['globalSettings']
-if len(sysmon_ids) >= 2:
-    cpu_id = int(sysmon_ids[-2])
-    ram_id = int(sysmon_ids[-1])
-    # unifyBgType 1 = island start, 3 = island end
-    gs['unifiedBackground'] = [
-        {'id': cpu_id, 'unifyBgType': 1},
-        {'id': ram_id, 'unifyBgType': 3},
-    ]
-    print(f"Unified CPU (id={cpu_id}) + RAM (id={ram_id}) as one Peach island")
-else:
-    print("WARNING: < 2 systemmonitor applets found; skipping unified island",
-          file=sys.stderr)
+gs['unifiedBackground'] = []
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
