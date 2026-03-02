@@ -372,12 +372,25 @@ kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
 ok "Krohnkite installed and enabled (8 px gaps)"
 
 # ---------------------------------------------------------------------------
-# Phase 9 — Dock (automated via Plasma JS scripting)
+# Phase 9 — Dock + Wallpaper (registered as autostart; needs live plasmashell)
 # ---------------------------------------------------------------------------
-info "Phase 9 · Dock"
+info "Phase 9 · Dock + Wallpaper autostart"
 
-bash "$REPO_DIR/scripts/configure-dock.sh"
-ok "Dock configured (floating bottom, Icons-only Task Manager + tray + clock)"
+# configure-dock.sh and plasma-apply-wallpaperimage both require D-Bus to a
+# running plasmashell — they cannot run headlessly during setup.sh.
+# Register a one-shot autostart that fires on the first KDE login instead.
+chmod +x "$REPO_DIR/scripts/setup-first-login.sh"
+mkdir -p "$HOME/.config/autostart"
+cat > "$HOME/.config/autostart/kde-post-install.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Name=KDE Post-Install Setup
+Comment=One-time: configure dock panels and wallpaper (requires live Plasma session)
+Exec=/bin/bash "$REPO_DIR/scripts/setup-first-login.sh"
+Terminal=false
+X-KDE-AutostartScript=true
+EOF
+ok "Autostart registered — panels and wallpaper configured on next login"
 
 # ---------------------------------------------------------------------------
 # Phase 10 — Kitty terminal config
@@ -417,6 +430,11 @@ OMZ_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
 
 ok "Zsh + oh-my-zsh + Starship configured"
+
+# Default terminal emulator — KDE defaults to Konsole; override with Kitty
+kwriteconfig6 --file kdeglobals --group General --key TerminalApplication kitty
+kwriteconfig6 --file kdeglobals --group General --key TerminalService kitty.desktop
+ok "Default terminal set to Kitty"
 
 # ---------------------------------------------------------------------------
 # Phase 11b — Tidal (tidal-hifi via Flatpak)
@@ -575,11 +593,9 @@ info "Phase 14 · Dotfiles (dotbot)"
 "$REPO_DIR/install"
 ok "Base dotfiles linked (zshrc, zshenv, kitty, starship, gitconfig, kvantum, gtk, envvars)"
 
-# Desktop wallpaper
-plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
-ok "Desktop wallpaper applied (evening-sky.png)"
+# Desktop wallpaper — applied by setup-first-login.sh on first login (needs plasmashell)
 
-# Lock screen wallpaper
+# Lock screen wallpaper (kwriteconfig6 works without a session)
 kwriteconfig6 --file kscreenlockerrc \
   --group Greeter --group Wallpaper --group "org.kde.image" --group General \
   --key Image "file://$REPO_DIR/images/evening-sky.png"
@@ -596,13 +612,14 @@ echo "============================================================"
 echo " KDE Plasma setup complete!"
 echo "============================================================"
 echo ""
+echo " Automatic on next login (via autostart):"
+echo "   · Dock + top bar panels will be created"
+echo "   · Desktop wallpaper will be applied"
+echo ""
 echo " Manual steps remaining:"
-echo "   1. Dock/panel (Phase 9): scripts/configure-dock.sh requires a live"
-echo "      Plasma session. Run it manually after first login:"
-echo "      bash ~/Linux-Setup/scripts/configure-dock.sh"
-echo "   2. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
-echo "   3. Restart session to apply SDDM + all env vars"
-echo "   4. Tidal: open tidal-hifi → Settings → Theming →"
+echo "   1. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
+echo "   2. Restart session to apply SDDM + all env vars"
+echo "   3. Tidal: open tidal-hifi → Settings → Theming →"
 echo "      choose ~/.config/tidal-hifi/catppuccin-mocha.css"
 echo ""
 echo " Optional: link plasma configs after reviewing compatibility:"
