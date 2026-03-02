@@ -199,16 +199,12 @@ kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
 ok "Krohnkite installed and enabled"
 
 # ---------------------------------------------------------------------------
-# Phase 9 — Dock
+# Phase 9 — Dock (automated via Plasma JS scripting)
 # ---------------------------------------------------------------------------
 info "Phase 9 · Dock"
-warn "Dock must be configured manually — KDE panel layout cannot be reliably scripted."
-warn "Recommended: right-click desktop → Add Panel → Floating Panel → position Bottom."
-warn "  Remove default bottom taskbar first, then configure the new panel as a dock:"
-warn "  - Add widget: Icons-only Task Manager (dock-style app icons)"
-warn "  - Add widget: System Tray (right side)"
-warn "  - Add widget: Digital Clock (right side)"
-warn "  - Set panel height ~60px, floating, centered"
+
+bash "$REPO_DIR/scripts/configure-dock.sh"
+ok "Dock configured (floating bottom, Icons-only Task Manager + tray + clock)"
 
 # ---------------------------------------------------------------------------
 # Phase 10 — Kitty terminal config

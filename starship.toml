@@ -1,82 +1,126 @@
 # ~/.config/starship.toml
-# Catppuccin Mocha palette
+# Catppuccin Mocha — connected two-line prompt
+#
+# Preview:
+# ╭─  mathias@debian  ~/code/project   main ✓ [+2 ~1]  took 3s ─── 23:45 ─╮
+# ╰─❯
 
 palette = 'catppuccin_mocha'
 
 format = """
-[$username$hostname](green)[$directory](sapphire)[$git_branch](mauve)[$rust$package](peach)$fill[$time](overlay1)
-[$character](bold green) """
+[╭─](overlay0)\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$rust\
+$nodejs\
+$python\
+$java\
+$golang\
+$docker_context\
+$cmd_duration\
+$fill\
+$time\
+[─╮](overlay0)
+[╰─](overlay0)\
+$character\
+"""
 
 [fill]
-symbol = ' '
+symbol = '─'
+style  = 'overlay0'
 
+# --- Prompt character ---
 [character]
-success_symbol = '[➜](bold green)'
-error_symbol = '[✗](bold red)'
+success_symbol = '[❯](bold mauve)'
+error_symbol   = '[❯](bold red)'
+vimcmd_symbol  = '[❮](bold green)'
 
+# --- User / Host ---
 [username]
-format = '[$user]($style)[@](subtext0)'
-style_user = 'green'
+format     = '[ $user]($style)'
+style_user = 'bold green'
 show_always = true
 
 [hostname]
+format   = '[@$hostname]($style)  '
+style    = 'green'
 ssh_only = false
-format = '[$hostname]($style) '
-trim_at = '-'
-style = 'green'
-disabled = false
+trim_at  = '-'
 
+# --- Directory ---
 [directory]
-truncation_length = 5
-format = '[$path]($style)[$lock_symbol]($lock_style) '
-style = 'sapphire'
+format            = '[ $path]($style)[$lock_symbol]($lock_style)  '
+style             = 'bold sapphire'
+truncation_length = 4
+truncation_symbol = '…/'
 
+# --- Git ---
 [git_branch]
-symbol = ' '
-format = '[$symbol$branch]($style) '
-style = 'mauve'
+format = '[ $branch]($style)'
+style  = 'bold mauve'
 
 [git_status]
-format = '([$all_status$ahead_behind]($style) )'
-style = 'bold mauve'
+format    = '([$all_status$ahead_behind]($style))  '
+style     = 'bold mauve'
+up_to_date  = '[✓](bold green)'
+modified    = '[~${count}](bold yellow)'
+staged      = '[+${count}](bold green)'
+untracked   = '[?${count}](overlay2)'
+deleted     = '[✘${count}](bold red)'
+renamed     = '[»${count}](bold blue)'
+stashed     = '[≡](bold overlay1)'
+ahead       = '[⇡${count}](bold green)'
+behind      = '[⇣${count}](bold red)'
+diverged    = '[⇕⇡${ahead_count}⇣${behind_count}](bold red)'
+conflicted  = '[⚡${count}](bold red)'
 
+# --- Command duration ---
+[cmd_duration]
+format            = '[  $duration]($style)  '
+style             = 'yellow'
+min_time          = 2000
+show_milliseconds = false
+
+# --- Time (right side, before the closing connector) ---
+[time]
+format      = '[  $time]($style) '
+style       = 'overlay1'
+time_format = '%H:%M'
+disabled    = false
+
+# --- Language / runtime modules ---
 [rust]
 symbol = ' '
-format = '[$symbol$version]($style) '
-style = 'peach'
-
-[package]
-symbol = ' '
-format = '[$symbol$version]($style) '
-style = 'peach'
-
-[time]
-time_format = '%H:%M'
-format = '[$time]($style)'
-style = 'overlay1'
-disabled = false
-
-[cmd_duration]
-show_milliseconds = false
-format = 'took [$duration](bold yellow) '
-min_time = 2000
-disabled = false
-
-# --- Language modules ---
-[golang]
-symbol = ' '
+format = '[$symbol$version]($style)  '
+style  = 'peach'
 
 [nodejs]
 symbol = ' '
+format = '[$symbol$version]($style)  '
+style  = 'green'
 
 [python]
 symbol = ' '
+format = '[$symbol$version]($style)  '
+style  = 'yellow'
 
 [java]
 symbol = ' '
+format = '[$symbol$version]($style)  '
+style  = 'peach'
+
+[golang]
+symbol = ' '
+format = '[$symbol$version]($style)  '
+style  = 'sapphire'
 
 [docker_context]
 symbol = ' '
+format = '[$symbol$context]($style)  '
+style  = 'blue'
 
 [aws]
 symbol = ' '
