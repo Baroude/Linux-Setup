@@ -425,6 +425,20 @@ EOF
 ok "Autostart registered — panels and wallpaper configured on next login"
 
 # ---------------------------------------------------------------------------
+# Phase 9b — Panel Colorizer (pill-style widget islands for the top bar)
+# ---------------------------------------------------------------------------
+info "Phase 9b · Panel Colorizer"
+
+PC_VERSION="6.8.1"
+PC_TMP="$(mktemp --suffix=.plasmoid)"
+curl -fsSL -o "$PC_TMP" \
+  "https://github.com/luisbocanegra/plasma-panel-colorizer/releases/download/v${PC_VERSION}/plasmoid-panel-colorizer-v${PC_VERSION}.plasmoid"
+kpackagetool6 --type Plasma/Applet --install "$PC_TMP" 2>/dev/null \
+  || kpackagetool6 --type Plasma/Applet --upgrade "$PC_TMP"
+rm -f "$PC_TMP"
+ok "Panel Colorizer ${PC_VERSION} installed"
+
+# ---------------------------------------------------------------------------
 # Phase 10 — Kitty terminal config
 # ---------------------------------------------------------------------------
 info "Phase 10 · Kitty config"
