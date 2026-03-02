@@ -175,7 +175,10 @@ kwriteconfig6 --file kwinrc --group Plugins --key blurEnabled true
 kwriteconfig6 --file kwinrc --group Plugins --key backgroundcontrastEnabled true
 kwriteconfig6 --file kwinrc --group Effect-blur --key BlurStrength 9
 kwriteconfig6 --file kwinrc --group Effect-blur --key NoiseStrength 2
-ok "KWin blur enabled (strength=9, noise=2)"
+
+kwriteconfig6 --file kwinrc --group Plugins --key roundedcornersEnabled true
+kwriteconfig6 --file kwinrc --group Effect-roundedcorners --key Radius 12
+ok "KWin blur + rounded corners enabled"
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script

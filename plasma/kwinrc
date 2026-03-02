@@ -6,6 +6,10 @@ NoiseStrength=2
 blurEnabled=true
 backgroundcontrastEnabled=true
 krohnkiteEnabled=true
+roundedcornersEnabled=true
+
+[Effect-roundedcorners]
+Radius=12
 
 [Script-krohnkite]
 # Krohnkite options are set via its own settings UI / kwriteconfig6
