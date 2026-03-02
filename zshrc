@@ -51,6 +51,50 @@ eval "$(zoxide init zsh --cmd cd)"
 # --- Starship ---
 eval "$(starship init zsh)"
 
+# --- Modern CLI aliases ---
+# eza replaces ls (icons require a Nerd Font)
+if command -v eza &>/dev/null; then
+  alias ls='eza --icons --group-directories-first'
+  alias ll='eza -lh --icons --group-directories-first --git'
+  alias la='eza -lah --icons --group-directories-first --git'
+  alias lt='eza --tree --icons --level=2'
+  alias lta='eza --tree --icons -a --level=2'
+fi
+
+# bat replaces cat (Debian ships it as 'batcat')
+if command -v batcat &>/dev/null; then
+  alias bat='batcat'
+  alias cat='batcat --paging=never'
+elif command -v bat &>/dev/null; then
+  alias cat='bat --paging=never'
+fi
+
+# fd replaces find (Debian ships it as 'fdfind')
+if command -v fdfind &>/dev/null; then
+  alias fd='fdfind'
+fi
+
+# btop replaces top/htop
+alias top='btop'
+alias htop='btop'
+
+# dust replaces du
+if command -v dust &>/dev/null; then
+  alias du='dust'
+fi
+
+# duf replaces df
+if command -v duf &>/dev/null; then
+  alias df='duf'
+fi
+
+# delta: set as git pager (via gitconfig, not alias)
+
+# Quick navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
 # --- PATH ---
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$PATH:/usr/local/go/bin"

@@ -37,7 +37,8 @@ sudo apt install -y \
   kitty \
   fzf zoxide \
   imagemagick doxygen \
-  fastfetch
+  fastfetch \
+  plasma-systemmonitor
 
 ok "APT base packages installed"
 
@@ -90,6 +91,73 @@ fi
 
 sudo npm install -g typescript typescript-language-server bash-language-server pyright
 ok "LSP tools up-to-date"
+
+# ---------------------------------------------------------------------------
+# Phase 1d — Modern CLI tools
+# ---------------------------------------------------------------------------
+info "Phase 1d · Modern CLI tools"
+
+# Tools available in Debian apt (binary names differ from upstream on Debian)
+sudo apt install -y \
+  bat \
+  fd-find \
+  ripgrep \
+  btop \
+  duf \
+  jq
+
+# eza — not in Debian apt; grab the latest .deb from GitHub
+if ! command -v eza &>/dev/null; then
+  EZA_TAG=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
+    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  EZA_DEB="eza_$(echo "$EZA_TAG" | tr -d 'v')_amd64.deb"
+  curl -fLo "/tmp/$EZA_DEB" \
+    "https://github.com/eza-community/eza/releases/download/${EZA_TAG}/${EZA_DEB}"
+  sudo dpkg -i "/tmp/$EZA_DEB"
+  rm "/tmp/$EZA_DEB"
+  ok "eza ${EZA_TAG} installed"
+else
+  skip "eza ($(eza --version 2>/dev/null | head -1))"
+fi
+
+# dust (du replacement) — grab latest .deb from GitHub
+if ! command -v dust &>/dev/null; then
+  DUST_TAG=$(curl -fsSL https://api.github.com/repos/bootandy/dust/releases/latest \
+    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  DUST_TGZ="dust-${DUST_TAG}-x86_64-unknown-linux-musl.tar.gz"
+  curl -fLo "/tmp/dust.tar.gz" \
+    "https://github.com/bootandy/dust/releases/download/${DUST_TAG}/${DUST_TGZ}"
+  tar -xzf /tmp/dust.tar.gz -C /tmp/
+  sudo mv "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl/dust" /usr/local/bin/dust
+  sudo chmod +x /usr/local/bin/dust
+  rm -rf /tmp/dust.tar.gz "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl"
+  ok "dust ${DUST_TAG} installed"
+else
+  skip "dust"
+fi
+
+# delta (git diff pager) — grab latest .deb from GitHub
+if ! command -v delta &>/dev/null; then
+  DELTA_TAG=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest \
+    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  DELTA_DEB="git-delta_${DELTA_TAG}_amd64.deb"
+  curl -fLo "/tmp/$DELTA_DEB" \
+    "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/${DELTA_DEB}"
+  sudo dpkg -i "/tmp/$DELTA_DEB"
+  rm "/tmp/$DELTA_DEB"
+  ok "delta ${DELTA_TAG} installed"
+else
+  skip "delta"
+fi
+
+# Wire delta into git as the diff/pager
+git config --global core.pager delta
+git config --global interactive.diffFilter "delta --color-only"
+git config --global delta.navigate true
+git config --global delta.dark true
+git config --global delta.syntax-theme "Catppuccin Mocha"
+
+ok "Modern CLI tools installed"
 
 # ---------------------------------------------------------------------------
 # Phase 2 — Fonts
@@ -347,6 +415,103 @@ curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
 ok "Zsh + oh-my-zsh + Starship configured"
 
 # ---------------------------------------------------------------------------
+# Phase 11b — Tidal (tidal-hifi via Flatpak)
+# ---------------------------------------------------------------------------
+info "Phase 11b · Tidal (tidal-hifi)"
+
+if ! command -v flatpak &>/dev/null; then
+  sudo apt install -y flatpak
+  flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+fi
+
+if ! flatpak list --app | grep -q "com.mastermindzh.tidal-hifi"; then
+  flatpak install -y flathub com.mastermindzh.tidal-hifi
+  ok "tidal-hifi installed"
+else
+  skip "tidal-hifi"
+fi
+
+# Wayland flags — .desktop override so launcher uses native Wayland rendering
+TIDAL_DESKTOP_DIR="$HOME/.local/share/applications"
+mkdir -p "$TIDAL_DESKTOP_DIR"
+cat > "$TIDAL_DESKTOP_DIR/com.mastermindzh.tidal-hifi.desktop" << 'EOF'
+[Desktop Entry]
+Name=TIDAL Hi-Fi
+Comment=Tidal music streaming (Catppuccin Mocha)
+Exec=flatpak run com.mastermindzh.tidal-hifi -- --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations,WaylandLinuxDmabuf --enable-wayland-ime
+Icon=com.mastermindzh.tidal-hifi
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Music;Player;
+StartupWMClass=tidal-hifi
+EOF
+ok "tidal-hifi .desktop override written (Wayland flags)"
+
+# Catppuccin Mocha CSS theme for tidal-hifi
+# Load via: tidal-hifi → Settings → Theming → choose this file
+TIDAL_THEME_DIR="$HOME/.config/tidal-hifi"
+mkdir -p "$TIDAL_THEME_DIR"
+cat > "$TIDAL_THEME_DIR/catppuccin-mocha.css" << 'ENDCSS'
+/* Catppuccin Mocha theme for tidal-hifi
+   Load via: Settings > Theming > "Choose theme file"
+   Palette: Base #1e1e2e  Mantle #181825  Crust #11111b
+            Surface0 #313244  Text #cdd6f4  Mauve #cba6f7 */
+:root {
+  --ctp-base:    #1e1e2e;
+  --ctp-mantle:  #181825;
+  --ctp-crust:   #11111b;
+  --ctp-surface0:#313244;
+  --ctp-surface1:#45475a;
+  --ctp-text:    #cdd6f4;
+  --ctp-subtext0:#a6adc8;
+  --ctp-mauve:   #cba6f7;
+  --ctp-peach:   #fab387;
+  --ctp-green:   #a6e3a1;
+  --ctp-red:     #f38ba8;
+  --ctp-blue:    #89b4fa;
+}
+#react-root, body, .nowPlaying, .mainContent, .main-content {
+  background-color: var(--ctp-base) !important;
+  color: var(--ctp-text) !important;
+}
+nav, [class*="sidebar"], [class*="NavigationMenu"] {
+  background-color: var(--ctp-mantle) !important;
+}
+[class*="playbackControls"], [class*="footer"], #footerPlayer {
+  background-color: var(--ctp-crust) !important;
+  border-top: 1px solid var(--ctp-surface0) !important;
+}
+[class*="progressBar"] [role="progressbar"],
+[class*="progressBar"] [class*="bar"] {
+  background-color: var(--ctp-mauve) !important;
+}
+button[class*="playButton"], [class*="button--primary"] {
+  background-color: var(--ctp-mauve) !important;
+  color: var(--ctp-base) !important;
+}
+a, [class*="title"], [class*="trackName"] {
+  color: var(--ctp-text) !important;
+}
+a:hover { color: var(--ctp-mauve) !important; }
+[class*="isPlaying"], [class*="active"] { color: var(--ctp-mauve) !important; }
+[class*="card"], [class*="modal"], [class*="dialog"], [class*="dropdown"] {
+  background-color: var(--ctp-surface0) !important;
+  border: 1px solid var(--ctp-surface1) !important;
+}
+input, [class*="search"] {
+  background-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface1) !important;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--ctp-mantle); }
+::-webkit-scrollbar-thumb { background: var(--ctp-surface1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ctp-mauve); }
+ENDCSS
+ok "Catppuccin Mocha CSS theme written to ~/.config/tidal-hifi/catppuccin-mocha.css"
+warn "Manual step: Open tidal-hifi → Settings → Theming → choose ~/.config/tidal-hifi/catppuccin-mocha.css"
+
+# ---------------------------------------------------------------------------
 # Phase 12 — SDDM (Catppuccin Mocha Mauve theme)
 # ---------------------------------------------------------------------------
 info "Phase 12 · SDDM"
@@ -428,10 +593,13 @@ echo " KDE Plasma setup complete!"
 echo "============================================================"
 echo ""
 echo " Manual steps remaining:"
-echo "   1. Configure dock (Phase 9): remove bottom taskbar, add floating panel"
-echo "      with Icons-only Task Manager + System Tray + Clock"
+echo "   1. Dock/panel (Phase 9): scripts/configure-dock.sh requires a live"
+echo "      Plasma session. Run it manually after first login:"
+echo "      bash ~/Linux-Setup/scripts/configure-dock.sh"
 echo "   2. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
 echo "   3. Restart session to apply SDDM + all env vars"
+echo "   4. Tidal: open tidal-hifi → Settings → Theming →"
+echo "      choose ~/.config/tidal-hifi/catppuccin-mocha.css"
 echo ""
 echo " Optional: link plasma configs after reviewing compatibility:"
 echo "   ./install -c install-plasma.conf.yaml"
