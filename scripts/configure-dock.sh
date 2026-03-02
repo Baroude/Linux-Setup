@@ -263,21 +263,49 @@ else:
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
-# ── Write settings to Panel Colorizer applet config group ─────────────────
-base = ['kwriteconfig6', '--file', config_file,
-        '--group', 'Containments', '--group', top_id,
-        '--group', 'Applets',       '--group', pc_id,
-        '--group', 'Configuration', '--group', 'General']
-subprocess.run(base + ['--key', 'isEnabled',      'true'],  check=True)
-subprocess.run(base + ['--key', 'hideWidget',     'true'],  check=True)
-subprocess.run(base + ['--key', 'globalSettings',  gs_str], check=True)
+# ── Write settings via Plasma JS writeConfig (triggers configChanged live) ─
+# kwriteconfig6 writes to the file but does NOT notify the running applet —
+# Panel Colorizer caches globalSettings in memory and never sees those changes.
+# widget.writeConfig() fires configChanged so Panel Colorizer applies immediately.
+js_gs = gs_str.replace('\\', '\\\\').replace("'", "\\'")
+js_code = (
+    "var p = panelById(" + top_id + ");"
+    "if (p) {"
+    "  var ws = p.widgets();"
+    "  for (var i = 0; i < ws.length; i++) {"
+    "    if (ws[i].pluginName === 'luisbocanegra.panel.colorizer') {"
+    "      ws[i].currentConfigGroup = ['General'];"
+    "      ws[i].writeConfig('isEnabled', 'true');"
+    "      ws[i].writeConfig('hideWidget', 'true');"
+    "      ws[i].writeConfig('globalSettings', '" + js_gs + "');"
+    "      print('Panel Colorizer configured via JS writeConfig');"
+    "      break;"
+    "    }"
+    "  }"
+    "}"
+)
+dbus_cmd = 'qdbus6'
+if subprocess.run(['which', 'qdbus6'], capture_output=True).returncode != 0:
+    dbus_cmd = 'qdbus'
+result = subprocess.run(
+    [dbus_cmd, 'org.kde.plasmashell', '/PlasmaShell',
+     'org.kde.PlasmaShell.evaluateScript', js_code],
+    capture_output=True, text=True
+)
+if result.stdout.strip():
+    print(result.stdout.strip())
+if result.returncode != 0:
+    print("WARNING: JS writeConfig failed — falling back to kwriteconfig6", file=sys.stderr)
+    base = ['kwriteconfig6', '--file', config_file,
+            '--group', 'Containments', '--group', top_id,
+            '--group', 'Applets',       '--group', pc_id,
+            '--group', 'Configuration', '--group', 'General']
+    subprocess.run(base + ['--key', 'isEnabled',      'true'],  check=True)
+    subprocess.run(base + ['--key', 'hideWidget',     'true'],  check=True)
+    subprocess.run(base + ['--key', 'globalSettings',  gs_str], check=True)
 
 print(f"Panel Colorizer configured (applet id={pc_id})")
 PYEOF
 
-    # Reload the containment so Panel Colorizer picks up its new globalSettings
-    $DBUS_CMD org.kde.plasmashell /PlasmaShell \
-        org.kde.PlasmaShell.evaluateScript \
-        "var p = panelById(${TOP_ID}); if(p) p.reloadConfig();" 2>/dev/null || true
     echo "Panel Colorizer catppuccin islands applied to top bar"
 fi
