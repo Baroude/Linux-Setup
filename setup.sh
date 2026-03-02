@@ -182,7 +182,17 @@ curl -fLo /tmp/papirus-folders \
 chmod +x /tmp/papirus-folders
 /tmp/papirus-folders -C cat-mocha-mauve --theme Papirus-Dark
 rm /tmp/papirus-folders
-ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
+ok "Papirus-Dark + cat-mocha-mauve folders configured"
+
+# catppuccin-vibes — vibrant icon theme (installs alongside Papirus as fallback)
+clone_fresh /tmp/catppuccin-vibes https://github.com/generalentropy/catppuccin-vibes.git
+sudo cp -r /tmp/catppuccin-vibes/icons/catppuccin-vibrant /usr/share/icons/
+sudo cp -r /tmp/catppuccin-vibes/icons/catppuccin-muted   /usr/share/icons/
+rm -rf /tmp/catppuccin-vibes
+sudo gtk-update-icon-cache -f /usr/share/icons/catppuccin-vibrant 2>/dev/null || true
+
+kwriteconfig6 --file kdeglobals --group Icons --key Theme catppuccin-vibrant
+ok "Icons configured (catppuccin-vibrant active, Papirus-Dark as fallback)"
 
 # ---------------------------------------------------------------------------
 # Phase 7 — KWin blur
@@ -233,7 +243,8 @@ sudo apt install -y \
   libkf6guiaddons-dev \
   libkf6kcmutils-dev \
   libxkbcommon-dev \
-  libkdecorations3-dev
+  libkdecorations3-dev \
+  libxcb-composite0-dev
 
 BETTERBLUR_BUILD="$(mktemp -d)"
 # Pin to v1.3.6 — last release that supports Plasma < 6.4.
