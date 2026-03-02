@@ -11,6 +11,9 @@ set -euo pipefail
 DBUS_CMD="qdbus6"
 command -v qdbus6 &>/dev/null || DBUS_CMD="qdbus"
 
+# catppuccin-vibes SVG icons (downloaded by setup.sh Phase 6)
+VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
+
 # ── Detect .desktop file names (vary between distros) ──────────────────────
 
 # Firefox: Debian ships firefox-esr.desktop, not firefox.desktop
@@ -53,7 +56,9 @@ dock.height     = 56;
 dock.alignment  = 'center';
 dock.lengthMode = 'fit';
 
-dock.addWidget('org.kde.plasma.kickoff');
+var kickoff = dock.addWidget('org.kde.plasma.kickoff');
+kickoff.currentConfigGroup = ['General'];
+kickoff.writeConfig('icon', '${VIBES_DIR}/apps-vibrant.svg');
 
 var tasks = dock.addWidget('org.kde.plasma.icontasks');
 tasks.currentConfigGroup = ['General'];

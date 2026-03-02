@@ -267,7 +267,7 @@ ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
 VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
 mkdir -p "$VIBES_DIR"
 VIBES_BASE="https://raw.githubusercontent.com/generalentropy/catppuccin-vibes/main/icons/catppuccin-vibrant"
-for _icon in terminal-vibrant folder-vibrant browser-vibrant music-vibrant; do
+for _icon in apps-vibrant terminal-vibrant folder-vibrant browser-vibrant music-vibrant; do
   curl -fLo "$VIBES_DIR/${_icon}.svg" "${VIBES_BASE}/${_icon}.svg"
 done
 ok "catppuccin-vibes SVGs downloaded to $VIBES_DIR"
