@@ -12,10 +12,8 @@ roundedcornersEnabled=true
 Radius=12
 
 [Script-krohnkite]
-# Krohnkite options are set via its own settings UI / kwriteconfig6
-# Inner/outer gaps: 8px each
-
-[Windows]
-# Float exceptions for Krohnkite
-# Configured in Krohnkite settings UI:
-# systemsettings, krunner, plasmashell, all dialogs
+tileLayoutGap=8
+screenGapTop=8
+screenGapBottom=8
+screenGapLeft=8
+screenGapRight=8

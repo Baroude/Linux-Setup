@@ -3,6 +3,7 @@
 # Skip before major KDE upgrades; re-run after verifying config compatibility.
 
 - link:
-    ~/.config/kwinrc:         plasma/kwinrc
-    ~/.config/kdeglobals:     plasma/kdeglobals
+    ~/.config/kwinrc:          plasma/kwinrc
+    ~/.config/kdeglobals:      plasma/kdeglobals
     ~/.config/kscreenlockerrc: plasma/kscreenlockerrc
+    ~/.config/kwinrulesrc:     plasma/kwinrulesrc
