@@ -2,7 +2,7 @@
 # configure-dock.sh — Plasma 6 panel layout via JS scripting API
 # Creates:
 #   Bottom dock (no background, centered): Kickoff | icontasks [pinned apps]
-#   Top bar     (transparent, full-width): AppMenu | Spacer | Media | SysMonitor | SysTray | Clock
+#   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu | Media | CPU% | RAM% | SysTray
 #
 # Requires a running plasmashell session. Safe to re-run.
 
@@ -34,6 +34,12 @@ if flatpak list --app 2>/dev/null | grep -q "com.mastermindzh.tidal-hifi"; then
 fi
 
 echo "Launchers: ${LAUNCHERS}"
+
+# ── Virtual desktops — pager hides itself when only 1 desktop exists ───────
+kwriteconfig6 --file "$HOME/.config/kwinrc" --group "Desktops" --key "Number" "4"
+kwriteconfig6 --file "$HOME/.config/kwinrc" --group "Desktops" --key "Rows"   "1"
+qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+echo "Virtual desktops set to 4"
 
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
 # Double-quoted string so bash variables (LAUNCHERS) expand into the JS.
@@ -90,39 +96,58 @@ clock.writeConfig('dateFormat', 'shortDate');
 
 top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right group away
 
-// right group: weather first, then system widgets
+// right group: weather, appmenu, media, then inline CPU% and RAM%, then systray
 top.addWidget('org.kde.plasma.weather');
 top.addWidget('org.kde.plasma.appmenu');
 top.addWidget('org.kde.plasma.mediacontroller');
-top.addWidget('org.kde.plasma.systemmonitor');
+
+// CPU usage — text-only face shows the percentage directly in the bar
+var cpu = top.addWidget('org.kde.plasma.systemmonitor');
+cpu.currentConfigGroup = ['Sensors'];
+cpu.writeConfig('highPrioritySensorIds', '["cpu/all/usage"]');
+cpu.writeConfig('totalSensors',          '["cpu/all/usage"]');
+cpu.currentConfigGroup = ['Appearance'];
+cpu.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+
+// RAM usage — same approach, physical memory used %
+var mem = top.addWidget('org.kde.plasma.systemmonitor');
+mem.currentConfigGroup = ['Sensors'];
+mem.writeConfig('highPrioritySensorIds', '["memory/physical/usedPercent"]');
+mem.writeConfig('totalSensors',          '["memory/physical/usedPercent"]');
+mem.currentConfigGroup = ['Appearance'];
+mem.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+
 top.addWidget('org.kde.plasma.systemtray');
 
 "
 
 # ── Colorize top bar icons with Catppuccin Mocha palette ──────────────────
-# Colors:Header controls icon/text color for panel widgets (symbolic icons,
-# clock, appmenu text). ForegroundNormal = Catppuccin Text (soft white).
-# DecorationFocus/Hover = Mauve accent so highlights pop with the theme.
+# Writing to kdeglobals alone doesn't stick — the active color scheme
+# overrides it whenever KDE refreshes. Instead, patch the installed scheme
+# file directly so the values survive reapplication, then reapply the scheme.
 # RGB format: "R,G,B"  (Catppuccin Mocha reference values)
-KDEGLOBALS="$HOME/.config/kdeglobals"
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "BackgroundNormal"    "30,30,46"        # base      #1e1e2e
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "BackgroundAlternate" "24,24,37"        # mantle    #181825
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "ForegroundNormal"    "203,166,247"     # mauve     #cba6f7
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "ForegroundInactive"  "166,173,200"     # subtext1  #a6adc8
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "DecorationFocus"     "203,166,247"     # mauve     #cba6f7
-kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "DecorationHover"     "203,166,247"     # mauve     #cba6f7
-
-# Notify running KDE session to pick up the new colours
-qdbus6 org.kde.KGlobalSettings /KGlobalSettings \
-    org.kde.KGlobalSettings.notifyChange 0 0 2>/dev/null || true
-
-echo "Top bar icon colours set to Catppuccin Mocha (mauve accents)"
+SCHEME_FILE="$HOME/.local/share/color-schemes/CatppuccinMochaMauve.colors"
+if [[ -f "$SCHEME_FILE" ]]; then
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "BackgroundNormal"    "30,30,46"    # base      #1e1e2e
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "BackgroundAlternate" "24,24,37"    # mantle    #181825
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "ForegroundNormal"    "203,166,247" # mauve     #cba6f7
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "ForegroundInactive"  "166,173,200" # subtext1  #a6adc8
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "DecorationFocus"     "203,166,247" # mauve     #cba6f7
+    kwriteconfig6 --file "$SCHEME_FILE" --group "Colors:Header" \
+        --key "DecorationHover"     "203,166,247" # mauve     #cba6f7
+    # Reapply so the running session picks up the patched scheme
+    plasma-apply-colorscheme CatppuccinMochaMauve 2>/dev/null || \
+        qdbus6 org.kde.KGlobalSettings /KGlobalSettings \
+            org.kde.KGlobalSettings.notifyChange 0 0 2>/dev/null || true
+    echo "Catppuccin Mocha scheme patched and reapplied (mauve panel icons)"
+else
+    echo "WARNING: CatppuccinMochaMauve.colors not found — run Phase 3 of setup.sh first"
+fi
 
 # ── Remove top bar background via kwriteconfig6 + reloadConfig ────────────
 # JS writeConfig alone doesn't survive without an explicit reloadConfig call.
@@ -133,15 +158,24 @@ TOP_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
     2>/dev/null | tail -1)
 
 if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
+    # backgroundHints=0 → NoBackground (removes SVG decoration)
+    # panelOpacity=2    → Translucent (the key Plasma's own right-click menu writes)
+    # Both are needed: backgroundHints handles the containment SVG layer,
+    # panelOpacity handles the PanelView compositor layer.
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
         --group "Containments" --group "$TOP_ID" \
         --group "Configuration" --group "General" \
         --key "backgroundHints" "0"
+    kwriteconfig6 \
+        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
+        --group "Containments" --group "$TOP_ID" \
+        --group "Configuration" --group "General" \
+        --key "panelOpacity" "2"
     $DBUS_CMD org.kde.plasmashell /PlasmaShell \
         org.kde.PlasmaShell.evaluateScript \
         "var p = panelById(${TOP_ID}); if(p) p.reloadConfig();" 2>/dev/null || true
-    echo "No-background applied to top bar containment ${TOP_ID}"
+    echo "Transparent top bar applied to containment ${TOP_ID}"
 fi
 
 # ── Enable floating mode on bottom dock ────────────────────────────────────
