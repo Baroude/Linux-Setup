@@ -197,22 +197,42 @@ kwriteconfig6 --file kwinrc --group Effect-blur --key NoiseStrength 2
 kwriteconfig6 --file kwinrc --group Plugins --key roundedcornersEnabled true
 kwriteconfig6 --file kwinrc --group Effect-roundedcorners --key Radius 12
 
-# Dolphin window rule — force 88 % opacity + blur so KWin blurs behind it.
-# blursettings=2 / opacityactivesettings=2 = "Force" policy.
-# Only writes rule 1; safe on a fresh install with no prior rules.
+# Dolphin window rule — force 88 % opacity so kwin-better-blur can blur behind it.
+# Plasma 6 uses the "rule" suffix (not "settings") for policy values; 2 = Force.
+# wmclassmatch=2 = substring match (safer than exact on Wayland).
 if ! grep -q "dolphin" "$HOME/.config/kwinrulesrc" 2>/dev/null; then
   kwriteconfig6 --file kwinrulesrc --group General --key count 1
   kwriteconfig6 --file kwinrulesrc --group 1 --key Description "Dolphin — transparency + blur"
-  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclass "dolphin dolphin"
-  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclassmatch 1
-  kwriteconfig6 --file kwinrulesrc --group 1 --key blur true
-  kwriteconfig6 --file kwinrulesrc --group 1 --key blursettings 2
+  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclass "dolphin"
+  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclasscomplete false
+  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclassmatch 2
   kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactive 88
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactivesettings 2
+  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactiverule 2
   kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactive 85
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactivesettings 2
+  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactiverule 2
 fi
-ok "KWin blur + rounded corners + Dolphin rule enabled"
+ok "KWin blur + rounded corners + Dolphin opacity rule written"
+
+# ---------------------------------------------------------------------------
+# Phase 7b — kwin-better-blur (force blur behind any semi-transparent window)
+# ---------------------------------------------------------------------------
+info "Phase 7b · kwin-better-blur"
+
+# Build dependencies (kwin-dev pulls in Qt6/KF6 headers transitively)
+sudo apt install -y kwin-dev extra-cmake-modules
+
+BETTERBLUR_BUILD="$(mktemp -d)"
+clone_fresh /tmp/kwin-better-blur https://github.com/taj-ny/kwin-effects-forceblur.git
+cmake -S /tmp/kwin-better-blur -B "$BETTERBLUR_BUILD" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build "$BETTERBLUR_BUILD" -j"$(nproc)"
+sudo cmake --install "$BETTERBLUR_BUILD"
+rm -rf /tmp/kwin-better-blur "$BETTERBLUR_BUILD"
+
+# Enable the effect — plugin ID is derived from CMakeLists project name
+kwriteconfig6 --file kwinrc --group Plugins --key kwin_better_blurEnabled true
+ok "kwin-better-blur installed and enabled (configure in System Settings → Desktop Effects)"
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script
@@ -238,11 +258,13 @@ kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
 
 # Gap between tiled windows and screen edges (px).
 # Keys are camelCase — Krohnkite reads them via KWin.readConfig().
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key tileLayoutGap   8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop    8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom 8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft   8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight  8
+# screenGapBetween = gap between adjacent tiles (NOT tileLayoutGap — that key
+# does not exist in the anametologin fork).
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBetween 8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop     8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom  8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft    8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
 ok "Krohnkite installed and enabled (8 px gaps)"
 
 # ---------------------------------------------------------------------------

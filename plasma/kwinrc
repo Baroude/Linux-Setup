@@ -12,7 +12,7 @@ roundedcornersEnabled=true
 Radius=12
 
 [Script-krohnkite]
-tileLayoutGap=8
+screenGapBetween=8
 screenGapTop=8
 screenGapBottom=8
 screenGapLeft=8

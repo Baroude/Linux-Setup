@@ -15,6 +15,7 @@ Theme: **Catppuccin Mocha Mauve** end-to-end (shell, terminal, KDE, GTK, GRUB, S
 | Shell | Zsh + oh-my-zsh |
 | Prompt | Starship — Catppuccin Powerline |
 | Tiling | Krohnkite (vim-key moves, 8 px gaps) |
+| Blur | kwin-better-blur (force-blurs semi-transparent windows incl. Dolphin) |
 | Editor | Neovim (latest stable) |
 | UI font | Inter |
 | Mono font | JetBrains Mono Nerd Font |
@@ -55,8 +56,9 @@ kdeglobals, kscreenlockerrc). Skip this before a major KDE upgrade:
 | 4 | Kvantum — `catppuccin-mocha-mauve` Qt app style |
 | 5 | GTK bridge — catppuccin/gtk v1.0.3 + Flatpak overrides |
 | 6 | Icons — Papirus-Dark + catppuccin papirus-folders (cat-mocha-mauve) |
-| 7 | KWin — blur (strength 9, noise 2) + rounded corners (radius 12) |
-| 8 | Krohnkite tiling script (install or upgrade) + 8 px gaps |
+| 7 | KWin — blur (strength 9, noise 2) + rounded corners (radius 12) + Dolphin opacity rule |
+| 7b | kwin-better-blur built from source (forces blur behind any semi-transparent window) |
+| 8 | Krohnkite tiling script (install or upgrade) + 8 px gaps (`screenGapBetween` + screen edges) |
 | 9 | Dock — floating bottom panel (Icons-only Task Manager + tray + clock) |
 | 10 | Kitty config directory (dotbot links `kitty/kitty.conf`) |
 | 11 | Zsh + oh-my-zsh + plugins + Starship |
@@ -183,6 +185,9 @@ qdbus6 org.kde.KWin /KWin reconfigure
 
 1. **Dock** — Phase 9 runs automatically, but verify the floating bottom
    panel has: Icons-only Task Manager + System Tray + Digital Clock.
-2. **Krohnkite** — review gaps and layout keybinds in
+2. **kwin-better-blur** — go to System Settings → Desktop Effects → Better Blur
+   → Configure. Enable "Blur windows that request blur" and add Dolphin to the
+   window list, or enable "Blur all windows" for a global frosted glass effect.
+3. **Krohnkite** — review gaps and layout keybinds in
    System Settings → KWin Scripts → Krohnkite → Configure.
-3. **Restart session** to apply SDDM theme and all environment variables.
+4. **Restart session** to apply SDDM theme and all environment variables.

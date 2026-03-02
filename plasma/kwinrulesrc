@@ -3,11 +3,10 @@ count=1
 
 [1]
 Description=Dolphin — transparency + blur
-wmclass=dolphin dolphin
-wmclassmatch=1
-blur=true
-blursettings=2
+wmclass=dolphin
+wmclasscomplete=false
+wmclassmatch=2
 opacityactive=88
-opacityactivesettings=2
+opacityactiverule=2
 opacityinactive=85
-opacityinactivesettings=2
+opacityinactiverule=2
