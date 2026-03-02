@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
+qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
 // Remove all existing panels (fresh install only has the default bottom panel)
 var allPanels = panels();
 for (var i = 0; i < allPanels.length; i++) {

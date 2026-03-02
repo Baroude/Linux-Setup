@@ -141,7 +141,7 @@ background_opacity 0.90   # Readable on evening-sky.png; frosted glass via KWin 
 background_blur    64     # Requests blur from KWin via Wayland protocol. WORKS.
 ```
 
-Apply without logout: `qdbus org.kde.KWin /KWin reconfigure`
+Apply without logout: `qdbus6 org.kde.KWin /KWin reconfigure`
 
 ---
 
@@ -186,7 +186,7 @@ Float exceptions: `systemsettings`, `krunner`, `plasmashell`, auth dialogs, all 
 Rollback for any option:
 ```bash
 kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled false
-qdbus org.kde.KWin /KWin reconfigure
+qdbus6 org.kde.KWin /KWin reconfigure
 ```
 
 ---
@@ -393,7 +393,7 @@ Bootstrap:
 systemctl --user restart plasma-plasmashell
 
 # Reconfigure KWin without logout
-qdbus org.kde.KWin /KWin reconfigure
+qdbus6 org.kde.KWin /KWin reconfigure
 
 # Disable tiling from TTY if session is broken
 kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled false
