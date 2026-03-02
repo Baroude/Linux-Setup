@@ -106,10 +106,14 @@ sudo apt install -y \
   duf \
   jq
 
+# Helper: fetch latest GitHub release tag without SIGPIPE from grep -m1
+# Uses python3 to consume the full JSON (avoids curl: (23) under pipefail)
+gh_latest_tag() { curl -fsSL "https://api.github.com/repos/$1/releases/latest" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])"; }
+
 # eza — not in Debian apt; grab the latest .deb from GitHub
 if ! command -v eza &>/dev/null; then
-  EZA_TAG=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
-    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  EZA_TAG=$(gh_latest_tag eza-community/eza)
   EZA_DEB="eza_$(echo "$EZA_TAG" | tr -d 'v')_amd64.deb"
   curl -fLo "/tmp/$EZA_DEB" \
     "https://github.com/eza-community/eza/releases/download/${EZA_TAG}/${EZA_DEB}"
@@ -120,10 +124,9 @@ else
   skip "eza ($(eza --version 2>/dev/null | head -1))"
 fi
 
-# dust (du replacement) — grab latest .deb from GitHub
+# dust (du replacement) — grab latest tarball from GitHub
 if ! command -v dust &>/dev/null; then
-  DUST_TAG=$(curl -fsSL https://api.github.com/repos/bootandy/dust/releases/latest \
-    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  DUST_TAG=$(gh_latest_tag bootandy/dust)
   DUST_TGZ="dust-${DUST_TAG}-x86_64-unknown-linux-musl.tar.gz"
   curl -fLo "/tmp/dust.tar.gz" \
     "https://github.com/bootandy/dust/releases/download/${DUST_TAG}/${DUST_TGZ}"
@@ -138,8 +141,7 @@ fi
 
 # delta (git diff pager) — grab latest .deb from GitHub
 if ! command -v delta &>/dev/null; then
-  DELTA_TAG=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest \
-    | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  DELTA_TAG=$(gh_latest_tag dandavison/delta)
   DELTA_DEB="git-delta_${DELTA_TAG}_amd64.deb"
   curl -fLo "/tmp/$DELTA_DEB" \
     "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/${DELTA_DEB}"
