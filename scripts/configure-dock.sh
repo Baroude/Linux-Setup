@@ -114,8 +114,8 @@ top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to
 var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
 clock.writeConfig('showDate', 'true');
-clock.writeConfig('dateDisplayFormat', 'BelowTime');
-clock.writeConfig('dateFormat', 'shortDate');
+clock.writeConfig('dateDisplayFormat', '1');           // BesideTime: date first, time after
+clock.writeConfig('dateFormat', 'longDate');
 
 top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right group away
 
