@@ -256,15 +256,12 @@ chmod +x /tmp/papirus-folders
 rm /tmp/papirus-folders
 ok "Papirus-Dark + cat-mocha-mauve folders configured"
 
-# catppuccin-vibes — vibrant icon theme (installs alongside Papirus as fallback)
-clone_fresh /tmp/catppuccin-vibes https://github.com/generalentropy/catppuccin-vibes.git
-sudo cp -r /tmp/catppuccin-vibes/icons/catppuccin-vibrant /usr/share/icons/
-sudo cp -r /tmp/catppuccin-vibes/icons/catppuccin-muted   /usr/share/icons/
-rm -rf /tmp/catppuccin-vibes
-sudo gtk-update-icon-cache -f /usr/share/icons/catppuccin-vibrant 2>/dev/null || true
-
-kwriteconfig6 --file kdeglobals --group Icons --key Theme catppuccin-vibrant
-ok "Icons configured (catppuccin-vibrant active, Papirus-Dark as fallback)"
+# Papirus-Dark is the active theme — it has full KDE/hicolor coverage and
+# the papirus-folders recoloring above already gives catppuccin mauve folders.
+# catppuccin-vibes (generalentropy) was removed: incomplete icon set with no
+# Inherits fallback causes missing/broken icons across KDE.
+kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
+ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
 
 # ---------------------------------------------------------------------------
 # Phase 7 — KWin blur
