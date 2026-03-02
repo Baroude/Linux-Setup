@@ -3,7 +3,7 @@
 # Creates:
 #   Bottom dock (no background, centered): Kickoff | icontasks [pinned apps]
 #   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu |
-#             Media | CPU | RAM | SysTray | PanelColorizer(hidden)
+#             Media | CPU | RAM | CPU Temp | SysTray | Power | PanelColorizer(hidden)
 #
 # Panel Colorizer applies catppuccin Mocha pill islands — each widget gets its
 # own distinct accent colour.
@@ -103,10 +103,11 @@ top.writeConfig('backgroundHints', '0');
 
 var pager = top.addWidget('org.kde.plasma.pager');  // far left
 pager.currentConfigGroup = ['General'];
-pager.writeConfig('displayedText', '0');            // Number
+pager.writeConfig('displayedText', '2');            // None (cleaner, dot-only look)
 pager.writeConfig('showWindowOutlines', 'false');
 pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
+pager.writeConfig('showOnlyCurrentScreen', 'true');
 
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
@@ -128,20 +129,36 @@ var cpu = top.addWidget('org.kde.plasma.systemmonitor');
 cpu.currentConfigGroup = ['Sensors'];
 cpu.writeConfig('highPrioritySensorIds', '[\"cpu/all/usage\"]');
 cpu.writeConfig('totalSensors',          '[\"cpu/all/usage\"]');
+cpu.currentConfigGroup = ['SensorLabels'];
+cpu.writeConfig('cpu/all/usage', ' CPU');
 cpu.currentConfigGroup = ['Appearance'];
 cpu.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
-cpu.writeConfig('title', 'CPU');
+cpu.writeConfig('title', ' CPU');
 
 // RAM usage — same approach, physical memory used %
 var mem = top.addWidget('org.kde.plasma.systemmonitor');
 mem.currentConfigGroup = ['Sensors'];
 mem.writeConfig('highPrioritySensorIds', '[\"memory/physical/usedPercent\"]');
 mem.writeConfig('totalSensors',          '[\"memory/physical/usedPercent\"]');
+mem.currentConfigGroup = ['SensorLabels'];
+mem.writeConfig('memory/physical/usedPercent', '󰍛 RAM');
 mem.currentConfigGroup = ['Appearance'];
 mem.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
-mem.writeConfig('title', 'RAM');
+mem.writeConfig('title', '󰍛 RAM');
+
+// CPU temperature — average package temperature
+var temp = top.addWidget('org.kde.plasma.systemmonitor');
+temp.currentConfigGroup = ['Sensors'];
+temp.writeConfig('highPrioritySensorIds', '[\"cpu/all/averageTemperature\"]');
+temp.writeConfig('totalSensors',          '[\"cpu/all/averageTemperature\"]');
+temp.currentConfigGroup = ['SensorLabels'];
+temp.writeConfig('cpu/all/averageTemperature', ' TEMP');
+temp.currentConfigGroup = ['Appearance'];
+temp.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+temp.writeConfig('title', ' TEMP');
 
 top.addWidget('org.kde.plasma.systemtray');
+top.addWidget('org.kde.plasma.battery');       // far-right power widget
 
 // Panel Colorizer — hidden control widget; applies catppuccin pill islands.
 // globalSettings are written by the Python block below after panel IDs are known.
@@ -243,12 +260,39 @@ if not pc_id:
 
 print(f"Panel Colorizer applet id: {pc_id}")
 
-# ── Load preset and keep CPU/RAM visually distinct ─────────────────────────
+# ── Load preset and unify CPU/RAM/Temp into one island ─────────────────────
 with open(preset_file) as f:
     preset = json.load(f)
 
 gs = preset['globalSettings']
-gs['unifiedBackground'] = []
+sysmon_ids = sorted(
+    [aid for aid, p in applet_plugins.items() if p == 'org.kde.plasma.systemmonitor'],
+    key=int)
+print(f"System monitor applet ids (sorted): {sysmon_ids}")
+
+if len(sysmon_ids) >= 3:
+    cpu_id = int(sysmon_ids[-3])
+    ram_id = int(sysmon_ids[-2])
+    temp_id = int(sysmon_ids[-1])
+    # unifyBgType: 1=start, 2=middle, 3=end
+    gs['unifiedBackground'] = [
+        {'id': cpu_id,  'unifyBgType': 1},
+        {'id': ram_id,  'unifyBgType': 2},
+        {'id': temp_id, 'unifyBgType': 3},
+    ]
+    print(f"Unified CPU (id={cpu_id}) + RAM (id={ram_id}) + TEMP (id={temp_id}) as one island")
+elif len(sysmon_ids) == 2:
+    cpu_id = int(sysmon_ids[-2])
+    ram_id = int(sysmon_ids[-1])
+    gs['unifiedBackground'] = [
+        {'id': cpu_id, 'unifyBgType': 1},
+        {'id': ram_id, 'unifyBgType': 3},
+    ]
+    print(f"Unified CPU (id={cpu_id}) + RAM (id={ram_id}) as one island (TEMP unavailable)")
+else:
+    gs['unifiedBackground'] = []
+    print("WARNING: < 2 systemmonitor applets found; skipping unified island",
+          file=sys.stderr)
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
