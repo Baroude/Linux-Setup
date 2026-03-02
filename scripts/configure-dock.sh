@@ -3,7 +3,7 @@
 # Creates:
 #   Bottom dock (no background, centered): Kickoff | icontasks [pinned apps]
 #   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu |
-#             Media | CPU | RAM | CPU Temp | SysTray | Power | PanelColorizer(hidden)
+#             Media | CPU/RAM/Temp | SysTray | Power | PanelColorizer(hidden)
 #
 # Panel Colorizer applies catppuccin Mocha pill islands — each widget gets its
 # own distinct accent colour.
@@ -103,7 +103,7 @@ top.writeConfig('backgroundHints', '0');
 
 var pager = top.addWidget('org.kde.plasma.pager');  // far left
 pager.currentConfigGroup = ['General'];
-pager.writeConfig('displayedText', '2');            // None (cleaner, dot-only look)
+pager.writeConfig('displayedText', '0');            // Number
 pager.writeConfig('showWindowOutlines', 'false');
 pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
@@ -119,43 +119,23 @@ clock.writeConfig('dateFormat', 'shortDate');
 
 top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right group away
 
-// right group: weather, appmenu, media, inline CPU% and RAM%, systray
+// right group: weather, appmenu, media, inline metrics, systray, power
 top.addWidget('org.kde.plasma.weather');
 top.addWidget('org.kde.plasma.appmenu');
 top.addWidget('org.kde.plasma.mediacontroller');
 
-// CPU usage — text-only face shows the percentage directly in the bar
-var cpu = top.addWidget('org.kde.plasma.systemmonitor');
-cpu.currentConfigGroup = ['Sensors'];
-cpu.writeConfig('highPrioritySensorIds', '[\"cpu/all/usage\"]');
-cpu.writeConfig('totalSensors',          '[\"cpu/all/usage\"]');
-cpu.currentConfigGroup = ['SensorLabels'];
-cpu.writeConfig('cpu/all/usage', ' CPU');
-cpu.currentConfigGroup = ['Appearance'];
-cpu.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
-cpu.writeConfig('title', ' CPU');
-
-// RAM usage — same approach, physical memory used %
-var mem = top.addWidget('org.kde.plasma.systemmonitor');
-mem.currentConfigGroup = ['Sensors'];
-mem.writeConfig('highPrioritySensorIds', '[\"memory/physical/usedPercent\"]');
-mem.writeConfig('totalSensors',          '[\"memory/physical/usedPercent\"]');
-mem.currentConfigGroup = ['SensorLabels'];
-mem.writeConfig('memory/physical/usedPercent', '󰍛 RAM');
-mem.currentConfigGroup = ['Appearance'];
-mem.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
-mem.writeConfig('title', '󰍛 RAM');
-
-// CPU temperature — average package temperature
-var temp = top.addWidget('org.kde.plasma.systemmonitor');
-temp.currentConfigGroup = ['Sensors'];
-temp.writeConfig('highPrioritySensorIds', '[\"cpu/all/averageTemperature\"]');
-temp.writeConfig('totalSensors',          '[\"cpu/all/averageTemperature\"]');
-temp.currentConfigGroup = ['SensorLabels'];
-temp.writeConfig('cpu/all/averageTemperature', ' TEMP');
-temp.currentConfigGroup = ['Appearance'];
-temp.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
-temp.writeConfig('title', ' TEMP');
+// Unified metrics island: CPU %, RAM %, CPU temperature (icon-only labels)
+var metrics = top.addWidget('org.kde.plasma.systemmonitor');
+metrics.currentConfigGroup = ['Sensors'];
+metrics.writeConfig('highPrioritySensorIds', '[\"cpu/all/usage\",\"memory/physical/usedPercent\",\"cpu/all/averageTemperature\"]');
+metrics.writeConfig('totalSensors',          '[\"cpu/all/usage\",\"memory/physical/usedPercent\",\"cpu/all/averageTemperature\"]');
+metrics.currentConfigGroup = ['SensorLabels'];
+metrics.writeConfig('cpu/all/usage', '');
+metrics.writeConfig('memory/physical/usedPercent', '󰍛');
+metrics.writeConfig('cpu/all/averageTemperature', '');
+metrics.currentConfigGroup = ['Appearance'];
+metrics.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
+metrics.writeConfig('title', '');
 
 top.addWidget('org.kde.plasma.systemtray');
 top.addWidget('org.kde.plasma.battery');       // far-right power widget
@@ -260,44 +240,17 @@ if not pc_id:
 
 print(f"Panel Colorizer applet id: {pc_id}")
 
-# ── Load preset and unify CPU/RAM/Temp into one island ─────────────────────
+# ── Load preset and keep a single unified metrics widget ───────────────────
 with open(preset_file) as f:
     preset = json.load(f)
 
 gs = preset['globalSettings']
-sysmon_ids = sorted(
-    [aid for aid, p in applet_plugins.items() if p == 'org.kde.plasma.systemmonitor'],
-    key=int)
-print(f"System monitor applet ids (sorted): {sysmon_ids}")
-
-if len(sysmon_ids) >= 3:
-    cpu_id = int(sysmon_ids[-3])
-    ram_id = int(sysmon_ids[-2])
-    temp_id = int(sysmon_ids[-1])
-    # unifyBgType: 1=start, 2=middle, 3=end
-    gs['unifiedBackground'] = [
-        {'id': cpu_id,  'unifyBgType': 1},
-        {'id': ram_id,  'unifyBgType': 2},
-        {'id': temp_id, 'unifyBgType': 3},
-    ]
-    print(f"Unified CPU (id={cpu_id}) + RAM (id={ram_id}) + TEMP (id={temp_id}) as one island")
-elif len(sysmon_ids) == 2:
-    cpu_id = int(sysmon_ids[-2])
-    ram_id = int(sysmon_ids[-1])
-    gs['unifiedBackground'] = [
-        {'id': cpu_id, 'unifyBgType': 1},
-        {'id': ram_id, 'unifyBgType': 3},
-    ]
-    print(f"Unified CPU (id={cpu_id}) + RAM (id={ram_id}) as one island (TEMP unavailable)")
-else:
-    gs['unifiedBackground'] = []
-    print("WARNING: < 2 systemmonitor applets found; skipping unified island",
-          file=sys.stderr)
+gs['unifiedBackground'] = []
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
-# ── Build configurationOverrides to disable panelspacer widgets ────────────
-# Spacers advance the color-list counter but must not render a colored pill.
+# ── Build configurationOverrides to disable spacer/pager pills ─────────────
+# Spacers and pager advance the color-list counter but should not render pills.
 # configurationOverrides is a SEPARATE config key (not inside globalSettings)
 # and is matched by both numeric id AND plugin name.
 spacer_ids = sorted(
@@ -305,6 +258,11 @@ spacer_ids = sorted(
      if p == 'org.kde.plasma.panelspacer'],
     key=int)
 print(f"Spacer applet ids: {spacer_ids}")
+pager_ids = sorted(
+    [aid for aid, p in applet_plugins.items()
+     if p == 'org.kde.plasma.pager'],
+    key=int)
+print(f"Pager applet ids: {pager_ids}")
 off = {
     "disabledFallback": True,
     "normal":          {"enabled": False},
@@ -317,11 +275,13 @@ off = {
 # so the association must use id=-1. Also include the real config IDs as
 # belt-and-suspenders in case the behaviour differs across Plasma versions.
 co = {
-    "overrides": {"spacer_off": off},
+    "overrides": {"no_pill": off},
     "associations": (
-        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["spacer_off"]}]
+        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["no_pill"]}]
         + [{"id": int(sid), "name": "org.kde.plasma.panelspacer",
-            "presets": ["spacer_off"]} for sid in spacer_ids]
+            "presets": ["no_pill"]} for sid in spacer_ids]
+        + [{"id": int(pid), "name": "org.kde.plasma.pager",
+            "presets": ["no_pill"]} for pid in pager_ids]
     ),
 }
 co_str = json.dumps(co, separators=(',', ':'))
