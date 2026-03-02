@@ -216,9 +216,9 @@ if ! grep -q "dolphin" "$HOME/.config/kwinrulesrc" 2>/dev/null; then
   kwriteconfig6 --file kwinrulesrc --group 1 --key wmclass "dolphin"
   kwriteconfig6 --file kwinrulesrc --group 1 --key wmclasscomplete false
   kwriteconfig6 --file kwinrulesrc --group 1 --key wmclassmatch 2
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactive 88
+  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactive 90
   kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactiverule 2
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactive 85
+  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactive 88
   kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactiverule 2
 fi
 ok "KWin blur + rounded corners + Dolphin opacity rule written"
