@@ -78,17 +78,24 @@ top.lengthMode = 'fill';
 top.currentConfigGroup = ['General'];
 top.writeConfig('backgroundHints', '0');
 
-top.addWidget('org.kde.plasma.appmenu');
-top.addWidget('org.kde.plasma.panelspacer');
-top.addWidget('org.kde.plasma.mediacontroller');
-top.addWidget('org.kde.plasma.systemmonitor');
-top.addWidget('org.kde.plasma.systemtray');
+top.addWidget('org.kde.plasma.pager');          // far left
+
+top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
 var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
 clock.writeConfig('showDate', 'true');
 clock.writeConfig('dateDisplayFormat', 'BelowTime');
 clock.writeConfig('dateFormat', 'shortDate');
+
+top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right group away
+
+// right group: weather first, then system widgets
+top.addWidget('org.kde.plasma.weather');
+top.addWidget('org.kde.plasma.appmenu');
+top.addWidget('org.kde.plasma.mediacontroller');
+top.addWidget('org.kde.plasma.systemmonitor');
+top.addWidget('org.kde.plasma.systemtray');
 
 "
 
