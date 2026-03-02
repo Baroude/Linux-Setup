@@ -111,15 +111,17 @@ sudo apt install -y \
 gh_latest_tag() { curl -fsSL "https://api.github.com/repos/$1/releases/latest" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])"; }
 
-# eza — not in Debian apt; grab the latest .deb from GitHub
+# eza — install via official apt repo (asset names vary across releases)
 if ! command -v eza &>/dev/null; then
-  EZA_TAG=$(gh_latest_tag eza-community/eza)
-  EZA_DEB="eza_$(echo "$EZA_TAG" | tr -d 'v')_amd64.deb"
-  curl -fLo "/tmp/$EZA_DEB" \
-    "https://github.com/eza-community/eza/releases/download/${EZA_TAG}/${EZA_DEB}"
-  sudo dpkg -i "/tmp/$EZA_DEB"
-  rm "/tmp/$EZA_DEB"
-  ok "eza ${EZA_TAG} installed"
+  sudo mkdir -p /etc/apt/keyrings
+  wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
+    | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
+    | sudo tee /etc/apt/sources.list.d/gierens.list
+  sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+  sudo apt update -y
+  sudo apt install -y eza
+  ok "eza installed"
 else
   skip "eza ($(eza --version 2>/dev/null | head -1))"
 fi
