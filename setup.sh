@@ -268,8 +268,18 @@ sudo tee /etc/sddm.conf.d/10-catppuccin.conf > /dev/null << 'EOF'
 Current=catppuccin-mocha-mauve
 EOF
 
+# Set evening-sky.png as SDDM background via theme.conf.user (no theme edit needed)
+sudo mkdir -p /usr/share/sddm/themes/catppuccin-mocha-mauve/backgrounds
+sudo cp "$REPO_DIR/images/evening-sky.png" \
+  /usr/share/sddm/themes/catppuccin-mocha-mauve/backgrounds/evening-sky.png
+sudo tee /usr/share/sddm/themes/catppuccin-mocha-mauve/theme.conf.user > /dev/null << 'EOF'
+[General]
+CustomBackground=true
+Background="backgrounds/evening-sky.png"
+EOF
+
 cd "$REPO_DIR"
-ok "SDDM theme installed (catppuccin-mocha-mauve)"
+ok "SDDM theme installed (catppuccin-mocha-mauve) with evening-sky.png background"
 
 # ---------------------------------------------------------------------------
 # Phase 13 — GRUB (catppuccin/grub)
@@ -294,9 +304,15 @@ info "Phase 14 · Dotfiles (dotbot)"
 "$REPO_DIR/install"
 ok "Base dotfiles linked (zshrc, zshenv, kitty, starship, gitconfig, kvantum, gtk, envvars)"
 
-# Set wallpaper
+# Desktop wallpaper
 plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
-ok "Wallpaper applied (evening-sky.png)"
+ok "Desktop wallpaper applied (evening-sky.png)"
+
+# Lock screen wallpaper
+kwriteconfig6 --file kscreenlockerrc \
+  --group Greeter --group Wallpaper --group "org.kde.image" --group General \
+  --key Image "file://$REPO_DIR/images/evening-sky.png"
+ok "Lock screen wallpaper applied (evening-sky.png)"
 
 warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kdeglobals, kscreenlockerrc)."
 warn "Skip this before major KDE upgrades."
