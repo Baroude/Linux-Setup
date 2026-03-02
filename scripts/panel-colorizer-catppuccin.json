@@ -43,7 +43,7 @@
                     "enabled": true,
                     "sourceType": 2,
                     "custom": "#cba6f7",
-                    "alpha": 0.85,
+                    "alpha": 1.0,
                     "lightnessValue": 0.5,
                     "saturationValue": 0.5,
                     "systemColor": "highlightColor",
@@ -65,7 +65,7 @@
                     "animation": {"enabled": false, "interval": 3000, "smoothing": 800}
                 },
                 "foregroundColor": {
-                    "enabled": false,
+                    "enabled": true,
                     "sourceType": 0,
                     "custom": "#1e1e2e",
                     "alpha": 1,
@@ -118,7 +118,7 @@
             "visible":    {"enabled": false, "value": true}
         },
         "nativePanel": {
-            "background": {"enabled": false, "opacity": 1, "shadow": false},
+            "background": {"enabled": true, "opacity": 0, "shadow": false},
             "floatingDialogs": false,
             "floatingDialogsAllowOverride": false
         },
