@@ -103,7 +103,7 @@ kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
 kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
     --key "BackgroundAlternate" "24,24,37"        # mantle    #181825
 kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
-    --key "ForegroundNormal"    "205,214,244"     # text      #cdd6f4
+    --key "ForegroundNormal"    "203,166,247"     # mauve     #cba6f7
 kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
     --key "ForegroundInactive"  "166,173,200"     # subtext1  #a6adc8
 kwriteconfig6 --file "$KDEGLOBALS" --group "Colors:Header" \
@@ -116,6 +116,26 @@ qdbus6 org.kde.KGlobalSettings /KGlobalSettings \
     org.kde.KGlobalSettings.notifyChange 0 0 2>/dev/null || true
 
 echo "Top bar icon colours set to Catppuccin Mocha (mauve accents)"
+
+# ── Remove top bar background via kwriteconfig6 + reloadConfig ────────────
+# JS writeConfig alone doesn't survive without an explicit reloadConfig call.
+# Mirror the same pattern used for the dock's floating flag.
+TOP_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
+    org.kde.PlasmaShell.evaluateScript \
+    "var t = panelIds.filter(function(id){ return panelById(id) && panelById(id).location === 'top'; }); print(t[t.length-1]);" \
+    2>/dev/null | tail -1)
+
+if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
+    kwriteconfig6 \
+        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
+        --group "Containments" --group "$TOP_ID" \
+        --group "Configuration" --group "General" \
+        --key "backgroundHints" "0"
+    $DBUS_CMD org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "var p = panelById(${TOP_ID}); if(p) p.reloadConfig();" 2>/dev/null || true
+    echo "No-background applied to top bar containment ${TOP_ID}"
+fi
 
 # ── Enable floating mode on bottom dock ────────────────────────────────────
 DOCK_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
