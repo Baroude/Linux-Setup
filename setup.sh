@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # setup.sh — KDE Plasma 6 · Catppuccin Mocha · Debian 13 · Wayland
-# Run as your normal user (sudo available). Not idempotent — intended for
-# a fresh Debian 13 installation.
+# Run as your normal user (sudo available). Idempotent — safe to re-run.
 
 set -euo pipefail
 
@@ -13,6 +12,10 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info()  { echo -e "\033[1;34m==>\033[0m $*"; }
 ok()    { echo -e "\033[1;32m OK\033[0m $*"; }
 warn()  { echo -e "\033[1;33mWRN\033[0m $*"; }
+skip()  { echo -e "\033[1;36mSKP\033[0m $* (already installed)"; }
+
+# Clone to a fixed /tmp path, wiping any previous partial clone.
+clone_fresh() { rm -rf "$1"; git clone --depth=1 "$2" "$1"; }
 
 # ---------------------------------------------------------------------------
 # Phase 1 — APT base packages
@@ -43,12 +46,16 @@ ok "APT base packages installed"
 # ---------------------------------------------------------------------------
 info "Phase 1b · Node.js LTS"
 
-NODE_SETUP="$(mktemp)"
-curl -fsSL https://deb.nodesource.com/setup_lts.x -o "$NODE_SETUP"
-sudo bash "$NODE_SETUP"
-rm "$NODE_SETUP"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
-ok "Node.js LTS installed ($(node --version))"
+if command -v node &>/dev/null; then
+  skip "Node.js ($(node --version))"
+else
+  NODE_SETUP="$(mktemp)"
+  curl -fsSL https://deb.nodesource.com/setup_lts.x -o "$NODE_SETUP"
+  sudo bash "$NODE_SETUP"
+  rm "$NODE_SETUP"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+  ok "Node.js LTS installed ($(node --version))"
+fi
 
 # ---------------------------------------------------------------------------
 # Phase 1c — Neovim (latest stable prebuilt) + LSP tools
@@ -58,25 +65,31 @@ info "Phase 1c · Neovim + LSP"
 NVIM_API=$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest)
 NVIM_TAG=$(echo "$NVIM_API" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
 
-ARCH="$(uname -m)"
-case "$ARCH" in
-  x86_64)  NVIM_ARCH="x86_64" ;;
-  aarch64) NVIM_ARCH="arm64"  ;;
-  *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
-esac
+NVIM_CURRENT=$(nvim --version 2>/dev/null | grep -oP '(?<=NVIM )v[\d.]+' | head -1 || true)
+if [[ "$NVIM_CURRENT" == "$NVIM_TAG" ]]; then
+  skip "Neovim ${NVIM_TAG}"
+else
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64)  NVIM_ARCH="x86_64" ;;
+    aarch64) NVIM_ARCH="arm64"  ;;
+    *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
+  esac
 
-NVIM_TMP="$(mktemp -d)"
-curl -fL "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim-linux-${NVIM_ARCH}.tar.gz" \
-  -o "$NVIM_TMP/nvim.tar.gz"
-tar -xzf "$NVIM_TMP/nvim.tar.gz" -C "$NVIM_TMP"
-NVIM_DIR="$(find "$NVIM_TMP" -maxdepth 1 -type d -name 'nvim-linux-*' | head -1)"
-sudo rm -rf /opt/nvim
-sudo mv "$NVIM_DIR" /opt/nvim
-sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-rm -rf "$NVIM_TMP"
+  NVIM_TMP="$(mktemp -d)"
+  curl -fL "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim-linux-${NVIM_ARCH}.tar.gz" \
+    -o "$NVIM_TMP/nvim.tar.gz"
+  tar -xzf "$NVIM_TMP/nvim.tar.gz" -C "$NVIM_TMP"
+  NVIM_DIR="$(find "$NVIM_TMP" -maxdepth 1 -type d -name 'nvim-linux-*' | head -1)"
+  sudo rm -rf /opt/nvim
+  sudo mv "$NVIM_DIR" /opt/nvim
+  sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+  rm -rf "$NVIM_TMP"
+  ok "Neovim ${NVIM_TAG} installed"
+fi
 
 sudo npm install -g typescript typescript-language-server bash-language-server pyright
-ok "Neovim ${NVIM_TAG} installed + LSP tools"
+ok "LSP tools up-to-date"
 
 # ---------------------------------------------------------------------------
 # Phase 2 — Fonts
@@ -87,22 +100,27 @@ info "Phase 2 · Fonts"
 sudo apt install -y fonts-inter-variable
 
 # JetBrains Mono Nerd Font — manual (Nerd variant not in APT)
-NERD_VERSION=$(curl -s 'https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest' \
-  | grep -Po '"tag_name": "\K[^"]*')
-curl -fLo /tmp/JetBrainsMono.zip \
-  "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_VERSION}/JetBrainsMono.zip"
-mkdir -p ~/.local/share/fonts/JetBrainsMonoNerd
-unzip -o /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/JetBrainsMonoNerd
-rm /tmp/JetBrainsMono.zip
-fc-cache -fv
-ok "Fonts installed (Inter + JetBrains Mono Nerd Font ${NERD_VERSION})"
+JBMONO_DIR="$HOME/.local/share/fonts/JetBrainsMonoNerd"
+if ls "$JBMONO_DIR"/*.ttf &>/dev/null 2>&1; then
+  skip "JetBrains Mono Nerd Font"
+else
+  NERD_VERSION=$(curl -s 'https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest' \
+    | grep -Po '"tag_name": "\K[^"]*')
+  curl -fLo /tmp/JetBrainsMono.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_VERSION}/JetBrainsMono.zip"
+  mkdir -p "$JBMONO_DIR"
+  unzip -o /tmp/JetBrainsMono.zip -d "$JBMONO_DIR"
+  rm /tmp/JetBrainsMono.zip
+  fc-cache -fv
+  ok "JetBrains Mono Nerd Font ${NERD_VERSION} installed"
+fi
 
 # ---------------------------------------------------------------------------
 # Phase 3 — catppuccin/kde (global theme, colors, decorations, cursors)
 # ---------------------------------------------------------------------------
 info "Phase 3 · catppuccin/kde"
 
-git clone --depth=1 https://github.com/catppuccin/kde /tmp/catppuccin-kde
+clone_fresh /tmp/catppuccin-kde https://github.com/catppuccin/kde
 cd /tmp/catppuccin-kde
 # Args: Mocha=1, Mauve=4, Modern decorations=1
 # printf answers the two confirmation prompts without broken-pipe from 'yes'
@@ -119,7 +137,7 @@ ok "catppuccin/kde applied"
 # ---------------------------------------------------------------------------
 info "Phase 4 · Kvantum"
 
-git clone --depth=1 https://github.com/catppuccin/kvantum.git /tmp/catppuccin-kvantum
+clone_fresh /tmp/catppuccin-kvantum https://github.com/catppuccin/kvantum.git
 mkdir -p ~/.config/Kvantum
 cp -r /tmp/catppuccin-kvantum/themes/catppuccin-mocha-mauve ~/.config/Kvantum/
 rm -rf /tmp/catppuccin-kvantum
@@ -155,7 +173,7 @@ ok "GTK bridge configured"
 # ---------------------------------------------------------------------------
 info "Phase 6 · Icons"
 
-git clone --depth=1 https://github.com/catppuccin/papirus-folders.git /tmp/catppuccin-papirus
+clone_fresh /tmp/catppuccin-papirus https://github.com/catppuccin/papirus-folders.git
 sudo cp -r /tmp/catppuccin-papirus/src/* /usr/share/icons/Papirus/
 rm -rf /tmp/catppuccin-papirus
 
@@ -196,11 +214,19 @@ versioned = [a for a in assets if a['name'] != 'krohnkite.kwinscript']
 print((versioned or assets)[0]['browser_download_url'])
 ")
 wget -O /tmp/krohnkite.kwinscript "$KROHNKITE_URL"
-kpackagetool6 --type=KWin/Script -i /tmp/krohnkite.kwinscript
+kpackagetool6 --type=KWin/Script -i /tmp/krohnkite.kwinscript 2>/dev/null \
+  || kpackagetool6 --type=KWin/Script -u /tmp/krohnkite.kwinscript
 rm /tmp/krohnkite.kwinscript
 
 kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
-ok "Krohnkite installed and enabled"
+
+# Gap between tiled windows and screen edges (px)
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key TileLayoutGap    8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key ScreenGapTop     8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key ScreenGapBottom  8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key ScreenGapLeft    8
+kwriteconfig6 --file kwinrc --group Script-krohnkite --key ScreenGapRight   8
+ok "Krohnkite installed and enabled (8 px gaps)"
 
 # ---------------------------------------------------------------------------
 # Phase 9 — Dock (automated via Plasma JS scripting)
@@ -224,7 +250,7 @@ ok "Kitty config directory ready (dotbot will link kitty/kitty.conf)"
 info "Phase 11 · Zsh + oh-my-zsh + Starship"
 
 # Change shell to zsh
-chsh -s /bin/zsh
+[[ "$(getent passwd "$USER" | cut -d: -f7)" != "/bin/zsh" ]] && chsh -s /bin/zsh
 
 # oh-my-zsh (non-interactive)
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
@@ -262,6 +288,7 @@ sudo apt install -y --no-install-recommends \
 cd /tmp
 curl -LOsS https://github.com/catppuccin/sddm/releases/latest/download/catppuccin-mocha-mauve-sddm.zip
 unzip -o catppuccin-mocha-mauve-sddm.zip
+sudo rm -rf /usr/share/sddm/themes/catppuccin-mocha-mauve
 sudo mv catppuccin-mocha-mauve /usr/share/sddm/themes/
 rm catppuccin-mocha-mauve-sddm.zip
 
@@ -289,7 +316,8 @@ ok "SDDM theme installed (catppuccin-mocha-mauve) with evening-sky.png backgroun
 # ---------------------------------------------------------------------------
 info "Phase 13 · GRUB"
 
-git clone --depth=1 https://github.com/catppuccin/grub.git /tmp/catppuccin-grub
+clone_fresh /tmp/catppuccin-grub https://github.com/catppuccin/grub.git
+sudo rm -rf /usr/share/grub/themes/catppuccin-mocha-grub-theme
 sudo cp -r /tmp/catppuccin-grub/src/catppuccin-mocha-grub-theme /usr/share/grub/themes/
 rm -rf /tmp/catppuccin-grub
 

@@ -1,172 +1,175 @@
 # ~/.config/starship.toml
-# Catppuccin Mocha — connected ribbon + rounded pill prompt
+# Catppuccin Mocha — Powerline preset
 #
-# user@host and directory form one connected ribbon (powerline arrow between them).
-# Git, languages, duration, and time are separate rounded pills.
-#
-# Preview:
-#  user@debian  ~/code/project   main ~2    took 3s   23:45  ❯
+# Segments: os+user  directory  git  languages  docker  time  ❯
+# All connected with powerline chevron (►) separators.
+
+"$schema" = 'https://starship.rs/config-schema.json'
 
 palette = 'catppuccin_mocha'
 
 format = """
+[](red)\
+$os\
 $username\
-$hostname\
+[](bg:peach fg:red)\
 $directory\
+[](bg:yellow fg:peach)\
 $git_branch\
 $git_status\
+[](fg:yellow bg:green)\
+$c\
 $rust\
-$nodejs\
-$python\
-$java\
 $golang\
+$nodejs\
+$php\
+$java\
+$kotlin\
+$haskell\
+$python\
+[](fg:green bg:sapphire)\
 $docker_context\
-$cmd_duration\
+[](fg:sapphire bg:lavender)\
 $time\
-$character\
-"""
+[ ](fg:lavender)\
+$cmd_duration\
+$line_break\
+$character"""
 
-# --- Prompt character ---
-[character]
-success_symbol = '[❯](bold mauve)'
-error_symbol   = '[❯](bold red)'
-vimcmd_symbol  = '[❮](bold green)'
+# --- OS icon ---
+[os]
+disabled = false
+style = "bg:red fg:crust"
 
-# ─────────────────────────────────────────────────────────────────
-# Connected ribbon:  user@host  ~/path
-# ─────────────────────────────────────────────────────────────────
-#   Opening rounded cap + green content — no closing cap here,
-#   the ribbon continues into hostname → directory.
+[os.symbols]
+Linux   = "󰌽"
+Debian  = "󰣚"
+Ubuntu  = "󰕈"
+Windows = ""
+Macos   = "󰀵"
+Arch    = "󰣇"
+Fedora  = "󰣛"
+Manjaro = ""
 
+# --- Username ---
 [username]
-format     = '[](fg:green)[ $user](fg:base bg:green)'
-style_user = 'fg:base bg:green'
 show_always = true
+style_user = "bg:red fg:crust"
+style_root = "bg:red fg:crust"
+format = '[ $user ]($style)'
 
-[hostname]
-# Green content, then powerline arrow transitioning into sapphire
-format = '[@$hostname ](fg:base bg:green)[](fg:green bg:sapphire)'
-style  = 'fg:base bg:green'
-ssh_only = false
-trim_at  = '-'
-
+# --- Directory ---
 [directory]
-# Continues in sapphire, then closes with a rounded right cap
-format            = '[ $path](fg:base bg:sapphire)[](fg:sapphire) '
-style             = 'fg:base bg:sapphire'
-truncation_length = 4
-truncation_symbol = '…/'
+style = "bg:peach fg:crust"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
 
-# ─────────────────────────────────────────────────────────────────
-# Rounded pills — each independent, separated by a space
-# ─────────────────────────────────────────────────────────────────
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music"     = "󰝚 "
+"Pictures"  = " "
 
+# --- Git ---
 [git_branch]
-# Opens the mauve pill; git_status closes it
-format = '[](fg:mauve)[ $branch](fg:base bg:mauve)'
-style  = 'fg:base bg:mauve'
+symbol = ""
+style = "bg:yellow"
+format = '[[ $symbol $branch ](fg:crust bg:yellow)]($style)'
 
 [git_status]
-# Appends status inside the mauve pill, then closes it
-format     = '([ $all_status$ahead_behind](fg:base bg:mauve))[](fg:mauve) '
-style      = 'fg:base bg:mauve'
+style = "bg:yellow"
+format = '[[($all_status$ahead_behind )](fg:crust bg:yellow)]($style)'
 up_to_date = ''
-modified   = ' ~${count}'
-staged     = ' +${count}'
-untracked  = ' ?${count}'
-deleted    = ' ✘${count}'
-renamed    = ' »${count}'
-stashed    = ' ≡'
-ahead      = ' ⇡${count}'
-behind     = ' ⇣${count}'
-diverged   = ' ⇕⇡${ahead_count}⇣${behind_count}'
-conflicted = ' ⚡${count}'
+modified   = '~${count}'
+staged     = '+${count}'
+untracked  = '?${count}'
+deleted    = '✘${count}'
+renamed    = '»${count}'
+stashed    = '≡'
+ahead      = '⇡${count}'
+behind     = '⇣${count}'
+diverged   = '⇕⇡${ahead_count}⇣${behind_count}'
+conflicted = '⚡${count}'
 
-[cmd_duration]
-format            = '[](fg:yellow)[  $duration](fg:base bg:yellow)[](fg:yellow) '
-style             = 'fg:base bg:yellow'
-min_time          = 2000
-show_milliseconds = false
-
-[time]
-format      = '[](fg:overlay0)[  $time](fg:text bg:overlay0)[](fg:overlay0) '
-style       = 'fg:text bg:overlay0'
-time_format = '%H:%M'
-disabled    = false
-
-# ─────────────────────────────────────────────────────────────────
-# Language modules — each a rounded pill, only shown when active
-# ─────────────────────────────────────────────────────────────────
+# --- Languages (green segment, only shown when active) ---
+[c]
+symbol = " "
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
 [rust]
-symbol = ' '
-format = '[](fg:peach)[$symbol$version](fg:base bg:peach)[](fg:peach) '
-style  = 'fg:base bg:peach'
-
-[nodejs]
-symbol = ' '
-format = '[](fg:green)[$symbol$version](fg:base bg:green)[](fg:green) '
-style  = 'fg:base bg:green'
-
-[python]
-symbol = ' '
-format = '[](fg:yellow)[$symbol$version](fg:base bg:yellow)[](fg:yellow) '
-style  = 'fg:base bg:yellow'
-
-[java]
-symbol = ' '
-format = '[](fg:peach)[$symbol$version](fg:base bg:peach)[](fg:peach) '
-style  = 'fg:base bg:peach'
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
 [golang]
-symbol = ' '
-format = '[](fg:sapphire)[$symbol$version](fg:base bg:sapphire)[](fg:sapphire) '
-style  = 'fg:base bg:sapphire'
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
-[docker_context]
-symbol = ' '
-format = '[](fg:blue)[$symbol$context](fg:base bg:blue)[](fg:blue) '
-style  = 'fg:base bg:blue'
-
-# --- Inactive modules ---
-[aws]
-symbol = ' '
-
-[conda]
-symbol = ' '
-
-[dart]
-symbol = ' '
-
-[elixir]
-symbol = ' '
-
-[elm]
-symbol = ' '
-
-[hg_branch]
-symbol = ' '
-
-[julia]
-symbol = ' '
-
-[nim]
-symbol = ' '
-
-[nix_shell]
-symbol = ' '
-
-[perl]
-symbol = ' '
+[nodejs]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
 [php]
-symbol = ' '
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
-[ruby]
-symbol = ' '
+[java]
+symbol = " "
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
-[swift]
-symbol = ' '
+[kotlin]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+
+[haskell]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+
+[python]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $version)(\(#$virtualenv\)) ](fg:crust bg:green)]($style)'
+
+# --- Docker (sapphire segment) ---
+[docker_context]
+symbol = ""
+style = "bg:sapphire"
+format = '[[ $symbol( $context) ](fg:crust bg:sapphire)]($style)'
+
+# --- Time (lavender segment) ---
+[time]
+disabled = false
+time_format = "%R"
+style = "bg:lavender"
+format = '[[  $time ](fg:crust bg:lavender)]($style)'
+
+# --- Command duration (after the bar, plain text) ---
+[cmd_duration]
+disabled = false
+min_time = 2000
+show_milliseconds = false
+format = " took [$duration](bold yellow) "
+
+# --- Prompt character ---
+[line_break]
+disabled = true
+
+[character]
+disabled = false
+success_symbol = '[❯](bold fg:green)'
+error_symbol   = '[❯](bold fg:red)'
+vimcmd_symbol  = '[❮](bold fg:green)'
+vimcmd_replace_one_symbol = '[❮](bold fg:lavender)'
+vimcmd_replace_symbol     = '[❮](bold fg:lavender)'
+vimcmd_visual_symbol      = '[❮](bold fg:yellow)'
 
 # --- Catppuccin Mocha palette ---
 [palettes.catppuccin_mocha]
