@@ -263,25 +263,57 @@ else:
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
+# ── Build configurationOverrides to disable panelspacer widgets ────────────
+# Spacers advance the color-list counter but must not render a colored pill.
+# configurationOverrides is a SEPARATE config key (not inside globalSettings)
+# and is matched by both numeric id AND plugin name.
+spacer_ids = sorted(
+    [aid for aid, p in applet_plugins.items()
+     if p == 'org.kde.plasma.panelspacer'],
+    key=int)
+print(f"Spacer applet ids: {spacer_ids}")
+off = {
+    "disabledFallback": True,
+    "normal":          {"enabled": False},
+    "busy":            {"enabled": False},
+    "hovered":         {"enabled": False},
+    "needsAttention":  {"enabled": False},
+    "expanded":        {"enabled": False},
+}
+# panelspacer returns plasmoid.id=undefined → falls back to -1 at render time,
+# so the association must use id=-1. Also include the real config IDs as
+# belt-and-suspenders in case the behaviour differs across Plasma versions.
+co = {
+    "overrides": {"spacer_off": off},
+    "associations": (
+        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["spacer_off"]}]
+        + [{"id": int(sid), "name": "org.kde.plasma.panelspacer",
+            "presets": ["spacer_off"]} for sid in spacer_ids]
+    ),
+}
+co_str = json.dumps(co, separators=(',', ':'))
+
 # ── Write settings via Plasma JS writeConfig (triggers configChanged live) ─
 # kwriteconfig6 writes to the file but does NOT notify the running applet —
 # Panel Colorizer caches globalSettings in memory and never sees those changes.
 # widget.writeConfig() fires configChanged so Panel Colorizer applies immediately.
 js_gs = gs_str.replace('\\', '\\\\').replace("'", "\\'")
+js_co = co_str.replace('\\', '\\\\').replace("'", "\\'")
 js_code = (
+    # In Plasma 6 scripting API the property is w.type, not w.pluginName.
+    # p.widgets(['plugin.id']) filters directly by type — cleanest approach.
     "var p = panelById(" + top_id + ");"
-    "if (p) {"
-    "  var ws = p.widgets();"
-    "  for (var i = 0; i < ws.length; i++) {"
-    "    if (ws[i].pluginName === 'luisbocanegra.panel.colorizer') {"
-    "      ws[i].currentConfigGroup = ['General'];"
-    "      ws[i].writeConfig('isEnabled', 'true');"
-    "      ws[i].writeConfig('hideWidget', 'true');"
-    "      ws[i].writeConfig('globalSettings', '" + js_gs + "');"
-    "      print('Panel Colorizer configured via JS writeConfig');"
-    "      break;"
-    "    }"
-    "  }"
+    "var pcs = p.widgets(['luisbocanegra.panel.colorizer']);"
+    "if (pcs.length > 0) {"
+    "  var pc = pcs[0];"
+    "  pc.currentConfigGroup = ['General'];"
+    "  pc.writeConfig('isEnabled', 'true');"
+    "  pc.writeConfig('hideWidget', 'true');"
+    "  pc.writeConfig('globalSettings', '" + js_gs + "');"
+    "  pc.writeConfig('configurationOverrides', '" + js_co + "');"
+    "  print('Panel Colorizer configured id=' + pc.id);"
+    "} else {"
+    "  print('WARNING: Panel Colorizer widget not found in top panel');"
     "}"
 )
 dbus_cmd = 'qdbus6'
