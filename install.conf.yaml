@@ -24,6 +24,10 @@
     ~/.gitconfig:
       path: gitconfig
 
+    # Neovim
+    ~/.config/nvim:
+      path: nvim
+
     # Qt style (Kvantum) — force: kvantummanager creates the file during Phase 4
     ~/.config/Kvantum/kvantum.kvconfig:
       path: kvantum/kvantum.kvconfig

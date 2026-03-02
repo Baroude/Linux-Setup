@@ -38,6 +38,46 @@ sudo apt install -y \
 ok "APT base packages installed"
 
 # ---------------------------------------------------------------------------
+# Phase 1b — Node.js LTS (needed for Neovim LSP tools)
+# ---------------------------------------------------------------------------
+info "Phase 1b · Node.js LTS"
+
+NODE_SETUP="$(mktemp)"
+curl -fsSL https://deb.nodesource.com/setup_lts.x -o "$NODE_SETUP"
+sudo bash "$NODE_SETUP"
+rm "$NODE_SETUP"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+ok "Node.js LTS installed ($(node --version))"
+
+# ---------------------------------------------------------------------------
+# Phase 1c — Neovim (latest stable prebuilt) + LSP tools
+# ---------------------------------------------------------------------------
+info "Phase 1c · Neovim + LSP"
+
+NVIM_API=$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest)
+NVIM_TAG=$(echo "$NVIM_API" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64)  NVIM_ARCH="x86_64" ;;
+  aarch64) NVIM_ARCH="arm64"  ;;
+  *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
+esac
+
+NVIM_TMP="$(mktemp -d)"
+curl -fL "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim-linux-${NVIM_ARCH}.tar.gz" \
+  -o "$NVIM_TMP/nvim.tar.gz"
+tar -xzf "$NVIM_TMP/nvim.tar.gz" -C "$NVIM_TMP"
+NVIM_DIR="$(find "$NVIM_TMP" -maxdepth 1 -type d -name 'nvim-linux-*' | head -1)"
+sudo rm -rf /opt/nvim
+sudo mv "$NVIM_DIR" /opt/nvim
+sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+rm -rf "$NVIM_TMP"
+
+sudo npm install -g typescript typescript-language-server bash-language-server pyright
+ok "Neovim ${NVIM_TAG} installed + LSP tools"
+
+# ---------------------------------------------------------------------------
 # Phase 2 — Fonts
 # ---------------------------------------------------------------------------
 info "Phase 2 · Fonts"
@@ -159,12 +199,16 @@ kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
 ok "Krohnkite installed and enabled"
 
 # ---------------------------------------------------------------------------
-# Phase 9 — Panel & widgets
+# Phase 9 — Dock
 # ---------------------------------------------------------------------------
-info "Phase 9 · Panel & widgets"
-warn "Panel layout must be configured manually in System Settings."
-warn "Target: floating top panel, height 36px, translucent."
-warn "Widgets (left→right): Kickoff | Window Title | Spacer | Sensor×2 | Media | Tray | Clock"
+info "Phase 9 · Dock"
+warn "Dock must be configured manually — KDE panel layout cannot be reliably scripted."
+warn "Recommended: right-click desktop → Add Panel → Floating Panel → position Bottom."
+warn "  Remove default bottom taskbar first, then configure the new panel as a dock:"
+warn "  - Add widget: Icons-only Task Manager (dock-style app icons)"
+warn "  - Add widget: System Tray (right side)"
+warn "  - Add widget: Digital Clock (right side)"
+warn "  - Set panel height ~60px, floating, centered"
 
 # ---------------------------------------------------------------------------
 # Phase 10 — Kitty terminal config
@@ -253,6 +297,10 @@ info "Phase 14 · Dotfiles (dotbot)"
 "$REPO_DIR/install"
 ok "Base dotfiles linked (zshrc, zshenv, kitty, starship, gitconfig, kvantum, gtk, envvars)"
 
+# Set wallpaper
+plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
+ok "Wallpaper applied (evening-sky.png)"
+
 warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kdeglobals, kscreenlockerrc)."
 warn "Skip this before major KDE upgrades."
 
@@ -265,10 +313,10 @@ echo " KDE Plasma setup complete!"
 echo "============================================================"
 echo ""
 echo " Manual steps remaining:"
-echo "   1. Configure panel in System Settings (see migration plan Phase 9)"
-echo "   2. Set wallpaper: ~/Documents/Linux-Setup/images/evening-sky.png"
-echo "   3. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
-echo "   4. Restart session to apply SDDM + all env vars"
+echo "   1. Configure dock (Phase 9): remove bottom taskbar, add floating panel"
+echo "      with Icons-only Task Manager + System Tray + Clock"
+echo "   2. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
+echo "   3. Restart session to apply SDDM + all env vars"
 echo ""
 echo " Optional: link plasma configs after reviewing compatibility:"
 echo "   ./install -c install-plasma.conf.yaml"
