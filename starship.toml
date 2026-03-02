@@ -1,14 +1,12 @@
 # ~/.config/starship.toml
-# Catppuccin Mocha — connected two-line prompt
+# Catppuccin Mocha — one-liner bubble prompt
 #
 # Preview:
-# ╭─  mathias@debian  ~/code/project   main ✓ [+2 ~1]  took 3s ─── 23:45 ─╮
-# ╰─❯
+#  mathias@debian   ~/code/project   main ~2 +1   took 3s   23:45  ❯
 
 palette = 'catppuccin_mocha'
 
 format = """
-[╭─](overlay0)\
 $username\
 $hostname\
 $directory\
@@ -21,16 +19,9 @@ $java\
 $golang\
 $docker_context\
 $cmd_duration\
-$fill\
 $time\
-[─╮](overlay0)
-[╰─](overlay0)\
 $character\
 """
-
-[fill]
-symbol = '─'
-style  = 'overlay0'
 
 # --- Prompt character ---
 [character]
@@ -38,90 +29,91 @@ success_symbol = '[❯](bold mauve)'
 error_symbol   = '[❯](bold red)'
 vimcmd_symbol  = '[❮](bold green)'
 
-# --- User / Host ---
+# --- User / Host (shared green bubble) ---
 [username]
-format     = '[ $user]($style)'
-style_user = 'bold green'
+format     = '[](fg:green)[ $user](fg:base bg:green)'
+style_user = 'fg:base bg:green'
 show_always = true
 
 [hostname]
-format   = '[@$hostname]($style)  '
-style    = 'green'
+format   = '[@$hostname ](fg:base bg:green)[](fg:green) '
+style    = 'fg:base bg:green'
 ssh_only = false
 trim_at  = '-'
 
 # --- Directory ---
 [directory]
-format            = '[ $path]($style)[$lock_symbol]($lock_style)  '
-style             = 'bold sapphire'
+format            = '[](fg:sapphire)[ $path](fg:base bg:sapphire)[](fg:sapphire) '
+style             = 'fg:base bg:sapphire'
 truncation_length = 4
 truncation_symbol = '…/'
 
-# --- Git ---
+# --- Git (branch + status share one mauve bubble) ---
 [git_branch]
-format = '[ $branch]($style)'
-style  = 'bold mauve'
+format = '[](fg:mauve)[ $branch](fg:base bg:mauve)'
+style  = 'fg:base bg:mauve'
 
 [git_status]
-format    = '([$all_status$ahead_behind]($style))  '
-style     = 'bold mauve'
-up_to_date  = '[✓](bold green)'
-modified    = '[~${count}](bold yellow)'
-staged      = '[+${count}](bold green)'
-untracked   = '[?${count}](overlay2)'
-deleted     = '[✘${count}](bold red)'
-renamed     = '[»${count}](bold blue)'
-stashed     = '[≡](bold overlay1)'
-ahead       = '[⇡${count}](bold green)'
-behind      = '[⇣${count}](bold red)'
-diverged    = '[⇕⇡${ahead_count}⇣${behind_count}](bold red)'
-conflicted  = '[⚡${count}](bold red)'
+format     = '([ $all_status$ahead_behind](fg:base bg:mauve))[](fg:mauve) '
+style      = 'fg:base bg:mauve'
+up_to_date = ''
+modified   = ' ~${count}'
+staged     = ' +${count}'
+untracked  = ' ?${count}'
+deleted    = ' ✘${count}'
+renamed    = ' »${count}'
+stashed    = ' ≡'
+ahead      = ' ⇡${count}'
+behind     = ' ⇣${count}'
+diverged   = ' ⇕⇡${ahead_count}⇣${behind_count}'
+conflicted = ' ⚡${count}'
 
 # --- Command duration ---
 [cmd_duration]
-format            = '[  $duration]($style)  '
-style             = 'yellow'
+format            = '[](fg:yellow)[  $duration](fg:base bg:yellow)[](fg:yellow) '
+style             = 'fg:base bg:yellow'
 min_time          = 2000
 show_milliseconds = false
 
-# --- Time (right side, before the closing connector) ---
+# --- Time ---
 [time]
-format      = '[  $time]($style) '
-style       = 'overlay1'
+format      = '[](fg:overlay0)[  $time](fg:text bg:overlay0)[](fg:overlay0) '
+style       = 'fg:text bg:overlay0'
 time_format = '%H:%M'
 disabled    = false
 
-# --- Language / runtime modules ---
+# --- Language / runtime modules (peach bubble, only shown when active) ---
 [rust]
 symbol = ' '
-format = '[$symbol$version]($style)  '
-style  = 'peach'
+format = '[](fg:peach)[$symbol$version](fg:base bg:peach)[](fg:peach) '
+style  = 'fg:base bg:peach'
 
 [nodejs]
 symbol = ' '
-format = '[$symbol$version]($style)  '
-style  = 'green'
+format = '[](fg:green)[$symbol$version](fg:base bg:green)[](fg:green) '
+style  = 'fg:base bg:green'
 
 [python]
 symbol = ' '
-format = '[$symbol$version]($style)  '
-style  = 'yellow'
+format = '[](fg:yellow)[$symbol$version](fg:base bg:yellow)[](fg:yellow) '
+style  = 'fg:base bg:yellow'
 
 [java]
 symbol = ' '
-format = '[$symbol$version]($style)  '
-style  = 'peach'
+format = '[](fg:peach)[$symbol$version](fg:base bg:peach)[](fg:peach) '
+style  = 'fg:base bg:peach'
 
 [golang]
 symbol = ' '
-format = '[$symbol$version]($style)  '
-style  = 'sapphire'
+format = '[](fg:sapphire)[$symbol$version](fg:base bg:sapphire)[](fg:sapphire) '
+style  = 'fg:base bg:sapphire'
 
 [docker_context]
 symbol = ' '
-format = '[$symbol$context]($style)  '
-style  = 'blue'
+format = '[](fg:blue)[$symbol$context](fg:base bg:blue)[](fg:blue) '
+style  = 'fg:base bg:blue'
 
+# --- Inactive modules (symbol only, no format) ---
 [aws]
 symbol = ' '
 
