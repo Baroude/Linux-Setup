@@ -235,7 +235,11 @@ sudo apt install -y \
   libxkbcommon-dev
 
 BETTERBLUR_BUILD="$(mktemp -d)"
-clone_fresh /tmp/kwin-better-blur https://github.com/taj-ny/kwin-effects-forceblur.git
+# Pin to v1.3.6 — last release that supports Plasma < 6.4.
+# v1.4.0+ added a hard "minimum Plasma 6.4" guard; Debian 13 ships 6.3.x.
+rm -rf /tmp/kwin-better-blur
+git clone --depth=1 --branch v1.3.6 \
+  https://github.com/taj-ny/kwin-effects-forceblur.git /tmp/kwin-better-blur
 cmake -S /tmp/kwin-better-blur -B "$BETTERBLUR_BUILD" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr
