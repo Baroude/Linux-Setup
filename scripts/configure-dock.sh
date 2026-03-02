@@ -3,7 +3,7 @@
 # Creates:
 #   Bottom dock (no background, centered): Kickoff | icontasks [pinned apps]
 #   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu |
-#             Media | CPU/RAM/Temp | SysTray | Power | PanelColorizer(hidden)
+#             Media | CPU/RAM/Temp | SysTray | Lock/Logout | PanelColorizer(hidden)
 #
 # Panel Colorizer applies catppuccin Mocha pill islands — each widget gets its
 # own distinct accent colour.
@@ -138,7 +138,13 @@ metrics.writeConfig('chartFace', 'org.kde.ksysguard.textonly');
 metrics.writeConfig('title', '');
 
 top.addWidget('org.kde.plasma.systemtray');
-top.addWidget('org.kde.plasma.battery');       // far-right power widget
+var session = top.addWidget('org.kde.plasma.lock_logout');   // far-right session controls
+session.currentConfigGroup = ['General'];
+session.writeConfig('show_lockScreen', 'true');
+session.writeConfig('show_requestShutDown', 'true');
+session.writeConfig('show_requestReboot', 'true');
+session.writeConfig('show_requestLogout', 'true');
+session.writeConfig('show_requestLogoutScreen', 'false');
 
 // Panel Colorizer — hidden control widget; applies catppuccin pill islands.
 // globalSettings are written by the Python block below after panel IDs are known.
@@ -249,8 +255,8 @@ gs['unifiedBackground'] = []
 
 gs_str = json.dumps(gs, separators=(',', ':'))
 
-# ── Build configurationOverrides to disable spacer/pager pills ─────────────
-# Spacers and pager advance the color-list counter but should not render pills.
+# ── Build configurationOverrides to disable panelspacer widgets ────────────
+# Spacers advance the color-list counter but must not render a colored pill.
 # configurationOverrides is a SEPARATE config key (not inside globalSettings)
 # and is matched by both numeric id AND plugin name.
 spacer_ids = sorted(
@@ -258,11 +264,6 @@ spacer_ids = sorted(
      if p == 'org.kde.plasma.panelspacer'],
     key=int)
 print(f"Spacer applet ids: {spacer_ids}")
-pager_ids = sorted(
-    [aid for aid, p in applet_plugins.items()
-     if p == 'org.kde.plasma.pager'],
-    key=int)
-print(f"Pager applet ids: {pager_ids}")
 off = {
     "disabledFallback": True,
     "normal":          {"enabled": False},
@@ -275,13 +276,11 @@ off = {
 # so the association must use id=-1. Also include the real config IDs as
 # belt-and-suspenders in case the behaviour differs across Plasma versions.
 co = {
-    "overrides": {"no_pill": off},
+    "overrides": {"spacer_off": off},
     "associations": (
-        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["no_pill"]}]
+        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["spacer_off"]}]
         + [{"id": int(sid), "name": "org.kde.plasma.panelspacer",
-            "presets": ["no_pill"]} for sid in spacer_ids]
-        + [{"id": int(pid), "name": "org.kde.plasma.pager",
-            "presets": ["no_pill"]} for pid in pager_ids]
+            "presets": ["spacer_off"]} for sid in spacer_ids]
     ),
 }
 co_str = json.dumps(co, separators=(',', ':'))
