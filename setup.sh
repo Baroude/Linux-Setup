@@ -244,7 +244,8 @@ sudo apt install -y \
   libkf6kcmutils-dev \
   libxkbcommon-dev \
   libkdecorations3-dev \
-  libxcb-composite0-dev
+  libxcb-composite0-dev \
+  libxcb-randr0-dev
 
 BETTERBLUR_BUILD="$(mktemp -d)"
 # Pin to v1.3.6 — last release that supports Plasma < 6.4.
