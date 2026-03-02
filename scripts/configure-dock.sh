@@ -16,6 +16,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DBUS_CMD="qdbus6"
 command -v qdbus6 &>/dev/null || DBUS_CMD="qdbus"
 
+# ── Panel Colorizer install guard ──────────────────────────────────────────
+if ! kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
+        | grep -q 'luisbocanegra.panel.colorizer'; then
+    echo "ERROR: Panel Colorizer (luisbocanegra.panel.colorizer) is not installed." >&2
+    echo "       Re-run setup.sh to install it (Phase 9b), or manually:" >&2
+    echo "       kpackagetool6 --type Plasma/Applet --install <path>.plasmoid" >&2
+    exit 1
+fi
+echo "Panel Colorizer detected — continuing"
+
 # catppuccin-vibes SVG icons (downloaded by setup.sh Phase 6)
 VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
 
@@ -44,6 +54,7 @@ echo "Launchers: ${LAUNCHERS}"
 kwriteconfig6 --file "$HOME/.config/kwinrc" --group "Desktops" --key "Number" "4"
 kwriteconfig6 --file "$HOME/.config/kwinrc" --group "Desktops" --key "Rows"   "1"
 qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+sleep 0.5   # wait for KWin to apply desktop count before pager widget is created
 echo "Virtual desktops set to 4"
 
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
@@ -213,16 +224,24 @@ with open(config_file) as f:
             if m:
                 applet_plugins[m.group(1)] = line[7:]
 
+print(f"Applets found in containment {top_id}:")
+for aid, plug in sorted(applet_plugins.items(), key=lambda x: int(x[0])):
+    print(f"  id={aid}  plugin={plug}")
+
 pc_id = next((aid for aid, p in applet_plugins.items()
               if p == 'luisbocanegra.panel.colorizer'), None)
 if not pc_id:
-    print("WARNING: Panel Colorizer not found in top panel config", file=sys.stderr)
-    sys.exit(0)
+    print("ERROR: Panel Colorizer not found in top panel config — did the widget get added?",
+          file=sys.stderr)
+    sys.exit(1)
+
+print(f"Panel Colorizer applet id: {pc_id}")
 
 # Systemmonitor applets in creation order (lower numeric ID = created first = CPU)
 sysmon_ids = sorted(
     [aid for aid, p in applet_plugins.items() if p == 'org.kde.plasma.systemmonitor'],
     key=int)
+print(f"System monitor applet ids (sorted): {sysmon_ids}")
 
 # ── Load preset and patch unifiedBackground with live applet IDs ───────────
 with open(preset_file) as f:
