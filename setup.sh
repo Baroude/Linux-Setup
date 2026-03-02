@@ -218,8 +218,21 @@ ok "KWin blur + rounded corners + Dolphin opacity rule written"
 # ---------------------------------------------------------------------------
 info "Phase 7b · kwin-better-blur"
 
-# Build dependencies (kwin-dev pulls in Qt6/KF6 headers transitively)
-sudo apt install -y kwin-dev extra-cmake-modules
+# Build dependencies — kwin-dev alone is not enough; list missing KF6 components
+# explicitly. Package names mirror the CMake find_package component names.
+sudo apt install -y \
+  kwin-dev extra-cmake-modules \
+  libkf6configwidgets-dev \
+  libkf6crash-dev \
+  libkf6globalaccel-dev \
+  libkf6i18n-dev \
+  libkf6kio-dev \
+  libkf6service-dev \
+  libkf6notifications-dev \
+  libkf6widgetsaddons-dev \
+  libkf6guiaddons-dev \
+  libkf6kcmutils-dev \
+  libxkbcommon-dev
 
 BETTERBLUR_BUILD="$(mktemp -d)"
 clone_fresh /tmp/kwin-better-blur https://github.com/taj-ny/kwin-effects-forceblur.git
