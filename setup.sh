@@ -469,6 +469,11 @@ info "Phase 7c · Klassy window decoration"
 # opacity support. Most-used third-party KWin decoration in 2025 KDE rices.
 # Build deps reuse Phase 7b's kwin-dev / kdecorations3-dev stack plus 3 extras
 # added to that apt block (libkf6coreaddons-dev, libkf6iconthemes-dev, libqt6svg6-dev).
+# Upstream also requires Qt6 Quick + Kirigami dev files on Debian/Ubuntu.
+sudo apt install -y \
+  qt6-base-dev \
+  qt6-declarative-dev \
+  libkirigami-dev
 
 if find /usr/lib -maxdepth 5 -name "*klassy*" -name "*.so" 2>/dev/null | grep -q .; then
   skip "Klassy (already installed)"
@@ -479,7 +484,6 @@ else
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
-    -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Quick=TRUE \
     -DBUILD_QT5=OFF \
     -DBUILD_QT6=ON
   cmake --build "$KLASSY_BUILD" -j"$(nproc)"
