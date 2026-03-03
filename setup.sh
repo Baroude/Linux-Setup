@@ -479,6 +479,7 @@ else
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Quick=TRUE \
     -DBUILD_QT5=OFF \
     -DBUILD_QT6=ON
   cmake --build "$KLASSY_BUILD" -j"$(nproc)"
