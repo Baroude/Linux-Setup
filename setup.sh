@@ -38,8 +38,16 @@ sudo apt install -y \
   fzf zoxide \
   imagemagick doxygen \
   fastfetch \
-  plasma-systemmonitor \
-  kdeplasma-addons
+  plasma-systemmonitor
+
+# Debian/Ubuntu package naming differs for Plasma addons.
+if apt-cache show kdeplasma-addons >/dev/null 2>&1; then
+  sudo apt install -y kdeplasma-addons
+elif apt-cache show plasma-widgets-addons >/dev/null 2>&1; then
+  sudo apt install -y plasma-widgets-addons
+else
+  warn "No Plasma addons package found; window title widget may be unavailable"
+fi
 
 ok "APT base packages installed"
 
