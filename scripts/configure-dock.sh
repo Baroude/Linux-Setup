@@ -109,6 +109,21 @@ pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
 pager.writeConfig('showOnlyCurrentScreen', 'true');
 
+// Window title applet — shows active window name between Pager and flex spacer.
+// Requires kdeplasma-addons (installed in Phase 1). Gracefully skipped if the
+// widget is unavailable on this Plasma build (non-fatal — bar still works fine).
+try {
+    var wintitle = top.addWidget('org.kde.plasma.windowtitle');
+    if (wintitle) {
+        wintitle.currentConfigGroup = ['General'];
+        wintitle.writeConfig('showWindowTitle', 'true');
+        wintitle.writeConfig('showWindowIcon',  'false');
+    }
+    print('Window Title widget added');
+} catch(e) {
+    print('Note: org.kde.plasma.windowtitle not available — skipping (' + e + ')');
+}
+
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
 var clock = top.addWidget('org.kde.plasma.digitalclock');

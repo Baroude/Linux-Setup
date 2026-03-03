@@ -44,6 +44,9 @@ export FZF_DEFAULT_OPTS=" \
   --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
   --color=selected-bg:#45475a \
   --multi"
+# fzf shell integration — Ctrl+R history, Ctrl+T file picker, Alt+C cd
+[[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+[[ -f /usr/share/doc/fzf/examples/completion.zsh    ]] && source /usr/share/doc/fzf/examples/completion.zsh
 
 # --- zoxide (replaces cd) ---
 eval "$(zoxide init zsh --cmd cd)"

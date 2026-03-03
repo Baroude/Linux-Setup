@@ -38,7 +38,8 @@ sudo apt install -y \
   fzf zoxide \
   imagemagick doxygen \
   fastfetch \
-  plasma-systemmonitor
+  plasma-systemmonitor \
+  kdeplasma-addons
 
 ok "APT base packages installed"
 
@@ -160,6 +161,27 @@ git config --global interactive.diffFilter "delta --color-only"
 git config --global delta.navigate true
 git config --global delta.dark true
 git config --global delta.syntax-theme "Catppuccin Mocha"
+
+
+# bat — Catppuccin Mocha theme
+BAT_CFG="$HOME/.config/bat"
+mkdir -p "$BAT_CFG/themes"
+curl -fLo "$BAT_CFG/themes/Catppuccin Mocha.tmTheme" \
+  "https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Mocha.tmTheme"
+if command -v batcat &>/dev/null; then batcat cache --build
+elif command -v bat &>/dev/null; then bat cache --build; fi
+[[ ! -f "$BAT_CFG/config" ]] && printf -- '--theme="Catppuccin Mocha"\n--style=numbers,changes,header\n' > "$BAT_CFG/config"
+ok "bat Catppuccin Mocha theme installed"
+
+# btop — Catppuccin Mocha theme
+mkdir -p "$HOME/.config/btop/themes"
+curl -fLo "$HOME/.config/btop/themes/catppuccin_mocha.theme" \
+  "https://github.com/catppuccin/btop/raw/main/themes/catppuccin_mocha.theme"
+if [[ ! -f "$HOME/.config/btop/btop.conf" ]]; then
+  printf 'color_theme = "catppuccin_mocha"\ntheme_background = False\n' \
+    > "$HOME/.config/btop/btop.conf"
+fi
+ok "btop Catppuccin Mocha theme installed"
 
 ok "Modern CLI tools installed"
 
@@ -359,6 +381,11 @@ if ! grep -q "dolphin" "$HOME/.config/kwinrulesrc" 2>/dev/null; then
 fi
 ok "KWin blur + rounded corners + Dolphin opacity rule written"
 
+# Magic Lamp minimize animation (replaces the default Scale effect)
+kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled true
+kwriteconfig6 --file kwinrc --group Plugins --key scaleEnabled false
+ok "Magic Lamp minimize effect enabled"
+
 # ---------------------------------------------------------------------------
 # Phase 7b — kwin-better-blur (force blur behind any semi-transparent window)
 # ---------------------------------------------------------------------------
@@ -382,14 +409,31 @@ sudo apt install -y \
   libkdecorations3-dev \
   libxcb-composite0-dev \
   libxcb-randr0-dev \
-  libxcb-shm0-dev
+  libxcb-shm0-dev \
+  libkf6coreaddons-dev \
+  libkf6iconthemes-dev \
+  libqt6svg6-dev
+
+# Select blur plugin based on installed Plasma version:
+#   Plasma < 6.4 → kwin-better-blur v1.3.6 (taj-ny pinned — last pre-6.4 release)
+#   Plasma ≥ 6.4 → D3SOX/kwin-forceblur  (maintained active fork; same plugin ID)
+PLASMA_VER=$(plasmashell --version 2>/dev/null | grep -oP '\d+\.\d+' | head -1 || echo "6.0")
+PLASMA_MAJOR=$(cut -d. -f1 <<< "$PLASMA_VER")
+PLASMA_MINOR=$(cut -d. -f2 <<< "$PLASMA_VER")
+if (( PLASMA_MAJOR > 6 )) || { (( PLASMA_MAJOR == 6 )) && (( PLASMA_MINOR >= 4 )); }; then
+  BETTERBLUR_REPO="https://github.com/D3SOX/kwin-forceblur.git"
+  BETTERBLUR_BRANCH=""
+  info "Plasma ${PLASMA_VER} ≥ 6.4 — using D3SOX/kwin-forceblur (maintained fork)"
+else
+  BETTERBLUR_REPO="https://github.com/taj-ny/kwin-effects-forceblur.git"
+  BETTERBLUR_BRANCH="--branch v1.3.6"
+  info "Plasma ${PLASMA_VER} < 6.4 — using kwin-better-blur v1.3.6 (pinned)"
+fi
 
 BETTERBLUR_BUILD="$(mktemp -d)"
-# Pin to v1.3.6 — last release that supports Plasma < 6.4.
-# v1.4.0+ added a hard "minimum Plasma 6.4" guard; Debian 13 ships 6.3.x.
 rm -rf /tmp/kwin-better-blur
-git clone --depth=1 --branch v1.3.6 \
-  https://github.com/taj-ny/kwin-effects-forceblur.git /tmp/kwin-better-blur
+# shellcheck disable=SC2086
+git clone --depth=1 ${BETTERBLUR_BRANCH} "$BETTERBLUR_REPO" /tmp/kwin-better-blur
 cmake -S /tmp/kwin-better-blur -B "$BETTERBLUR_BUILD" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr
@@ -407,6 +451,47 @@ kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurMa
 kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurNonMatching true
 kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key WindowList plasmashell
 ok "kwin-better-blur installed and enabled (blur all except plasmashell)"
+
+# ---------------------------------------------------------------------------
+# Phase 7c — Klassy window decoration
+# ---------------------------------------------------------------------------
+info "Phase 7c · Klassy window decoration"
+
+# Klassy: polished KWin decoration with Klassy-circle buttons and per-titlebar
+# opacity support. Most-used third-party KWin decoration in 2025 KDE rices.
+# Build deps reuse Phase 7b's kwin-dev / kdecorations3-dev stack plus 3 extras
+# added to that apt block (libkf6coreaddons-dev, libkf6iconthemes-dev, libqt6svg6-dev).
+
+if find /usr/lib -maxdepth 5 -name "*klassy*" -name "*.so" 2>/dev/null | grep -q .; then
+  skip "Klassy (already installed)"
+else
+  KLASSY_BUILD="$(mktemp -d)"
+  clone_fresh /tmp/klassy https://github.com/paulmcauley/klassy
+  cmake -S /tmp/klassy -B "$KLASSY_BUILD" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DKDE_INSTALL_USE_QT_SYS_PATHS=ON
+  cmake --build "$KLASSY_BUILD" -j"$(nproc)"
+  sudo cmake --install "$KLASSY_BUILD"
+  rm -rf /tmp/klassy "$KLASSY_BUILD"
+  ok "Klassy built and installed"
+fi
+
+# Apply Klassy as the active KWin window decoration
+kwriteconfig6 --file kwinrc \
+  --group "org.kde.kdecoration2" --key "library" "org.kde.klassy"
+kwriteconfig6 --file kwinrc \
+  --group "org.kde.kdecoration2" --key "theme"   "@Default"
+
+# Configure klassyrc — Klassy circles (ButtonIconStyle=0), corner radius 2.5
+# (≈12 px at 96 dpi, matching the KWin rounded-corners effect).
+# Titlebar opacity mirrors Kitty/Dolphin (90 % active, 85 % inactive) so
+# kwin-better-blur can show the frosted-glass effect behind the titlebar.
+kwriteconfig6 --file klassyrc --group Windeco --key ButtonIconStyle               0
+kwriteconfig6 --file klassyrc --group Windeco --key CornerRadius                  2.5
+kwriteconfig6 --file klassyrc --group Windeco --key ActiveWindowTitleBarOpacity   90
+kwriteconfig6 --file klassyrc --group Windeco --key InactiveWindowTitleBarOpacity 85
+ok "Klassy decoration applied (circles, 2.5 px corners, 90/85 % titlebar opacity)"
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script
@@ -440,6 +525,33 @@ kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom  8
 kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft    8
 kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
 ok "Krohnkite installed and enabled (8 px gaps)"
+
+# Vim-style keybinds — written to kglobalshortcutsrc before first login.
+# Format: "shortcut,default,description"
+# KWin/kglobalaccel6 merges these when the krohnkite script registers its actions.
+# Meta+H/J/K/L → move window in that direction (primary tiling interaction)
+# Meta+Alt+H/J/K/L → focus window without moving it
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Left"        "Meta+H,Meta+H,Move Window to Left"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Right"       "Meta+L,Meta+L,Move Window to Right"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Up"          "Meta+K,Meta+K,Move Window to Up"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Down"        "Meta+J,Meta+J,Move Window to Down"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Focus Left"  "Meta+Alt+H,Meta+Alt+H,Focus Window Left"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Focus Right" "Meta+Alt+L,Meta+Alt+L,Focus Window Right"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Focus Up"    "Meta+Alt+K,Meta+Alt+K,Focus Window Up"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Focus Down"  "Meta+Alt+J,Meta+Alt+J,Focus Window Down"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Float"       "Meta+F,Meta+F,Toggle Float"
+kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+  --key "Krohnkite: Next Layout" "Meta+\\,Meta+\\,Cycle Layout"
+ok "Krohnkite vim keybinds written (Meta+H/J/K/L move, Meta+Alt focus, F float, \\ cycle)"
 
 # ---------------------------------------------------------------------------
 # Phase 9 — Dock + Wallpaper (registered as autostart; needs live plasmashell)
