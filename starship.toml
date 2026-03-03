@@ -9,15 +9,15 @@
 palette = 'catppuccin_mocha'
 
 format = """
-[](red)\
+[](red)\
 $os\
 $username\
-[](bg:peach fg:red)\
+[](bg:peach fg:red)\
 $directory\
-[](bg:yellow fg:peach)\
+[](fg:peach bg:yellow)\
 $git_branch\
 $git_status\
-[](fg:yellow bg:green)\
+[](fg:yellow bg:green)\
 $c\
 $rust\
 $golang\
@@ -27,11 +27,11 @@ $java\
 $kotlin\
 $haskell\
 $python\
-[](fg:green bg:sapphire)\
+[](fg:green bg:sapphire)\
 $docker_context\
-[](fg:sapphire bg:lavender)\
+[](fg:sapphire bg:lavender)\
 $time\
-[ ](fg:lavender)\
+[ ](fg:lavender)\
 $cmd_duration\
 $line_break\
 $character"""
