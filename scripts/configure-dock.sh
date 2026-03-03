@@ -109,6 +109,10 @@ pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
 pager.writeConfig('showOnlyCurrentScreen', 'true');
 
+var wtitle = top.addWidget('org.kde.plasma.windowtitle');  // color slot 1 → Surface1 pill
+wtitle.currentConfigGroup = ['General'];
+wtitle.writeConfig('fillWidth', 'false');
+
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
 var clock = top.addWidget('org.kde.plasma.digitalclock');
