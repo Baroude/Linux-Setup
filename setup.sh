@@ -299,6 +299,38 @@ done
 ok "catppuccin-vibes .desktop overrides created for Kitty / Dolphin / Firefox"
 
 # ---------------------------------------------------------------------------
+# Phase 6b - Firefox theme (Catppuccin Mocha Mauve)
+# ---------------------------------------------------------------------------
+info "Phase 6b · Firefox theme"
+
+FIREFOX_THEME_URL="https://github.com/catppuccin/firefox/releases/download/old/catppuccin_mocha_mauve.xpi"
+FIREFOX_THEME_ID="{76aabc99-c1a8-4c1e-832b-d4f2941d5a7a}"
+FIREFOX_THEME_TMP="$(mktemp --suffix=.xpi)"
+FIREFOX_THEME_INSTALLED=0
+
+if curl -fsSL -o "$FIREFOX_THEME_TMP" "$FIREFOX_THEME_URL"; then
+  for _ff_root in /usr/lib/firefox /usr/lib/firefox-esr; do
+    if [[ -d "$_ff_root" ]]; then
+      sudo mkdir -p "$_ff_root/distribution/extensions"
+      sudo install -m 0644 "$FIREFOX_THEME_TMP" \
+        "$_ff_root/distribution/extensions/${FIREFOX_THEME_ID}.xpi"
+      FIREFOX_THEME_INSTALLED=1
+    fi
+  done
+  rm -f "$FIREFOX_THEME_TMP"
+
+  if [[ "$FIREFOX_THEME_INSTALLED" -eq 1 ]]; then
+    ok "Catppuccin Mocha Mauve Firefox theme installed"
+    warn "Manual step: if Firefox keeps the default look, open Add-ons and Themes and select 'Catppuccin Mocha - Mauve'."
+  else
+    warn "Firefox not found under /usr/lib/firefox or /usr/lib/firefox-esr; skipped theme install."
+  fi
+else
+  rm -f "$FIREFOX_THEME_TMP"
+  warn "Could not download Catppuccin Firefox theme; skipped."
+fi
+
+# ---------------------------------------------------------------------------
 # Phase 7 — KWin blur
 # ---------------------------------------------------------------------------
 info "Phase 7 · KWin blur"
@@ -671,6 +703,7 @@ echo "   1. Configure Krohnkite gaps/keybinds in System Settings → KWin Script
 echo "   2. Restart session to apply SDDM + all env vars"
 echo "   3. Tidal: open tidal-hifi → Settings → Theming →"
 echo "      choose ~/.config/tidal-hifi/catppuccin-mocha.css"
+echo "   4. Firefox: Add-ons and Themes → select 'Catppuccin Mocha - Mauve' if needed"
 echo ""
 echo " Optional: link plasma configs after reviewing compatibility:"
 echo "   ./install -c install-plasma.conf.yaml"
