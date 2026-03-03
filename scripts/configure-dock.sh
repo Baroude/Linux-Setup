@@ -109,29 +109,11 @@ pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
 pager.writeConfig('showOnlyCurrentScreen', 'true');
 
-// Window title applet — shows active window name between Pager and flex spacer.
-// Requires Plasma addons package (kdeplasma-addons/plasma-widgets-addons in Phase 1).
-// Gracefully skipped if the
-// widget is unavailable on this Plasma build (non-fatal — bar still works fine).
-try {
-    var wintitle = top.addWidget('org.kde.plasma.windowtitle');
-    if (wintitle) {
-        wintitle.currentConfigGroup = ['General'];
-        wintitle.writeConfig('showWindowTitle', 'true');
-        wintitle.writeConfig('showWindowIcon',  'false');
-    }
-    print('Window Title widget added');
-} catch(e) {
-    print('Note: org.kde.plasma.windowtitle not available — skipping (' + e + ')');
-}
-
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
 var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
-clock.writeConfig('showDate', 'true');
-clock.writeConfig('dateDisplayFormat', '1');           // BesideTime: date first, time after
-clock.writeConfig('dateFormat', 'longDate');
+clock.writeConfig('showDate', 'false');                // keep center island compact/readable
 clock.writeConfig('customFont', 'true');
 clock.writeConfig('fontFamily', 'Inter');
 clock.writeConfig('fontSize', '10');
