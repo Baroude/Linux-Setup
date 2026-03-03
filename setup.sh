@@ -397,10 +397,16 @@ cmake --build "$BETTERBLUR_BUILD" -j"$(nproc)"
 sudo cmake --install "$BETTERBLUR_BUILD"
 rm -rf /tmp/kwin-better-blur "$BETTERBLUR_BUILD"
 
-# Enable the effect — plugin ID is derived from CMakeLists project name
-kwriteconfig6 --file kwinrc --group Plugins --key kwin_better_blurEnabled true
-ok "kwin-better-blur installed and enabled"
-warn "Manual step: System Settings → Desktop Effects → Better Blur → Configure → set 'Blur all windows' and adjust blur strength (try 10-15)."
+# Enable the effect — plugin ID from metadata.json: kwin4_effect_better_blur
+kwriteconfig6 --file kwinrc --group Plugins --key kwin4_effect_better_blurEnabled true
+# Blur all windows EXCEPT Plasma panels (plasmashell).
+# BlurMatching=false + BlurNonMatching=true + WindowList=plasmashell → everything
+# gets blur EXCEPT the shell itself, keeping the top bar fully transparent.
+kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurAll false
+kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurMatching false
+kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurNonMatching true
+kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key WindowList plasmashell
+ok "kwin-better-blur installed and enabled (blur all except plasmashell)"
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script

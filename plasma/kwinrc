@@ -3,6 +3,13 @@ blurEnabled=false
 backgroundcontrastEnabled=true
 krohnkiteEnabled=true
 roundedcornersEnabled=true
+kwin4_effect_better_blurEnabled=true
+
+[Effect-kwin4_effect_better_blur]
+BlurAll=false
+BlurMatching=false
+BlurNonMatching=true
+WindowList=plasmashell
 
 [Effect-roundedcorners]
 Radius=12

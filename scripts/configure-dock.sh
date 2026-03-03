@@ -116,6 +116,10 @@ clock.currentConfigGroup = ['Configuration', 'Appearance'];
 clock.writeConfig('showDate', 'true');
 clock.writeConfig('dateDisplayFormat', '1');           // BesideTime: date first, time after
 clock.writeConfig('dateFormat', 'longDate');
+clock.writeConfig('customFont', 'true');
+clock.writeConfig('fontFamily', 'Inter');
+clock.writeConfig('fontSize', '10');
+clock.writeConfig('boldText', 'false');
 
 top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right group away
 
