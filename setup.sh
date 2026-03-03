@@ -478,7 +478,9 @@ else
   cmake -S /tmp/klassy -B "$KLASSY_BUILD" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DKDE_INSTALL_USE_QT_SYS_PATHS=ON
+    -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
+    -DBUILD_QT5=OFF \
+    -DBUILD_QT6=ON
   cmake --build "$KLASSY_BUILD" -j"$(nproc)"
   sudo cmake --install "$KLASSY_BUILD"
   rm -rf /tmp/klassy "$KLASSY_BUILD"
