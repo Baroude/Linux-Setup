@@ -323,3 +323,18 @@ PYEOF
 
     echo "Panel Colorizer catppuccin islands applied to top bar"
 fi
+
+# ── Register autostart to re-apply Panel Colorizer on every login ──────────
+# Panel Colorizer saves its own (Macchiato) state to appletsrc on logout,
+# overwriting our Mocha config. The autostart script re-applies Mocha after
+# Panel Colorizer initialises on the next login.
+AUTOSTART_DIR="$HOME/.config/autostart"
+mkdir -p "$AUTOSTART_DIR"
+cat > "$AUTOSTART_DIR/apply-panel-colorizer.desktop" << DESKTOP_EOF
+[Desktop Entry]
+Name=Panel Colorizer Catppuccin Mocha
+Exec=bash "${SCRIPT_DIR}/apply-panel-colorizer.sh"
+Type=Application
+X-KDE-autostart-phase=2
+DESKTOP_EOF
+echo "Autostart registered: ${AUTOSTART_DIR}/apply-panel-colorizer.desktop"
