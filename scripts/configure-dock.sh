@@ -206,7 +206,10 @@ if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
 fi
 
 # ── Panel Colorizer: catppuccin Mocha pill islands ─────────────────────────
-# Installs the preset file and writes globalSettings directly to the applet config.
+# Applet IDs are discovered via the live JS API (not the appletsrc file) to
+# avoid a race condition where Plasma hasn't yet flushed the newly-created
+# panel to disk. kwriteconfig6 always writes to disk for reboot persistence;
+# JS writeConfig also fires configChanged for immediate live application.
 if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     # Install preset file so Panel Colorizer can also load it from the UI
     PC_PRESET_DIR="$HOME/.config/panel-colorizer/presets/Catppuccin Mocha Mauve"
@@ -214,73 +217,57 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     cp "${SCRIPT_DIR}/panel-colorizer-catppuccin.json" "$PC_PRESET_DIR/settings.json"
     echo "Panel Colorizer preset installed → $PC_PRESET_DIR/settings.json"
 
-    # Discover live applet IDs and write config
+    # ── Discover applet IDs via live JS API (no file-read race condition) ──
+    PC_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "var p=panelById(${TOP_ID}); var ws=p.widgets(['luisbocanegra.panel.colorizer']); print(ws.length>0?ws[0].id:'NOT_FOUND');" \
+        2>/dev/null | tail -1)
+    [[ "${PC_ID:-}" =~ ^[0-9]+$ ]] || {
+        echo "ERROR: Panel Colorizer not found in top panel" >&2; exit 1; }
+    echo "Panel Colorizer applet id: ${PC_ID}"
+
+    SPACER_IDS_JSON=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "var p=panelById(${TOP_ID}); var ws=p.widgets(['org.kde.plasma.panelspacer']); var ids=[]; ws.forEach(function(w){ids.push(w.id);}); print(JSON.stringify(ids));" \
+        2>/dev/null | tail -1)
+    echo "Spacer applet ids: ${SPACER_IDS_JSON}"
+
+    # ── Build JSON configs and write via kwriteconfig6 + JS writeConfig ────
     PANEL_ID="$TOP_ID" \
+    APPLET_ID="$PC_ID" \
     PRESET_FILE="${SCRIPT_DIR}/panel-colorizer-catppuccin.json" \
+    SPACER_IDS_JSON="${SPACER_IDS_JSON:-[]}" \
     python3 << 'PYEOF'
-import re, os, json, subprocess, sys
+import os, json, subprocess, sys
 
 config_file = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
 preset_file = os.environ['PRESET_FILE']
 top_id      = os.environ['PANEL_ID']
-
-# ── Find all applet plugin names under this containment ────────────────────
-applet_plugins = {}   # "str_id" → "plugin.name"
-current_section = None
-with open(config_file) as f:
-    for line in f:
-        line = line.rstrip()
-        if line.startswith('['):
-            current_section = line
-        elif current_section and line.startswith('plugin='):
-            m = re.search(
-                rf'\[Containments\]\[{re.escape(top_id)}\]\[Applets\]\[(\d+)\]$',
-                current_section)
-            if m:
-                applet_plugins[m.group(1)] = line[7:]
-
-print(f"Applets found in containment {top_id}:")
-for aid, plug in sorted(applet_plugins.items(), key=lambda x: int(x[0])):
-    print(f"  id={aid}  plugin={plug}")
-
-pc_id = next((aid for aid, p in applet_plugins.items()
-              if p == 'luisbocanegra.panel.colorizer'), None)
-if not pc_id:
-    print("ERROR: Panel Colorizer not found in top panel config — did the widget get added?",
-          file=sys.stderr)
-    sys.exit(1)
+pc_id       = os.environ['APPLET_ID']
+spacer_ids  = json.loads(os.environ.get('SPACER_IDS_JSON', '[]'))
 
 print(f"Panel Colorizer applet id: {pc_id}")
+print(f"Spacer applet ids: {spacer_ids}")
 
-# ── Load preset and keep a single unified metrics widget ───────────────────
+# ── Load preset ────────────────────────────────────────────────────────────
 with open(preset_file) as f:
     preset = json.load(f)
 
 gs = preset['globalSettings']
 gs['unifiedBackground'] = []
-
 gs_str = json.dumps(gs, separators=(',', ':'))
 
 # ── Build configurationOverrides to disable panelspacer widgets ────────────
 # Spacers advance the color-list counter but must not render a colored pill.
-# configurationOverrides is a SEPARATE config key (not inside globalSettings)
-# and is matched by both numeric id AND plugin name.
-spacer_ids = sorted(
-    [aid for aid, p in applet_plugins.items()
-     if p == 'org.kde.plasma.panelspacer'],
-    key=int)
-print(f"Spacer applet ids: {spacer_ids}")
+# id=-1 covers the undefined plasmoid.id spacers return at render time.
 off = {
     "disabledFallback": True,
-    "normal":          {"enabled": False},
-    "busy":            {"enabled": False},
-    "hovered":         {"enabled": False},
-    "needsAttention":  {"enabled": False},
-    "expanded":        {"enabled": False},
+    "normal":         {"enabled": False},
+    "busy":           {"enabled": False},
+    "hovered":        {"enabled": False},
+    "needsAttention": {"enabled": False},
+    "expanded":       {"enabled": False},
 }
-# panelspacer returns plasmoid.id=undefined → falls back to -1 at render time,
-# so the association must use id=-1. Also include the real config IDs as
-# belt-and-suspenders in case the behaviour differs across Plasma versions.
 co = {
     "overrides": {"spacer_off": off},
     "associations": (
@@ -291,32 +278,35 @@ co = {
 }
 co_str = json.dumps(co, separators=(',', ':'))
 
-# ── Write settings via Plasma JS writeConfig (triggers configChanged live) ─
-# kwriteconfig6 writes to the file but does NOT notify the running applet —
-# Panel Colorizer caches globalSettings in memory and never sees those changes.
-# widget.writeConfig() fires configChanged so Panel Colorizer applies immediately.
-js_gs = gs_str.replace('\\', '\\\\').replace("'", "\\'")
-js_co = co_str.replace('\\', '\\\\').replace("'", "\\'")
-js_code = (
-    # In Plasma 6 scripting API the property is w.type, not w.pluginName.
-    # p.widgets(['plugin.id']) filters directly by type — cleanest approach.
-    "var p = panelById(" + top_id + ");"
-    "var pcs = p.widgets(['luisbocanegra.panel.colorizer']);"
-    "if (pcs.length > 0) {"
-    "  var pc = pcs[0];"
-    "  pc.currentConfigGroup = ['General'];"
-    "  pc.writeConfig('isEnabled', 'true');"
-    "  pc.writeConfig('hideWidget', 'true');"
-    "  pc.writeConfig('globalSettings', '" + js_gs + "');"
-    "  pc.writeConfig('configurationOverrides', '" + js_co + "');"
-    "  print('Panel Colorizer configured id=' + pc.id);"
-    "} else {"
-    "  print('WARNING: Panel Colorizer widget not found in top panel');"
-    "}"
-)
+# ── 1. kwriteconfig6: write to disk (persists across reboots) ─────────────
+base = ['kwriteconfig6', '--file', config_file,
+        '--group', 'Containments', '--group', top_id,
+        '--group', 'Applets',       '--group', pc_id,
+        '--group', 'Configuration', '--group', 'General']
+subprocess.run(base + ['--key', 'isEnabled',              'true'],   check=True)
+subprocess.run(base + ['--key', 'hideWidget',             'true'],   check=True)
+subprocess.run(base + ['--key', 'globalSettings',          gs_str],  check=True)
+subprocess.run(base + ['--key', 'configurationOverrides',  co_str],  check=True)
+print(f"Panel Colorizer config written to disk (applet id={pc_id})")
+
+# ── 2. JS writeConfig: apply in live session (fires configChanged) ─────────
 dbus_cmd = 'qdbus6'
 if subprocess.run(['which', 'qdbus6'], capture_output=True).returncode != 0:
     dbus_cmd = 'qdbus'
+js_gs = gs_str.replace('\\', '\\\\').replace("'", "\\'")
+js_co = co_str.replace('\\', '\\\\').replace("'", "\\'")
+js_code = (
+    f"var p=panelById({top_id});"
+    "var ws=p.widgets(['luisbocanegra.panel.colorizer']);"
+    "if(ws.length>0){"
+    "  var w=ws[0]; w.currentConfigGroup=['General'];"
+    "  w.writeConfig('isEnabled','true');"
+    "  w.writeConfig('hideWidget','true');"
+    f"  w.writeConfig('globalSettings','{js_gs}');"
+    f"  w.writeConfig('configurationOverrides','{js_co}');"
+    "  print('Panel Colorizer live-configured id='+w.id);"
+    "}else{ print('WARNING: Panel Colorizer not found for live config'); }"
+)
 result = subprocess.run(
     [dbus_cmd, 'org.kde.plasmashell', '/PlasmaShell',
      'org.kde.PlasmaShell.evaluateScript', js_code],
@@ -325,14 +315,8 @@ result = subprocess.run(
 if result.stdout.strip():
     print(result.stdout.strip())
 if result.returncode != 0:
-    print("WARNING: JS writeConfig failed — falling back to kwriteconfig6", file=sys.stderr)
-    base = ['kwriteconfig6', '--file', config_file,
-            '--group', 'Containments', '--group', top_id,
-            '--group', 'Applets',       '--group', pc_id,
-            '--group', 'Configuration', '--group', 'General']
-    subprocess.run(base + ['--key', 'isEnabled',      'true'],  check=True)
-    subprocess.run(base + ['--key', 'hideWidget',     'true'],  check=True)
-    subprocess.run(base + ['--key', 'globalSettings',  gs_str], check=True)
+    print(f"WARNING: JS live config failed (disk config was written): {result.stderr.strip()}",
+          file=sys.stderr)
 
 print(f"Panel Colorizer configured (applet id={pc_id})")
 PYEOF
