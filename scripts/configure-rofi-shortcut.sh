@@ -11,6 +11,7 @@ KGLOBAL_FILE="$HOME/.config/kglobalshortcutsrc"
 DESKTOP_DIR="$HOME/.local/share/applications"
 DESKTOP_FILE="${DESKTOP_DIR}/rofi-app-launcher.desktop"
 ROFI_GROUP="rofi-app-launcher.desktop"
+ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
 
 if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   warn "kwriteconfig6 not found; cannot configure KDE shortcut."
@@ -183,6 +184,16 @@ kwriteconfig6 --file "$KGLOBAL_FILE" \
   --group "$ROFI_GROUP" \
   --key "_launch" \
   "${chosen_shortcut},${chosen_shortcut},Launch Rofi Application Launcher"
+kwriteconfig6 --file "$KGLOBAL_FILE" \
+  --group "$ROFI_SERVICE_GROUP" \
+  --key "_launch" \
+  "${chosen_shortcut},${chosen_shortcut},Launch Rofi Application Launcher"
+
+# Keep desktop metadata aligned with the assigned shortcut so KDE can expose it in UI.
+kwriteconfig6 --file "$DESKTOP_FILE" \
+  --group "Desktop Entry" \
+  --key "X-KDE-Shortcuts" \
+  "${chosen_shortcut}"
 
 if [[ "$disable_krunner" == "1" ]]; then
   for krunner_group in krunner org.kde.krunner.desktop services/org.kde.krunner.desktop; do
@@ -197,6 +208,40 @@ if [[ "$disable_krunner" == "1" ]]; then
       "none,${krunner_secondary},${krunner_desc}"
   done
   info "Meta+Space reassigned from KRunner to rofi (KRunner secondary shortcut preserved)."
+fi
+
+refresh_global_shortcuts() {
+  local bus_cmd=""
+  if command -v qdbus6 >/dev/null 2>&1; then
+    bus_cmd="qdbus6"
+  elif command -v qdbus >/dev/null 2>&1; then
+    bus_cmd="qdbus"
+  fi
+
+  if [[ -n "$bus_cmd" ]]; then
+    "$bus_cmd" org.kde.kglobalaccel /kglobalaccel org.kde.KGlobalAccel.reloadConfig >/dev/null 2>&1 && return 0
+  fi
+
+  if command -v kquitapp6 >/dev/null 2>&1; then
+    kquitapp6 kglobalacceld >/dev/null 2>&1 || true
+    sleep 0.4
+    if command -v kglobalacceld6 >/dev/null 2>&1; then
+      nohup kglobalacceld6 >/dev/null 2>&1 &
+      return 0
+    fi
+    if command -v kglobalacceld >/dev/null 2>&1; then
+      nohup kglobalacceld >/dev/null 2>&1 &
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+if refresh_global_shortcuts; then
+  info "KDE global shortcut service refreshed."
+else
+  warn "Could not refresh kglobalaccel automatically; log out/in if shortcut does not apply immediately."
 fi
 
 info "Rofi launcher shortcut configured: ${chosen_shortcut}"
