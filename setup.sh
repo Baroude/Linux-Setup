@@ -123,6 +123,15 @@ sudo apt install -y \
   fastfetch \
   plasma-systemmonitor
 
+# Rofi launcher package name differs across Debian derivatives.
+if apt-cache show rofi-wayland >/dev/null 2>&1; then
+  sudo apt install -y rofi-wayland
+elif apt-cache show rofi >/dev/null 2>&1; then
+  sudo apt install -y rofi
+else
+  warn "No rofi package found in APT repositories; rofi setup will be skipped"
+fi
+
 # Debian/Ubuntu package naming differs for Plasma addons.
 if apt-cache show kdeplasma-addons >/dev/null 2>&1; then
   sudo apt install -y kdeplasma-addons
@@ -593,9 +602,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Phase 9 — Dock + Wallpaper (registered as autostart; needs live plasmashell)
+# Phase 8b — Rofi launcher shortcut
 # ---------------------------------------------------------------------------
-info "Phase 9 · Dock + Wallpaper autostart"
+info "Phase 8b · Rofi launcher shortcut"
+
+if command -v rofi &>/dev/null; then
+  bash "$REPO_DIR/scripts/configure-rofi-shortcut.sh"
+  ok "Rofi launcher configured (Meta+Space preferred when available)"
+else
+  warn "rofi binary not found; skipping rofi shortcut configuration."
+fi
+
+# ---------------------------------------------------------------------------
+# Phase 9 — Dock + Wallpaper rotation (registered as autostart; needs live plasmashell)
+# ---------------------------------------------------------------------------
+info "Phase 9 · Dock + Wallpaper rotation autostart"
 
 # configure-dock.sh and plasma-apply-wallpaperimage both require D-Bus to a
 # running plasmashell — they cannot run headlessly during setup.sh.
@@ -606,12 +627,12 @@ cat > "$HOME/.config/autostart/kde-post-install.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=KDE Post-Install Setup
-Comment=One-time: configure dock panels and wallpaper (requires live Plasma session)
+Comment=One-time: configure dock panels and wallpaper rotation (requires live Plasma session)
 Exec=/bin/bash "$REPO_DIR/scripts/setup-first-login.sh"
 Terminal=false
 X-KDE-AutostartScript=true
 EOF
-ok "Autostart registered — panels and wallpaper configured on next login"
+ok "Autostart registered — panels and wallpaper rotation configured on next login"
 
 # ---------------------------------------------------------------------------
 # Phase 9b — Panel Colorizer (pill-style widget islands for the top bar)
@@ -840,7 +861,7 @@ bash "$REPO_DIR/scripts/theme-switch.sh" \
   --non-interactive
 ok "Theme applied via scripts/theme-switch.sh (${THEME_NAME}/${THEME_FLAVOR}/${THEME_ACCENT})"
 
-# Desktop wallpaper — applied by setup-first-login.sh on first login (needs plasmashell)
+# Desktop wallpaper rotation — applied by setup-first-login.sh on first login (needs plasmashell)
 
 # Lock screen wallpaper (kwriteconfig6 works without a session)
 kwriteconfig6 --file kscreenlockerrc \
@@ -861,7 +882,7 @@ echo "============================================================"
 echo ""
 echo " Automatic on next login (via autostart):"
 echo "   · Dock + top bar panels will be created"
-echo "   · Desktop wallpaper will be applied"
+echo "   · Desktop wallpaper rotation will be applied"
 echo ""
 echo " Manual steps remaining:"
 echo "   1. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"

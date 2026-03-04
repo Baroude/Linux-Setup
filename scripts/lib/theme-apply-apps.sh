@@ -145,6 +145,29 @@ theme_apply_tidal_css_theme() {
   theme_warn "Manual step: Open tidal-hifi -> Settings -> Theming -> choose ${stable_css}"
 }
 
+theme_apply_rofi_theme() {
+  local flavor accent rofi_dir rofi_theme_dir variant_theme current_theme rofi_config
+  flavor="$(theme_context_get "flavor")"
+  accent="$(theme_context_get "accent")"
+  rofi_dir="$HOME/.config/rofi"
+  rofi_theme_dir="${rofi_dir}/themes"
+  variant_theme="${rofi_theme_dir}/catppuccin-${flavor}-${accent}.rasi"
+  current_theme="${rofi_theme_dir}/current.rasi"
+  rofi_config="${rofi_dir}/config.rasi"
+
+  theme_run "create rofi theme dir" mkdir -p "$rofi_theme_dir"
+  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-theme.rasi.tpl" "$variant_theme"
+  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-config.rasi.tpl" "$rofi_config"
+
+  if [[ "${THEME_DRY_RUN}" == "1" ]]; then
+    echo "[dry-run] copy ${variant_theme} -> ${current_theme}"
+  else
+    cp "$variant_theme" "$current_theme"
+  fi
+
+  theme_info "Rofi theme written: ${variant_theme}"
+}
+
 theme_apply_apps_adapter() {
   local theme
   theme="$(theme_context_get "theme")"
@@ -157,5 +180,6 @@ theme_apply_apps_adapter() {
   theme_apply_firefox_theme
   theme_apply_tidal_desktop_override
   theme_apply_tidal_css_theme
+  theme_apply_rofi_theme
   theme_info "Apps adapter completed"
 }

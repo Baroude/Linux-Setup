@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # configure-dock.sh — Plasma 6 panel layout via JS scripting API
 # Creates:
-#   Bottom dock (no background, centered): Kickoff | icontasks [pinned apps]
+#   Bottom dock (no background, centered): icontasks [pinned apps]
 #   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu |
 #             Media | CPU/RAM/Temp | SysTray | Lock/Logout | PanelColorizer(hidden)
 #
@@ -29,8 +29,6 @@ if ! kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
 fi
 echo "Panel Colorizer detected — continuing"
 
-# catppuccin-vibes SVG icons (downloaded by setup.sh Phase 6)
-VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
 APP_TITLEBAR_ID="com.github.antroids.application-title-bar"
 APP_TITLEBAR_URL="${APP_TITLEBAR_URL:-https://github.com/antroids/application-title-bar/releases/latest/download/application-title-bar.plasmoid}"
 
@@ -111,7 +109,7 @@ else
 fi
 
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
-# Double-quoted string so bash variables (LAUNCHERS, VIBES_DIR) expand into JS.
+# Double-quoted string so bash variables (LAUNCHERS, TITLE_WIDGET_ID) expand into JS.
 # JS strings use single quotes to avoid conflict.
 $DBUS_CMD org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
 
@@ -133,10 +131,6 @@ dock.alignment  = 'center';
 dock.lengthMode = 'fit';
 dock.currentConfigGroup = ['General'];
 dock.writeConfig('backgroundHints', '0');
-
-var kickoff = dock.addWidget('org.kde.plasma.kickoff');
-kickoff.currentConfigGroup = ['General'];
-kickoff.writeConfig('icon', '${VIBES_DIR}/apps-vibrant.svg');
 
 var tasks = dock.addWidget('org.kde.plasma.icontasks');
 tasks.currentConfigGroup = ['General'];

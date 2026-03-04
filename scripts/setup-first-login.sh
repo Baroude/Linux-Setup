@@ -17,8 +17,10 @@ sleep 8
 # Configure dock (bottom floating pill) and top bar
 bash "$REPO_DIR/scripts/configure-dock.sh"
 
-# Apply desktop wallpaper
-plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
+# Apply desktop wallpaper rotation. If slideshow setup fails, keep a static fallback.
+if ! bash "$REPO_DIR/scripts/apply-wallpaper-rotation.sh"; then
+  plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
+fi
 
 # Self-delete — only needs to run once
 rm -f "$HOME/.config/autostart/kde-post-install.desktop"

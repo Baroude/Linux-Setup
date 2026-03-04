@@ -56,7 +56,7 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 
 | Phase | What happens |
 |---|---|
-| 1 | APT base packages (git, zsh, kitty, fzf, zoxide, kvantum, papirus, fastfetch…) |
+| 1 | APT base packages (git, zsh, kitty, rofi, fzf, zoxide, kvantum, papirus, fastfetch…) |
 | 1b | Node.js LTS via nodesource (skipped if already present) |
 | 1c | Neovim latest stable prebuilt + LSP tools (skipped if already at latest) |
 | 2 | Fonts — Inter (APT) + JetBrains Mono Nerd Font (skipped if already present) |
@@ -66,6 +66,7 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 | 7 | KWin — blur (strength 9, noise 2) + rounded corners (radius 12) + Dolphin opacity rule |
 | 7b | kwin-better-blur built from source (forces blur behind any semi-transparent window) |
 | 8 | Krohnkite tiling script (install or upgrade) + 8 px gaps (`screenGapBetween` + screen edges) |
+| 8b | Rofi launcher shortcut (prefers `Meta + Space`, falls back only on conflicts) |
 | 9 | Dock — floating bottom panel (Icons-only Task Manager + tray + clock) |
 | 10 | Kitty config directory (dotbot links `kitty/kitty.conf`) |
 | 11 | Zsh + oh-my-zsh + plugins + Starship |
@@ -117,6 +118,7 @@ Linux-Setup/
 ├── images/evening-sky.png    # Wallpaper (desktop, lock screen, SDDM)
 └── scripts/
     ├── configure-dock.sh     # Plasma JS script — rebuilds the dock
+    ├── configure-rofi-shortcut.sh  # Assigns rofi global shortcut after conflict scan
     ├── backup-plasma.sh      # Copies live KDE configs back into repo
     └── restore-plasma.sh     # Re-runs install-plasma profile
 ```
@@ -133,12 +135,15 @@ Linux-Setup/
 | `Meta + ~` | Switch between windows of same application |
 | `Meta + D` | Show desktop |
 | `Meta + L` | Lock screen |
-| `Meta + Space` | KRunner (app launcher / search) |
+| `Meta + Space` | Rofi app launcher (`rofi -show drun`) when available |
 | `Meta + E` | Open file manager (Dolphin) |
 | `Meta + Shift + Q` | Close active window |
 | `Meta + PgUp/PgDn` | Move window to previous/next virtual desktop |
 | `Ctrl + F1–F4` | Switch to virtual desktop 1–4 |
 | `Meta + Arrow` | Snap window to half screen (KWin built-in) |
+
+If `Meta + Space` is already taken by a non-KRunner action, setup falls back to
+the first free binding in: `Meta + R`, `Meta + /`, `Alt + Space`.
 
 ### Krohnkite — tiling
 

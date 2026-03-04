@@ -34,7 +34,8 @@
         "terminal": true,
         "editors": true,
         "cli": true,
-        "apps": true
+        "apps": true,
+        "rofi": true
       }
     },
     "rosepine": {
