@@ -46,6 +46,7 @@ theme_apply_kde_adapter() {
 
   theme_clone_fresh /tmp/catppuccin-kvantum https://github.com/catppuccin/kvantum.git
   theme_run "create kvantum dir" mkdir -p "$HOME/.config/Kvantum"
+  theme_run "remove previous kvantum theme dir" rm -rf "$HOME/.config/Kvantum/${kvantum_theme}"
   theme_run "install kvantum theme files" cp -r "/tmp/catppuccin-kvantum/themes/${kvantum_theme}" "$HOME/.config/Kvantum/"
   [[ "${THEME_DRY_RUN}" == "1" ]] || rm -rf /tmp/catppuccin-kvantum
   theme_run "activate kvantum theme" kvantummanager --set "$kvantum_theme"

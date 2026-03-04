@@ -317,10 +317,22 @@ info "Phase 6 · Dock icon assets"
 VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
 mkdir -p "$VIBES_DIR"
 VIBES_BASE="https://raw.githubusercontent.com/generalentropy/catppuccin-vibes/main/icons/catppuccin-vibrant"
-for _icon in apps-vibrant terminal-vibrant folder-vibrant browser-vibrant music-vibrant; do
-  curl -fLo "$VIBES_DIR/${_icon}.svg" "${VIBES_BASE}/${_icon}.svg"
+VIBES_ICONS=(apps-vibrant terminal-vibrant folder-vibrant browser-vibrant music-vibrant)
+VIBES_MISSING=()
+for _icon in "${VIBES_ICONS[@]}"; do
+  if [[ ! -s "$VIBES_DIR/${_icon}.svg" ]]; then
+    VIBES_MISSING+=("$_icon")
+  fi
 done
-ok "catppuccin-vibes SVGs downloaded to $VIBES_DIR"
+
+if (( ${#VIBES_MISSING[@]} == 0 )); then
+  skip "catppuccin-vibes SVGs"
+else
+  for _icon in "${VIBES_MISSING[@]}"; do
+    curl -fLo "$VIBES_DIR/${_icon}.svg" "${VIBES_BASE}/${_icon}.svg"
+  done
+  ok "catppuccin-vibes SVGs downloaded to $VIBES_DIR"
+fi
 
 # .desktop overrides — freedesktop spec: ~/.local/share/applications/ takes
 # precedence over /usr/share/applications/ for icon resolution in icontasks.
@@ -683,7 +695,12 @@ OMZ_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
     "$OMZ_CUSTOM/zsh-history-substring-search"
 
 # Starship
-curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+if command -v starship &>/dev/null; then
+  skip "Starship ($(starship --version 2>/dev/null | head -1))"
+else
+  curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+  ok "Starship installed"
+fi
 
 ok "Zsh + oh-my-zsh + Starship configured"
 
@@ -699,8 +716,8 @@ info "Phase 11b · Tidal (tidal-hifi)"
 
 if ! command -v flatpak &>/dev/null; then
   sudo apt install -y flatpak
-  flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 fi
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 if ! flatpak list --app | grep -q "com.mastermindzh.tidal-hifi"; then
   flatpak install -y flathub com.mastermindzh.tidal-hifi

@@ -14,9 +14,11 @@ theme_apply_terminal_adapter() {
     echo "[dry-run] ensure kitty include ./theme.conf in ${kitty_conf}"
   else
     if [[ -f "$kitty_conf" ]]; then
-      if ! grep -q '^include ./theme.conf$' "$kitty_conf"; then
+      if ! grep -Eq '^[[:space:]]*include[[:space:]]+\./theme\.conf([[:space:]]*#.*)?$' "$kitty_conf"; then
         printf '\ninclude ./theme.conf\n' >> "$kitty_conf"
       fi
+    else
+      printf 'include ./theme.conf\n' > "$kitty_conf"
     fi
   fi
 
