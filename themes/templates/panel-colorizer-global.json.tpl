@@ -27,7 +27,7 @@
         "foregroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "${BASE}",
+          "custom": "${TEXT}",
           "alpha": 1,
           "list": []
         },
