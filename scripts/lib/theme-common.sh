@@ -69,6 +69,10 @@ theme_list_available() {
 import json, sys
 catalog = json.load(open(sys.argv[1], encoding='utf-8'))
 for name, data in catalog["themes"].items():
+    if not data.get("supported", True):
+        desc = data.get("description", "not yet implemented")
+        print(f"theme: {name}  [{desc}]")
+        continue
     flavors = ', '.join(data["flavors"])
     accents = ', '.join(data["accents"])
     print(f"theme: {name}")
@@ -96,8 +100,41 @@ theme_print_current_state() {
   fi
   python3 - "$THEME_STATE_FILE" <<'PY'
 import json, sys
+
+ALL_ADAPTERS = ["kde", "terminal", "editors", "cli", "panel"]
+
 state = json.load(open(sys.argv[1], encoding='utf-8'))
-print(json.dumps(state, indent=2))
+theme   = state.get("theme", "?")
+flavor  = state.get("flavor", "?")
+accent  = state.get("accent", "?")
+status  = state.get("status", "?")
+applied = state.get("last_applied", "?")
+completed = state.get("completed_adapters", [])
+restart   = state.get("restart_pending", False)
+
+print(f"Theme:    {theme}/{flavor}/{accent}")
+print(f"Status:   {status}")
+print(f"Applied:  {applied}")
+print()
+print("Adapters:")
+for adapter in ALL_ADAPTERS:
+    mark = "[ok]" if adapter in completed else "[ ]"
+    print(f"  {mark} {adapter}")
+
+if restart:
+    print()
+    print("[!] Session restart pending.")
+    print("    Run: kquitapp6 plasmashell && kstart6 plasmashell")
+
+missing = [a for a in ALL_ADAPTERS if a not in completed]
+if status == "partial" and missing:
+    print()
+    print(f"[!] Partial apply — missing: {', '.join(missing)}")
+    print("    Re-run: scripts/theme-switch.sh to retry failed adapters.")
+elif status == "failed":
+    print()
+    print("[!] Apply failed before any adapter ran.")
+    print("    Re-run: scripts/theme-switch.sh to retry.")
 PY
 }
 
@@ -228,10 +265,17 @@ import json, sys
 catalog_path, theme, flavor, accent = sys.argv[1:]
 catalog = json.load(open(catalog_path, encoding='utf-8'))
 if theme not in catalog['themes']:
-    print(f"Unsupported theme '{theme}'.", file=sys.stderr)
-    print("Valid themes:", ', '.join(sorted(catalog['themes'].keys())), file=sys.stderr)
+    print(f"Unknown theme '{theme}'.", file=sys.stderr)
+    supported = [k for k, v in catalog['themes'].items() if v.get('supported', True)]
+    print("Available themes:", ', '.join(sorted(supported)), file=sys.stderr)
     raise SystemExit(1)
 entry = catalog['themes'][theme]
+if not entry.get('supported', True):
+    desc = entry.get('description', 'not yet implemented')
+    print(f"Theme '{theme}' is not yet implemented: {desc}", file=sys.stderr)
+    supported = [k for k, v in catalog['themes'].items() if v.get('supported', True)]
+    print("Available themes:", ', '.join(sorted(supported)), file=sys.stderr)
+    raise SystemExit(1)
 if flavor not in entry['flavors']:
     print(f"Unsupported flavor '{flavor}' for theme '{theme}'.", file=sys.stderr)
     print("Valid flavors:", ', '.join(entry['flavors']), file=sys.stderr)

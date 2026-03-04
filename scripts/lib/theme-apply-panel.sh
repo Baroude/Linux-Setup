@@ -68,15 +68,15 @@ theme_panel_apply_live() {
 
   local detected
   if ! detected="$(theme_panel_detect_ids)"; then
-    theme_warn "Panel Colorizer not ready yet; skipping live apply"
-    return 1
+    theme_warn "Panel Colorizer applet not found; panel apply deferred (first-login race)"
+    return 2
   fi
 
   local top_id pc_id spacer_ids_json top_widgets_json
-  top_id="$(echo "$detected" | sed -n '1p')"
-  pc_id="$(echo "$detected" | sed -n '2p')"
-  spacer_ids_json="$(echo "$detected" | sed -n '3p')"
-  top_widgets_json="$(echo "$detected" | sed -n '4p')"
+  top_id="$(sed -n '1p' <<< "$detected")"
+  pc_id="$(sed -n '2p' <<< "$detected")"
+  spacer_ids_json="$(sed -n '3p' <<< "$detected")"
+  top_widgets_json="$(sed -n '4p' <<< "$detected")"
 
   PANEL_PRESET_FILE="$THEME_PANEL_PRESET_FILE" \
   PANEL_WIDGET_COLORS_JSON="$THEME_PANEL_WIDGET_COLORS_JSON" \
@@ -93,7 +93,9 @@ theme_apply_panel_adapter() {
   theme_panel_prepare_assets
   if [[ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
     theme_warn "No active desktop session detected; panel apply deferred"
-    return 0
+    return 2
   fi
-  theme_panel_apply_live 0
+  local rc=0
+  theme_panel_apply_live 0 || rc=$?
+  return $rc
 }

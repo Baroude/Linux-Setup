@@ -35,6 +35,14 @@
         "editors": true,
         "cli": true
       }
+    },
+    "rosepine": {
+      "supported": false,
+      "description": "Rose Pine — placeholder, not yet implemented"
+    },
+    "tokyonight": {
+      "supported": false,
+      "description": "Tokyo Night — placeholder, not yet implemented"
     }
   }
 }

@@ -138,10 +138,18 @@ run_adapter "kde" theme_apply_kde_adapter || true
 run_adapter "terminal" theme_apply_terminal_adapter || true
 run_adapter "editors" theme_apply_editors_adapter || true
 run_adapter "cli" theme_apply_cli_adapter || true
-run_adapter "panel" theme_apply_panel_adapter || {
+theme_info "Running adapter: panel"
+panel_rc=0
+theme_apply_panel_adapter || panel_rc=$?
+if [[ $panel_rc -eq 0 ]]; then
+  completed+=("panel")
+elif [[ $panel_rc -eq 2 ]]; then
   restart_pending="true"
-  true
-}
+  theme_warn "Panel adapter deferred: applet not yet available; will apply on next login"
+else
+  theme_warn "Adapter failed: panel"
+  failed=$((failed + 1))
+fi
 
 status="applied"
 if [[ "${#completed[@]}" -eq 0 ]]; then
