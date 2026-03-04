@@ -57,6 +57,24 @@ qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
 sleep 0.5   # wait for KWin to apply desktop count before pager widget is created
 echo "Virtual desktops set to 4"
 
+# Window title/buttons widget selection:
+# 1) Plasma 6 replacement with title + min/max/close buttons
+# 2) Legacy Plasma 5 window title widget (title only)
+TITLE_WIDGET_ID=""
+if kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
+        | grep -q 'com.github.antroids.application-title-bar'; then
+    TITLE_WIDGET_ID="com.github.antroids.application-title-bar"
+    echo "Window title/buttons widget detected: ${TITLE_WIDGET_ID}"
+elif kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
+        | grep -q 'org.kde.plasma.windowtitle'; then
+    TITLE_WIDGET_ID="org.kde.plasma.windowtitle"
+    echo "Window title widget detected: ${TITLE_WIDGET_ID}"
+else
+    echo "WARNING: No window title widget found." >&2
+    echo "         For Plasma 6 title + min/max/close support install:" >&2
+    echo "         https://github.com/antroids/application-title-bar" >&2
+fi
+
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
 # Double-quoted string so bash variables (LAUNCHERS, VIBES_DIR) expand into JS.
 # JS strings use single quotes to avoid conflict.
@@ -109,15 +127,36 @@ pager.writeConfig('showWindowIcons', 'false');
 pager.writeConfig('pagerLayout', '1');              // Horizontal
 pager.writeConfig('showOnlyCurrentScreen', 'true');
 
-var wtitle = top.addWidget('org.kde.plasma.windowtitle');  // color slot 1 → Surface1 pill
-wtitle.currentConfigGroup = ['General'];
-wtitle.writeConfig('fillWidth', 'false');
+// Optional title/buttons widget:
+// - com.github.antroids.application-title-bar (Plasma 6, title + buttons)
+// - org.kde.plasma.windowtitle (legacy, title only)
+var titleWidget = null;
+if ('${TITLE_WIDGET_ID}') {
+    try {
+        titleWidget = top.addWidget('${TITLE_WIDGET_ID}');
+    } catch(e) {
+        print('WARNING: title widget not available: ' + e);
+    }
+}
+if (titleWidget && typeof titleWidget.writeConfig === 'function') {
+    if ('${TITLE_WIDGET_ID}' === 'org.kde.plasma.windowtitle') {
+        // source=0: applicationName avoids empty title when hide_window_decorations=yes
+        titleWidget.currentConfigGroup = ['General'];
+        titleWidget.writeConfig('fillWidth', 'false');
+        titleWidget.writeConfig('source', '0');
+    } else if ('${TITLE_WIDGET_ID}' === 'com.github.antroids.application-title-bar') {
+        // Defaults already include close/maximize/minimize/title; enforce appName title source.
+        titleWidget.currentConfigGroup = ['Appearance'];
+        titleWidget.writeConfig('windowTitleSource', '0');
+        titleWidget.writeConfig('widgetFillWidth', 'false');
+    }
+}
 
 top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to centre
 
 var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
-clock.writeConfig('showDate', 'false');                // keep center island compact/readable
+clock.writeConfig('showDate', 'true');
 clock.writeConfig('customFont', 'true');
 clock.writeConfig('fontFamily', 'Inter');
 clock.writeConfig('fontSize', '10');
@@ -232,22 +271,31 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
         2>/dev/null | tail -1)
     echo "Spacer applet ids: ${SPACER_IDS_JSON}"
 
+    TOP_WIDGETS_JSON=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "var p=panelById(${TOP_ID}); var ws=p.widgets(); var out=[]; ws.forEach(function(w){out.push({id:w.id,name:w.type});}); print(JSON.stringify(out));" \
+        2>/dev/null | tail -1)
+    echo "Top panel widgets: ${TOP_WIDGETS_JSON}"
+
     # ── Build JSON configs and write via kwriteconfig6 + JS writeConfig ────
     PANEL_ID="$TOP_ID" \
     APPLET_ID="$PC_ID" \
     PRESET_FILE="${SCRIPT_DIR}/panel-colorizer-catppuccin.json" \
     SPACER_IDS_JSON="${SPACER_IDS_JSON:-[]}" \
+    TOP_WIDGETS_JSON="${TOP_WIDGETS_JSON:-[]}" \
     python3 << 'PYEOF'
-import os, json, subprocess, sys
+import os, json, re, subprocess, sys
 
 config_file = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
 preset_file = os.environ['PRESET_FILE']
 top_id      = os.environ['PANEL_ID']
 pc_id       = os.environ['APPLET_ID']
 spacer_ids  = json.loads(os.environ.get('SPACER_IDS_JSON', '[]'))
+top_widgets = json.loads(os.environ.get('TOP_WIDGETS_JSON', '[]'))
 
 print(f"Panel Colorizer applet id: {pc_id}")
 print(f"Spacer applet ids: {spacer_ids}")
+print(f"Top panel widgets: {top_widgets}")
 
 # ── Load preset ────────────────────────────────────────────────────────────
 with open(preset_file) as f:
@@ -255,26 +303,107 @@ with open(preset_file) as f:
 
 gs = preset['globalSettings']
 gs['unifiedBackground'] = []
+# Disable positional list-based coloring; use explicit per-widget overrides.
+widget_bg = gs.setdefault('widgets', {}).setdefault('normal', {}).setdefault('backgroundColor', {})
+widget_bg['sourceType'] = 0
+widget_bg['list'] = []
+widget_bg['custom'] = '#313244'
+widget_bg['enabled'] = True
 gs_str = json.dumps(gs, separators=(',', ':'))
 
-# ── Build configurationOverrides to disable panelspacer widgets ────────────
-# Spacers advance the color-list counter but must not render a colored pill.
-# id=-1 covers the undefined plasmoid.id spacers return at render time.
 off = {
     "disabledFallback": True,
-    "normal":         {"enabled": False},
-    "busy":           {"enabled": False},
-    "hovered":        {"enabled": False},
+    "normal": {"enabled": False},
+    "busy": {"enabled": False},
+    "hovered": {"enabled": False},
     "needsAttention": {"enabled": False},
-    "expanded":       {"enabled": False},
+    "expanded": {"enabled": False},
 }
+
+def make_color_override(bg_hex, fg_hex="#1e1e2e"):
+    return {
+        "disabledFallback": True,
+        "normal": {
+            "enabled": True,
+            "backgroundColor": {
+                "enabled": True,
+                "sourceType": 0,
+                "custom": bg_hex,
+                "alpha": 1,
+            },
+            "foregroundColor": {
+                "enabled": True,
+                "sourceType": 0,
+                "custom": fg_hex,
+                "alpha": 1,
+            },
+        },
+        "busy": {"enabled": False},
+        "hovered": {"enabled": False},
+        "needsAttention": {"enabled": False},
+        "expanded": {"enabled": False},
+    }
+
+widget_colors = {
+    "org.kde.plasma.pager": "#b4befe",
+    "org.kde.plasma.windowtitle": "#a6adc8",
+    "com.github.antroids.application-title-bar": "#a6adc8",
+    "org.kde.plasma.digitalclock": "#cba6f7",
+    "org.kde.plasma.weather": "#89b4fa",
+    "org.kde.plasma.appmenu": "#a6e3a1",
+    "org.kde.plasma.mediacontroller": "#94e2d5",
+    "org.kde.plasma.systemmonitor": "#fab387",
+    "org.kde.plasma.systemtray": "#89dceb",
+    "org.kde.plasma.lock_logout": "#f38ba8",
+}
+
+def override_name(widget_name):
+    return "color_" + re.sub(r"[^a-zA-Z0-9_]+", "_", widget_name).strip("_")
+
+overrides = {
+    "spacer_off": off,
+    "colorizer_off": off,
+}
+associations = []
+seen_associations = set()
+
+def add_association(widget_id, widget_name, preset_name):
+    key = (int(widget_id), widget_name, preset_name)
+    if key in seen_associations:
+        return
+    seen_associations.add(key)
+    associations.append({
+        "id": int(widget_id),
+        "name": widget_name,
+        "presets": [preset_name],
+    })
+
+# Spacers sometimes report plasmoid.id as -1; keep both specific IDs and generic.
+add_association(-1, "org.kde.plasma.panelspacer", "spacer_off")
+for sid in spacer_ids:
+    add_association(int(sid), "org.kde.plasma.panelspacer", "spacer_off")
+
+for widget in top_widgets:
+    name = widget.get("name")
+    wid = widget.get("id", -1)
+    if not name:
+        continue
+    if name == "org.kde.plasma.panelspacer":
+        add_association(int(wid), name, "spacer_off")
+        continue
+    if name == "luisbocanegra.panel.colorizer":
+        add_association(int(wid), name, "colorizer_off")
+        continue
+    if name not in widget_colors:
+        continue
+    ov_name = override_name(name)
+    if ov_name not in overrides:
+        overrides[ov_name] = make_color_override(widget_colors[name])
+    add_association(int(wid), name, ov_name)
+
 co = {
-    "overrides": {"spacer_off": off},
-    "associations": (
-        [{"id": -1, "name": "org.kde.plasma.panelspacer", "presets": ["spacer_off"]}]
-        + [{"id": int(sid), "name": "org.kde.plasma.panelspacer",
-            "presets": ["spacer_off"]} for sid in spacer_ids]
-    ),
+    "overrides": overrides,
+    "associations": associations,
 }
 co_str = json.dumps(co, separators=(',', ':'))
 
