@@ -146,26 +146,37 @@ theme_apply_tidal_css_theme() {
 }
 
 theme_apply_rofi_theme() {
-  local flavor accent rofi_dir rofi_theme_dir variant_theme current_theme rofi_config
+  local flavor rofi_dir rofi_default rofi_flavor rofi_config
   flavor="$(theme_context_get "flavor")"
-  accent="$(theme_context_get "accent")"
   rofi_dir="$HOME/.config/rofi"
-  rofi_theme_dir="${rofi_dir}/themes"
-  variant_theme="${rofi_theme_dir}/catppuccin-${flavor}-${accent}.rasi"
-  current_theme="${rofi_theme_dir}/current.rasi"
+  rofi_default="${rofi_dir}/catppuccin-default.rasi"
+  rofi_flavor="${rofi_dir}/catppuccin-${flavor}.rasi"
   rofi_config="${rofi_dir}/config.rasi"
 
-  theme_run "create rofi theme dir" mkdir -p "$rofi_theme_dir"
-  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-theme.rasi.tpl" "$variant_theme"
-  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-config.rasi.tpl" "$rofi_config"
+  theme_run "create rofi config dir" mkdir -p "$rofi_dir"
 
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-    echo "[dry-run] copy ${variant_theme} -> ${current_theme}"
+    echo "[dry-run] download official rofi theme ${rofi_default}"
+    echo "[dry-run] download official rofi flavor ${rofi_flavor}"
+    echo "[dry-run] enable flavor import catppuccin-${flavor} in ${rofi_default}"
   else
-    cp "$variant_theme" "$current_theme"
+    curl -fsSL -o "$rofi_default" \
+      "https://raw.githubusercontent.com/catppuccin/rofi/main/catppuccin-default.rasi"
+    curl -fsSL -o "$rofi_flavor" \
+      "https://raw.githubusercontent.com/catppuccin/rofi/main/themes/catppuccin-${flavor}.rasi"
+
+    sed -i -E "s|^// @import \"catppuccin-${flavor}\"|@import \"catppuccin-${flavor}\"|" "$rofi_default"
+    for other_flavor in latte frappe macchiato mocha; do
+      if [[ "$other_flavor" == "$flavor" ]]; then
+        continue
+      fi
+      sed -i -E "s|^@import \"catppuccin-${other_flavor}\"|// @import \"catppuccin-${other_flavor}\"|" "$rofi_default"
+    done
   fi
 
-  theme_info "Rofi theme written: ${variant_theme}"
+  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-config.rasi.tpl" "$rofi_config"
+
+  theme_info "Rofi theme written from official catppuccin/rofi (${flavor})"
 }
 
 theme_apply_apps_adapter() {
