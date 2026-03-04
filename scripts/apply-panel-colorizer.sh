@@ -54,7 +54,7 @@ PRESET_FILE="${PRESET_FILE}" \
 SPACER_IDS_JSON="${SPACER_IDS_JSON:-[]}" \
 TOP_WIDGETS_JSON="${TOP_WIDGETS_JSON:-[]}" \
 python3 << 'PYEOF'
-import os, json, re, subprocess, sys
+import copy, os, json, re, subprocess, sys
 
 preset_file = os.environ['PRESET_FILE']
 top_id      = os.environ['PANEL_ID']
@@ -84,23 +84,27 @@ off = {
 }
 
 def make_color_override(bg_hex, fg_hex="#1e1e2e"):
+    normal = copy.deepcopy(gs.get("widgets", {}).get("normal", {}))
+    normal["enabled"] = True
+    bg_cfg = normal.setdefault("backgroundColor", {})
+    bg_cfg.update({
+        "enabled": True,
+        "sourceType": 0,
+        "custom": bg_hex,
+        "alpha": 1,
+        "list": [],
+    })
+    fg_cfg = normal.setdefault("foregroundColor", {})
+    fg_cfg.update({
+        "enabled": True,
+        "sourceType": 0,
+        "custom": fg_hex,
+        "alpha": 1,
+        "list": [],
+    })
     return {
         "disabledFallback": True,
-        "normal": {
-            "enabled": True,
-            "backgroundColor": {
-                "enabled": True,
-                "sourceType": 0,
-                "custom": bg_hex,
-                "alpha": 1,
-            },
-            "foregroundColor": {
-                "enabled": True,
-                "sourceType": 0,
-                "custom": fg_hex,
-                "alpha": 1,
-            },
-        },
+        "normal": normal,
         "busy": {"enabled": False},
         "hovered": {"enabled": False},
         "needsAttention": {"enabled": False},

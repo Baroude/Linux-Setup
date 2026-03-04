@@ -71,6 +71,7 @@ elif kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
     echo "Window title widget detected: ${TITLE_WIDGET_ID}"
 else
     echo "WARNING: No window title widget found." >&2
+    echo "         Top bar will not show window title/buttons." >&2
     echo "         For Plasma 6 title + min/max/close support install:" >&2
     echo "         https://github.com/antroids/application-title-bar" >&2
 fi
@@ -145,10 +146,18 @@ if (titleWidget && typeof titleWidget.writeConfig === 'function') {
         titleWidget.writeConfig('fillWidth', 'false');
         titleWidget.writeConfig('source', '0');
     } else if ('${TITLE_WIDGET_ID}' === 'com.github.antroids.application-title-bar') {
-        // Defaults already include close/maximize/minimize/title; enforce appName title source.
+        // Force a compact Linux-like controls set and always show app title.
         titleWidget.currentConfigGroup = ['Appearance'];
+        titleWidget.writeConfig('widgetElements', 'windowMinimizeButton,windowCloseButton,windowTitle');
         titleWidget.writeConfig('windowTitleSource', '0');
+        titleWidget.writeConfig('windowTitleHideEmpty', 'false');
+        titleWidget.writeConfig('windowTitleUndefined', 'Desktop');
+        titleWidget.writeConfig('windowTitleMinimumWidth', '120');
+        titleWidget.writeConfig('windowTitleMaximumWidth', '420');
         titleWidget.writeConfig('widgetFillWidth', 'false');
+        titleWidget.currentConfigGroup = ['Behavior'];
+        titleWidget.writeConfig('widgetActiveTaskFilterNotMaximized', 'false');
+        titleWidget.writeConfig('disableButtonsForNotHoveredWidget', 'false');
     }
 }
 
@@ -284,7 +293,7 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     SPACER_IDS_JSON="${SPACER_IDS_JSON:-[]}" \
     TOP_WIDGETS_JSON="${TOP_WIDGETS_JSON:-[]}" \
     python3 << 'PYEOF'
-import os, json, re, subprocess, sys
+import copy, os, json, re, subprocess, sys
 
 config_file = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
 preset_file = os.environ['PRESET_FILE']
@@ -321,23 +330,27 @@ off = {
 }
 
 def make_color_override(bg_hex, fg_hex="#1e1e2e"):
+    normal = copy.deepcopy(gs.get("widgets", {}).get("normal", {}))
+    normal["enabled"] = True
+    bg_cfg = normal.setdefault("backgroundColor", {})
+    bg_cfg.update({
+        "enabled": True,
+        "sourceType": 0,
+        "custom": bg_hex,
+        "alpha": 1,
+        "list": [],
+    })
+    fg_cfg = normal.setdefault("foregroundColor", {})
+    fg_cfg.update({
+        "enabled": True,
+        "sourceType": 0,
+        "custom": fg_hex,
+        "alpha": 1,
+        "list": [],
+    })
     return {
         "disabledFallback": True,
-        "normal": {
-            "enabled": True,
-            "backgroundColor": {
-                "enabled": True,
-                "sourceType": 0,
-                "custom": bg_hex,
-                "alpha": 1,
-            },
-            "foregroundColor": {
-                "enabled": True,
-                "sourceType": 0,
-                "custom": fg_hex,
-                "alpha": 1,
-            },
-        },
+        "normal": normal,
         "busy": {"enabled": False},
         "hovered": {"enabled": False},
         "needsAttention": {"enabled": False},
