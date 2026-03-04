@@ -266,6 +266,6 @@ Note: `themes/templates/kvantum.kvconfig.tpl` is intentionally absent. Kvantum i
 ## Delivery Breakdown (PR sequencing)
 - PR 1: Theme data model and switcher scaffolding (`catalog`, manifest with correct data model, parser, validation, dry-run, `--list`, `--current`) + dotbot reclassification of theme-managed files (prerequisite for all adapter PRs). **Status: Completed**
 - PR 2: Catppuccin adapters for KDE (including kscreenlockerrc)/Kvantum/GTK/icons/panel (including widget color map deduplication and autostart migration to theme-aware apply). **Status: Completed**
-- PR 3: Terminal/shell/editor/CLI adapters (Kitty via `theme.conf` include, Starship, Neovim, bat, btop targeted-key update, delta via `git config --global`) and setup.sh argument integration. **Status: Completed (runtime validation pending)**
+- PR 3: Terminal/shell/editor/CLI adapters (Kitty via `theme.conf` include, Starship, Neovim, bat, btop targeted-key update, delta via `git config --global`) and setup.sh argument integration. **Status: Completed (runtime validation confirmed on 2026-03-04)**
 - PR 4: Docs only — README rewrite and `docs/themes.md`. **Status: Completed**
 - PR 5: Hardening pass with failure handling, partial-apply rollback, `completed_adapters` state, first-login race guard, and validation script outputs. **Status: Completed**

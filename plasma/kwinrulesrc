@@ -2,7 +2,7 @@
 count=1
 
 [1]
-Description=Dolphin — transparency + blur
+Description=Dolphin — transparency + blur + borderless
 wmclass=dolphin
 wmclasscomplete=false
 wmclassmatch=2
@@ -10,3 +10,5 @@ opacityactive=90
 opacityactiverule=2
 opacityinactive=88
 opacityinactiverule=2
+noborder=true
+noborderrule=2

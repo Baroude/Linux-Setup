@@ -384,21 +384,38 @@ kwriteconfig6 --file kwinrc --group Plugins --key backgroundcontrastEnabled true
 kwriteconfig6 --file kwinrc --group Plugins --key roundedcornersEnabled true
 kwriteconfig6 --file kwinrc --group Effect-roundedcorners --key Radius 12
 
-# Dolphin window rule — force 88 % opacity so kwin-better-blur can blur behind it.
+# Dolphin window rule — force opacity + borderless window so title/controls live
+# in the top panel widget instead of a native window titlebar.
 # Plasma 6 uses the "rule" suffix (not "settings") for policy values; 2 = Force.
 # wmclassmatch=2 = substring match (safer than exact on Wayland).
-if ! grep -q "dolphin" "$HOME/.config/kwinrulesrc" 2>/dev/null; then
-  kwriteconfig6 --file kwinrulesrc --group General --key count 1
-  kwriteconfig6 --file kwinrulesrc --group 1 --key Description "Dolphin — transparency + blur"
-  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclass "dolphin"
-  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclasscomplete false
-  kwriteconfig6 --file kwinrulesrc --group 1 --key wmclassmatch 2
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactive 90
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityactiverule 2
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactive 88
-  kwriteconfig6 --file kwinrulesrc --group 1 --key opacityinactiverule 2
+dolphin_rule_group="$(
+  awk -F'[][]' '
+    /^\[[0-9]+\]$/ { grp = $2 }
+    /^wmclass=dolphin$/ { print grp; exit }
+  ' "$HOME/.config/kwinrulesrc" 2>/dev/null || true
+)"
+
+if [[ -z "$dolphin_rule_group" ]]; then
+  existing_rule_count="$(kreadconfig6 --file kwinrulesrc --group General --key count 2>/dev/null || true)"
+  if [[ "$existing_rule_count" =~ ^[0-9]+$ ]]; then
+    dolphin_rule_group="$((existing_rule_count + 1))"
+  else
+    dolphin_rule_group="1"
+  fi
+  kwriteconfig6 --file kwinrulesrc --group General --key count "$dolphin_rule_group"
 fi
-ok "KWin blur + rounded corners + Dolphin opacity rule written"
+
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key Description "Dolphin — transparency + blur + borderless"
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key wmclass "dolphin"
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key wmclasscomplete false
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key wmclassmatch 2
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key opacityactive 90
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key opacityactiverule 2
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key opacityinactive 88
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key opacityinactiverule 2
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key noborder true
+kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key noborderrule 2
+ok "KWin blur + rounded corners + Dolphin borderless rule written"
 
 # Magic Lamp minimize animation (replaces the default Scale effect)
 kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled true
