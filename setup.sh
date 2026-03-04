@@ -64,6 +64,42 @@ skip()  { echo -e "\033[1;36mSKP\033[0m $* (already installed)"; }
 # Clone to a fixed /tmp path, wiping any previous partial clone.
 clone_fresh() { rm -rf "$1"; git clone --depth=1 "$2" "$1"; }
 
+# Resolve latest release tag with API first, then GitHub redirect fallback.
+# This avoids hard failures when unauthenticated API calls are rate-limited.
+gh_latest_tag() {
+  local repo="$1"
+  local tag=""
+  local api_url="https://api.github.com/repos/${repo}/releases/latest"
+
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    tag="$(curl -fsSL \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "$api_url" 2>/dev/null \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('tag_name',''))" 2>/dev/null || true)"
+  else
+    tag="$(curl -fsSL "$api_url" 2>/dev/null \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('tag_name',''))" 2>/dev/null || true)"
+  fi
+
+  if [[ -n "$tag" ]]; then
+    printf '%s\n' "$tag"
+    return 0
+  fi
+
+  local latest_url=""
+  latest_url="$(curl -fsSIL -o /dev/null -w '%{url_effective}' \
+    "https://github.com/${repo}/releases/latest" 2>/dev/null || true)"
+  tag="$(printf '%s' "$latest_url" | sed -nE 's|.*/tag/([^/?#]+).*|\1|p')"
+
+  if [[ -n "$tag" ]]; then
+    printf '%s\n' "$tag"
+    return 0
+  fi
+
+  return 1
+}
+
 # ---------------------------------------------------------------------------
 # Phase 1 — APT base packages
 # ---------------------------------------------------------------------------
@@ -119,30 +155,38 @@ fi
 # ---------------------------------------------------------------------------
 info "Phase 1c · Neovim + LSP"
 
-NVIM_API=$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest)
-NVIM_TAG=$(echo "$NVIM_API" | grep -m1 '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-
-NVIM_CURRENT=$(nvim --version 2>/dev/null | grep -oP '(?<=NVIM )v[\d.]+' | head -1 || true)
-if [[ "$NVIM_CURRENT" == "$NVIM_TAG" ]]; then
-  skip "Neovim ${NVIM_TAG}"
+NVIM_TAG="$(gh_latest_tag neovim/neovim || true)"
+if [[ -z "$NVIM_TAG" ]]; then
+  warn "Could not resolve latest Neovim tag from GitHub; using Debian package fallback."
+  if ! command -v nvim &>/dev/null; then
+    sudo apt install -y neovim
+    ok "Neovim installed from Debian repository"
+  else
+    warn "Neovim already present; skipped upgrade."
+  fi
 else
-  ARCH="$(uname -m)"
-  case "$ARCH" in
-    x86_64)  NVIM_ARCH="x86_64" ;;
-    aarch64) NVIM_ARCH="arm64"  ;;
-    *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
-  esac
+  NVIM_CURRENT=$(nvim --version 2>/dev/null | grep -oP '(?<=NVIM )v[\d.]+' | head -1 || true)
+  if [[ "$NVIM_CURRENT" == "$NVIM_TAG" ]]; then
+    skip "Neovim ${NVIM_TAG}"
+  else
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+      x86_64)  NVIM_ARCH="x86_64" ;;
+      aarch64) NVIM_ARCH="arm64"  ;;
+      *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
+    esac
 
-  NVIM_TMP="$(mktemp -d)"
-  curl -fL "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim-linux-${NVIM_ARCH}.tar.gz" \
-    -o "$NVIM_TMP/nvim.tar.gz"
-  tar -xzf "$NVIM_TMP/nvim.tar.gz" -C "$NVIM_TMP"
-  NVIM_DIR="$(find "$NVIM_TMP" -maxdepth 1 -type d -name 'nvim-linux-*' | head -1)"
-  sudo rm -rf /opt/nvim
-  sudo mv "$NVIM_DIR" /opt/nvim
-  sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-  rm -rf "$NVIM_TMP"
-  ok "Neovim ${NVIM_TAG} installed"
+    NVIM_TMP="$(mktemp -d)"
+    curl -fL "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim-linux-${NVIM_ARCH}.tar.gz" \
+      -o "$NVIM_TMP/nvim.tar.gz"
+    tar -xzf "$NVIM_TMP/nvim.tar.gz" -C "$NVIM_TMP"
+    NVIM_DIR="$(find "$NVIM_TMP" -maxdepth 1 -type d -name 'nvim-linux-*' | head -1)"
+    sudo rm -rf /opt/nvim
+    sudo mv "$NVIM_DIR" /opt/nvim
+    sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+    rm -rf "$NVIM_TMP"
+    ok "Neovim ${NVIM_TAG} installed"
+  fi
 fi
 
 sudo npm install -g typescript typescript-language-server bash-language-server pyright
@@ -162,11 +206,6 @@ sudo apt install -y \
   duf \
   jq
 
-# Helper: fetch latest GitHub release tag without SIGPIPE from grep -m1
-# Uses python3 to consume the full JSON (avoids curl: (23) under pipefail)
-gh_latest_tag() { curl -fsSL "https://api.github.com/repos/$1/releases/latest" \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])"; }
-
 # eza — install via official apt repo (asset names vary across releases)
 if ! command -v eza &>/dev/null; then
   sudo mkdir -p /etc/apt/keyrings
@@ -184,28 +223,36 @@ fi
 
 # dust (du replacement) — grab latest tarball from GitHub
 if ! command -v dust &>/dev/null; then
-  DUST_TAG=$(gh_latest_tag bootandy/dust)
-  DUST_TGZ="dust-${DUST_TAG}-x86_64-unknown-linux-musl.tar.gz"
-  curl -fLo "/tmp/dust.tar.gz" \
-    "https://github.com/bootandy/dust/releases/download/${DUST_TAG}/${DUST_TGZ}"
-  tar -xzf /tmp/dust.tar.gz -C /tmp/
-  sudo mv "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl/dust" /usr/local/bin/dust
-  sudo chmod +x /usr/local/bin/dust
-  rm -rf /tmp/dust.tar.gz "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl"
-  ok "dust ${DUST_TAG} installed"
+  DUST_TAG="$(gh_latest_tag bootandy/dust || true)"
+  if [[ -z "$DUST_TAG" ]]; then
+    warn "Could not resolve latest dust release tag; skipping dust install."
+  else
+    DUST_TGZ="dust-${DUST_TAG}-x86_64-unknown-linux-musl.tar.gz"
+    curl -fLo "/tmp/dust.tar.gz" \
+      "https://github.com/bootandy/dust/releases/download/${DUST_TAG}/${DUST_TGZ}"
+    tar -xzf /tmp/dust.tar.gz -C /tmp/
+    sudo mv "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl/dust" /usr/local/bin/dust
+    sudo chmod +x /usr/local/bin/dust
+    rm -rf /tmp/dust.tar.gz "/tmp/dust-${DUST_TAG}-x86_64-unknown-linux-musl"
+    ok "dust ${DUST_TAG} installed"
+  fi
 else
   skip "dust"
 fi
 
 # delta (git diff pager) — grab latest .deb from GitHub
 if ! command -v delta &>/dev/null; then
-  DELTA_TAG=$(gh_latest_tag dandavison/delta)
-  DELTA_DEB="git-delta_${DELTA_TAG}_amd64.deb"
-  curl -fLo "/tmp/$DELTA_DEB" \
-    "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/${DELTA_DEB}"
-  sudo dpkg -i "/tmp/$DELTA_DEB"
-  rm "/tmp/$DELTA_DEB"
-  ok "delta ${DELTA_TAG} installed"
+  DELTA_TAG="$(gh_latest_tag dandavison/delta || true)"
+  if [[ -z "$DELTA_TAG" ]]; then
+    warn "Could not resolve latest delta release tag; skipping delta install."
+  else
+    DELTA_DEB="git-delta_${DELTA_TAG}_amd64.deb"
+    curl -fLo "/tmp/$DELTA_DEB" \
+      "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/${DELTA_DEB}"
+    sudo dpkg -i "/tmp/$DELTA_DEB"
+    rm "/tmp/$DELTA_DEB"
+    ok "delta ${DELTA_TAG} installed"
+  fi
 else
   skip "delta"
 fi
@@ -232,15 +279,18 @@ JBMONO_DIR="$HOME/.local/share/fonts/JetBrainsMonoNerd"
 if ls "$JBMONO_DIR"/*.ttf &>/dev/null 2>&1; then
   skip "JetBrains Mono Nerd Font"
 else
-  NERD_VERSION=$(curl -s 'https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest' \
-    | grep -Po '"tag_name": "\K[^"]*')
-  curl -fLo /tmp/JetBrainsMono.zip \
-    "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_VERSION}/JetBrainsMono.zip"
-  mkdir -p "$JBMONO_DIR"
-  unzip -o /tmp/JetBrainsMono.zip -d "$JBMONO_DIR"
-  rm /tmp/JetBrainsMono.zip
-  fc-cache -fv
-  ok "JetBrains Mono Nerd Font ${NERD_VERSION} installed"
+  NERD_VERSION="$(gh_latest_tag ryanoasis/nerd-fonts || true)"
+  if [[ -z "$NERD_VERSION" ]]; then
+    warn "Could not resolve latest Nerd Fonts release tag; skipping JetBrains Mono Nerd Font install."
+  else
+    curl -fLo /tmp/JetBrainsMono.zip \
+      "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_VERSION}/JetBrainsMono.zip"
+    mkdir -p "$JBMONO_DIR"
+    unzip -o /tmp/JetBrainsMono.zip -d "$JBMONO_DIR"
+    rm /tmp/JetBrainsMono.zip
+    fc-cache -fv
+    ok "JetBrains Mono Nerd Font ${NERD_VERSION} installed"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -474,60 +524,56 @@ ok "Klassy decoration applied (circles, 2.5 px corners, 90/85 % titlebar opacity
 # ---------------------------------------------------------------------------
 info "Phase 8 · Krohnkite tiling"
 
-# The plain krohnkite.kwinscript asset has a persistent 500 bug on GitHub.
-# Use the API to get the versioned asset URL instead.
-KROHNKITE_URL=$(curl -fsSL https://api.github.com/repos/anametologin/krohnkite/releases/latest \
-  | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-assets = [a for a in data['assets'] if a['name'].endswith('.kwinscript')]
-versioned = [a for a in assets if a['name'] != 'krohnkite.kwinscript']
-print((versioned or assets)[0]['browser_download_url'])
-")
-wget -O /tmp/krohnkite.kwinscript "$KROHNKITE_URL"
-kpackagetool6 --type=KWin/Script -i /tmp/krohnkite.kwinscript 2>/dev/null \
-  || kpackagetool6 --type=KWin/Script -u /tmp/krohnkite.kwinscript
-rm /tmp/krohnkite.kwinscript
+KROHNKITE_TAG="$(gh_latest_tag anametologin/krohnkite || true)"
+if [[ -z "$KROHNKITE_TAG" ]]; then
+  warn "Could not resolve latest Krohnkite release tag; skipping Krohnkite install."
+else
+  KROHNKITE_URL="https://github.com/anametologin/krohnkite/releases/download/${KROHNKITE_TAG}/krohnkite.kwinscript"
+  wget -O /tmp/krohnkite.kwinscript "$KROHNKITE_URL"
+  kpackagetool6 --type=KWin/Script -i /tmp/krohnkite.kwinscript 2>/dev/null \
+    || kpackagetool6 --type=KWin/Script -u /tmp/krohnkite.kwinscript
+  rm /tmp/krohnkite.kwinscript
 
-kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
+  kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
 
-# Gap between tiled windows and screen edges (px).
-# Keys are camelCase — Krohnkite reads them via KWin.readConfig().
-# screenGapBetween = gap between adjacent tiles (NOT tileLayoutGap — that key
-# does not exist in the anametologin fork).
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBetween 8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop     8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom  8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft    8
-kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
-ok "Krohnkite installed and enabled (8 px gaps)"
+  # Gap between tiled windows and screen edges (px).
+  # Keys are camelCase — Krohnkite reads them via KWin.readConfig().
+  # screenGapBetween = gap between adjacent tiles (NOT tileLayoutGap — that key
+  # does not exist in the anametologin fork).
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBetween 8
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapTop     8
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom  8
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft    8
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
+  ok "Krohnkite installed and enabled (8 px gaps)"
 
-# Vim-style keybinds — written to kglobalshortcutsrc before first login.
-# Format: "shortcut,default,description"
-# KWin/kglobalaccel6 merges these when the krohnkite script registers its actions.
-# Meta+H/J/K/L → move window in that direction (primary tiling interaction)
-# Meta+Alt+H/J/K/L → focus window without moving it
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Left"        "Meta+H,Meta+H,Move Window to Left"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Right"       "Meta+L,Meta+L,Move Window to Right"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Up"          "Meta+K,Meta+K,Move Window to Up"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Down"        "Meta+J,Meta+J,Move Window to Down"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Focus Left"  "Meta+Alt+H,Meta+Alt+H,Focus Window Left"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Focus Right" "Meta+Alt+L,Meta+Alt+L,Focus Window Right"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Focus Up"    "Meta+Alt+K,Meta+Alt+K,Focus Window Up"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Focus Down"  "Meta+Alt+J,Meta+Alt+J,Focus Window Down"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Float"       "Meta+F,Meta+F,Toggle Float"
-kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
-  --key "Krohnkite: Next Layout" "Meta+\\,Meta+\\,Cycle Layout"
-ok "Krohnkite vim keybinds written (Meta+H/J/K/L move, Meta+Alt focus, F float, \\ cycle)"
+  # Vim-style keybinds — written to kglobalshortcutsrc before first login.
+  # Format: "shortcut,default,description"
+  # KWin/kglobalaccel6 merges these when the krohnkite script registers its actions.
+  # Meta+H/J/K/L → move window in that direction (primary tiling interaction)
+  # Meta+Alt+H/J/K/L → focus window without moving it
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Left"        "Meta+H,Meta+H,Move Window to Left"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Right"       "Meta+L,Meta+L,Move Window to Right"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Up"          "Meta+K,Meta+K,Move Window to Up"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Down"        "Meta+J,Meta+J,Move Window to Down"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Focus Left"  "Meta+Alt+H,Meta+Alt+H,Focus Window Left"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Focus Right" "Meta+Alt+L,Meta+Alt+L,Focus Window Right"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Focus Up"    "Meta+Alt+K,Meta+Alt+K,Focus Window Up"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Focus Down"  "Meta+Alt+J,Meta+Alt+J,Focus Window Down"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Float"       "Meta+F,Meta+F,Toggle Float"
+  kwriteconfig6 --file kglobalshortcutsrc --group krohnkite \
+    --key "Krohnkite: Next Layout" "Meta+\\,Meta+\\,Cycle Layout"
+  ok "Krohnkite vim keybinds written (Meta+H/J/K/L move, Meta+Alt focus, F float, \\ cycle)"
+fi
 
 # ---------------------------------------------------------------------------
 # Phase 9 — Dock + Wallpaper (registered as autostart; needs live plasmashell)
