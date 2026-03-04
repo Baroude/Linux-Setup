@@ -1,7 +1,7 @@
 # Linux Setup — KDE Plasma 6
 
 A fully automated, idempotent dotfiles setup for **Debian 13** running **KDE Plasma 6 on Wayland**.
-Theme system: **Catppuccin modular switching** (default: `mocha/mauve`) for KDE, GTK, Kvantum, terminal, prompt, editors, and CLI tools.
+Theme system: **Catppuccin modular switching** (default: `mocha/mauve`) for KDE, GTK, Kvantum, terminal, prompt, editors, CLI tools, Firefox, and tidal-hifi CSS.
 
 ---
 
@@ -69,6 +69,7 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 | 9 | Dock — floating bottom panel (Icons-only Task Manager + tray + clock) |
 | 10 | Kitty config directory (dotbot links `kitty/kitty.conf`) |
 | 11 | Zsh + oh-my-zsh + plugins + Starship |
+| 11b | Tidal (tidal-hifi Flatpak), Wayland launcher override, and generated Catppuccin CSS |
 | 12 | SDDM — catppuccin-mocha-mauve theme + evening-sky wallpaper |
 | 13 | GRUB — catppuccin-mocha theme |
 | 14 | Dotbot links base dotfiles + `theme-switch.sh` applies selected theme |
@@ -218,6 +219,8 @@ qdbus6 org.kde.KWin /KWin reconfigure
    intentionally — better-blur replaces it entirely.
 3. **Krohnkite** — review gaps and layout keybinds in
    System Settings → KWin Scripts → Krohnkite → Configure.
-4. **Firefox theme** — if Firefox keeps the default look, open
-   Add-ons and Themes and select **Catppuccin Mocha - Mauve**.
+4. **Firefox/TIDAL activation** — if Firefox keeps the default look, open
+   Add-ons and Themes and select the generated Catppuccin variant.
+   For TIDAL, open Settings -> Theming and choose
+   `~/.config/tidal-hifi/catppuccin.css`.
 5. **Restart session** to apply SDDM theme and all environment variables.

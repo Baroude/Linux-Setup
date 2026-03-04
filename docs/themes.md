@@ -59,7 +59,8 @@ Schema fields used in v1:
 ## v1 Caveats
 
 - SDDM and GRUB remain setup-managed and are not switched post-install.
-- Firefox theme and tidal-hifi CSS remain manual/legacy flows.
+- Firefox extension install and tidal-hifi CSS generation are handled by the `apps` adapter.
+- Firefox and tidal-hifi may still require manual activation in each app UI after files are installed/generated.
 - Panel Colorizer apply requires a running Plasma session. If the applet is not ready yet, rerun:
 
 ```bash

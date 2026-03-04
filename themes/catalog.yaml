@@ -33,7 +33,8 @@
         "panel": true,
         "terminal": true,
         "editors": true,
-        "cli": true
+        "cli": true,
+        "apps": true
       }
     },
     "rosepine": {

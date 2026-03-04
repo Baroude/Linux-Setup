@@ -15,6 +15,8 @@ source "${SCRIPT_DIR}/lib/theme-apply-editors.sh"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/theme-apply-cli.sh"
 # shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/theme-apply-apps.sh"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/theme-apply-panel.sh"
 
 arg_theme=""
@@ -138,6 +140,7 @@ run_adapter "kde" theme_apply_kde_adapter || true
 run_adapter "terminal" theme_apply_terminal_adapter || true
 run_adapter "editors" theme_apply_editors_adapter || true
 run_adapter "cli" theme_apply_cli_adapter || true
+run_adapter "apps" theme_apply_apps_adapter || true
 theme_info "Running adapter: panel"
 panel_rc=0
 theme_apply_panel_adapter || panel_rc=$?
