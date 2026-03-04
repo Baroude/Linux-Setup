@@ -181,8 +181,8 @@ if (titleWidget && typeof titleWidget.writeConfig === 'function') {
         titleWidget.currentConfigGroup = ['Appearance'];
         titleWidget.writeConfig('widgetElements', 'windowMinimizeButton,windowCloseButton,windowTitle');
         titleWidget.writeConfig('windowTitleSource', '0');
-        titleWidget.writeConfig('windowTitleHideEmpty', 'false');
-        titleWidget.writeConfig('windowTitleUndefined', 'Desktop');
+        titleWidget.writeConfig('windowTitleHideEmpty', 'true');
+        titleWidget.writeConfig('windowTitleUndefined', '');
         titleWidget.writeConfig('windowTitleMinimumWidth', '120');
         titleWidget.writeConfig('windowTitleMaximumWidth', '420');
         titleWidget.writeConfig('widgetFillWidth', 'false');
@@ -202,6 +202,7 @@ var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
 clock.writeConfig('showDate', 'true');
 clock.writeConfig('dateFormat', 'longDate');
+clock.writeConfig('dateDisplayFormat', '1');  // 1 = date beside time, 0/unset = below
 clock.writeConfig('customFont', 'true');
 clock.writeConfig('fontFamily', 'Inter');
 clock.writeConfig('fontSize', '10');
@@ -241,6 +242,13 @@ session.writeConfig('show_requestLogoutScreen', 'false');
 var colorizer = top.addWidget('luisbocanegra.panel.colorizer');
 colorizer.currentConfigGroup = ['General'];
 colorizer.writeConfig('hideWidget', 'true');
+
+// Remove native Plasma applet frame SVG from every top-bar widget so Panel
+// Colorizer pills render without a dark border underneath them.
+top.widgets().forEach(function(w) {
+    w.currentConfigGroup = ['Configuration', 'General'];
+    w.writeConfig('backgroundHints', '0');
+});
 
 "
 
@@ -401,7 +409,7 @@ def make_color_override(bg_hex, fg_hex="#1e1e2e"):
 widget_colors = {
     "org.kde.plasma.pager": "#b4befe",
     "org.kde.plasma.windowtitle": "#a6adc8",
-    "com.github.antroids.application-title-bar": "#a6adc8",
+    "com.github.antroids.application-title-bar": "#f5c2e7",  # Pink (unused accent)
     "org.kde.plasma.digitalclock": "#cba6f7",
     "org.kde.plasma.weather": "#89b4fa",
     "org.kde.plasma.appmenu": "#a6e3a1",
