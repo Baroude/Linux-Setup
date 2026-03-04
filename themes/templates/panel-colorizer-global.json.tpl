@@ -24,6 +24,7 @@
           "alpha": 1,
           "list": []
         },
+        "_foregroundColor_note": "ALL fields below are required. Panel Colorizer silently ignores an incomplete spec and falls back to the Plasma theme text color (#cdd6f4 light), which is unreadable on pastel pill backgrounds. panel-colorizer-apply.py deepcopies this object so extra fields are preserved in per-widget overrides.",
         "foregroundColor": {
           "enabled": true,
           "sourceType": 0,
