@@ -28,6 +28,32 @@ echo "Panel Colorizer detected — continuing"
 
 # catppuccin-vibes SVG icons (downloaded by setup.sh Phase 6)
 VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
+APP_TITLEBAR_ID="com.github.antroids.application-title-bar"
+APP_TITLEBAR_URL="${APP_TITLEBAR_URL:-https://github.com/antroids/application-title-bar/releases/latest/download/application-title-bar.plasmoid}"
+
+has_plasmoid() {
+    local plugin_id="$1"
+    kpackagetool6 --list --type Plasma/Applet 2>/dev/null | grep -Fq "$plugin_id" && return 0
+    [[ -d "$HOME/.local/share/plasma/plasmoids/$plugin_id" ]] && return 0
+    [[ -d "/usr/share/plasma/plasmoids/$plugin_id" ]] && return 0
+    return 1
+}
+
+install_application_titlebar() {
+    local tmp_pkg downloader_ok=0
+    tmp_pkg="$(mktemp /tmp/application-title-bar.XXXXXX.plasmoid 2>/dev/null || mktemp)"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL -o "$tmp_pkg" "$APP_TITLEBAR_URL" && downloader_ok=1
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO "$tmp_pkg" "$APP_TITLEBAR_URL" && downloader_ok=1
+    fi
+    if [[ "$downloader_ok" -eq 1 ]]; then
+        kpackagetool6 -t Plasma/Applet -u "$tmp_pkg" >/dev/null 2>&1 \
+            || kpackagetool6 -t Plasma/Applet -i "$tmp_pkg" >/dev/null 2>&1 \
+            || true
+    fi
+    rm -f "$tmp_pkg"
+}
 
 # ── Detect .desktop file names (vary between distros) ──────────────────────
 
@@ -61,19 +87,24 @@ echo "Virtual desktops set to 4"
 # 1) Plasma 6 replacement with title + min/max/close buttons
 # 2) Legacy Plasma 5 window title widget (title only)
 TITLE_WIDGET_ID=""
-if kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
-        | grep -q 'com.github.antroids.application-title-bar'; then
-    TITLE_WIDGET_ID="com.github.antroids.application-title-bar"
+if has_plasmoid "$APP_TITLEBAR_ID"; then
+    TITLE_WIDGET_ID="$APP_TITLEBAR_ID"
     echo "Window title/buttons widget detected: ${TITLE_WIDGET_ID}"
 elif kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
         | grep -q 'org.kde.plasma.windowtitle'; then
     TITLE_WIDGET_ID="org.kde.plasma.windowtitle"
     echo "Window title widget detected: ${TITLE_WIDGET_ID}"
 else
-    echo "WARNING: No window title widget found." >&2
-    echo "         Top bar will not show window title/buttons." >&2
-    echo "         For Plasma 6 title + min/max/close support install:" >&2
-    echo "         https://github.com/antroids/application-title-bar" >&2
+    echo "Window title widget not found, attempting install of ${APP_TITLEBAR_ID}..."
+    install_application_titlebar
+    if has_plasmoid "$APP_TITLEBAR_ID"; then
+        TITLE_WIDGET_ID="$APP_TITLEBAR_ID"
+        echo "Installed and detected: ${TITLE_WIDGET_ID}"
+    else
+        echo "WARNING: No window title widget found." >&2
+        echo "         Top bar will not show window title/buttons." >&2
+        echo "         Install manually: ${APP_TITLEBAR_URL}" >&2
+    fi
 fi
 
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
@@ -146,7 +177,7 @@ if (titleWidget && typeof titleWidget.writeConfig === 'function') {
         titleWidget.writeConfig('fillWidth', 'false');
         titleWidget.writeConfig('source', '0');
     } else if ('${TITLE_WIDGET_ID}' === 'com.github.antroids.application-title-bar') {
-        // Force a compact Linux-like controls set and always show app title.
+        // Keep defaults, force appName title source and broad task matching.
         titleWidget.currentConfigGroup = ['Appearance'];
         titleWidget.writeConfig('widgetElements', 'windowMinimizeButton,windowCloseButton,windowTitle');
         titleWidget.writeConfig('windowTitleSource', '0');
@@ -156,6 +187,10 @@ if (titleWidget && typeof titleWidget.writeConfig === 'function') {
         titleWidget.writeConfig('windowTitleMaximumWidth', '420');
         titleWidget.writeConfig('widgetFillWidth', 'false');
         titleWidget.currentConfigGroup = ['Behavior'];
+        titleWidget.writeConfig('widgetActiveTaskSource', '1');
+        titleWidget.writeConfig('widgetActiveTaskFilterByActivity', 'false');
+        titleWidget.writeConfig('widgetActiveTaskFilterByScreen', 'false');
+        titleWidget.writeConfig('widgetActiveTaskFilterByVirtualDesktop', 'false');
         titleWidget.writeConfig('widgetActiveTaskFilterNotMaximized', 'false');
         titleWidget.writeConfig('disableButtonsForNotHoveredWidget', 'false');
     }
@@ -166,6 +201,7 @@ top.addWidget('org.kde.plasma.panelspacer');    // left flex → pushes clock to
 var clock = top.addWidget('org.kde.plasma.digitalclock');
 clock.currentConfigGroup = ['Configuration', 'Appearance'];
 clock.writeConfig('showDate', 'true');
+clock.writeConfig('dateFormat', 'longDate');
 clock.writeConfig('customFont', 'true');
 clock.writeConfig('fontFamily', 'Inter');
 clock.writeConfig('fontSize', '10');
@@ -285,6 +321,11 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
         "var p=panelById(${TOP_ID}); var ws=p.widgets(); var out=[]; ws.forEach(function(w){out.push({id:w.id,name:w.type});}); print(JSON.stringify(out));" \
         2>/dev/null | tail -1)
     echo "Top panel widgets: ${TOP_WIDGETS_JSON}"
+    if [[ -n "${TITLE_WIDGET_ID:-}" ]] && ! echo "${TOP_WIDGETS_JSON}" | grep -Fq "\"name\":\"${TITLE_WIDGET_ID}\""; then
+        echo "WARNING: Title widget (${TITLE_WIDGET_ID}) was not added to the top panel." >&2
+        echo "         Try: systemctl --user restart plasma-plasmashell.service" >&2
+        echo "         Then re-run: bash scripts/configure-dock.sh" >&2
+    fi
 
     # ── Build JSON configs and write via kwriteconfig6 + JS writeConfig ────
     PANEL_ID="$TOP_ID" \
