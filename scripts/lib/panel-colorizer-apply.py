@@ -52,18 +52,14 @@ off = {
 }
 
 
-_surface0 = gs.get("widgets", {}).get("normal", {}).get("backgroundColor", {}).get("custom", "#313244")
-_text = gs.get("widgets", {}).get("normal", {}).get("foregroundColor", {}).get("custom", "#cdd6f4")
-
-
-def make_color_override(accent_hex):
+def make_color_override(bg_hex, fg_hex="#1e1e2e"):
     normal = copy.deepcopy(gs.get("widgets", {}).get("normal", {}))
     normal["enabled"] = True
     bg_cfg = normal.setdefault("backgroundColor", {})
     bg_cfg.update({
         "enabled": True,
         "sourceType": 0,
-        "custom": _surface0,
+        "custom": bg_hex,
         "alpha": 1,
         "list": [],
     })
@@ -71,7 +67,7 @@ def make_color_override(accent_hex):
     fg_cfg.update({
         "enabled": True,
         "sourceType": 0,
-        "custom": accent_hex,
+        "custom": fg_hex,
         "alpha": 1,
         "list": [],
     })
@@ -128,7 +124,7 @@ for widget in top_widgets:
         continue
     ov_name = override_name(name)
     if ov_name not in overrides:
-        overrides[ov_name] = make_color_override(widget_colors[name])  # accent as text, surface0 as bg
+        overrides[ov_name] = make_color_override(widget_colors[name])
     add_association(int(wid), name, ov_name)
 
 co = {

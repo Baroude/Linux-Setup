@@ -27,9 +27,17 @@
         "foregroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "${TEXT}",
+          "custom": "${BASE}",
           "alpha": 1,
-          "list": []
+          "lightnessValue": 0.5,
+          "saturationValue": 0.5,
+          "systemColor": "textColor",
+          "systemColorSet": "Window",
+          "followColor": 0,
+          "saturationEnabled": false,
+          "lightnessEnabled": false,
+          "list": [],
+          "animation": {"enabled": false, "interval": 3000, "smoothing": 800}
         },
         "radius": {
           "enabled": true,
