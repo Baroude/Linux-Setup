@@ -10,6 +10,8 @@ warn() { printf '[rofi-shortcut] WARN: %s\n' "$*" >&2; }
 KGLOBAL_FILE="$HOME/.config/kglobalshortcutsrc"
 DESKTOP_DIR="$HOME/.local/share/applications"
 DESKTOP_FILE="${DESKTOP_DIR}/rofi-app-launcher.desktop"
+LOCAL_BIN_DIR="$HOME/.local/bin"
+ROFI_LAUNCHER_BIN="${LOCAL_BIN_DIR}/rofi-launcher"
 ROFI_GROUP="rofi-app-launcher.desktop"
 ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
 
@@ -18,7 +20,7 @@ if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   exit 0
 fi
 
-mkdir -p "$HOME/.config" "$DESKTOP_DIR"
+mkdir -p "$HOME/.config" "$DESKTOP_DIR" "$LOCAL_BIN_DIR"
 [[ -f "$KGLOBAL_FILE" ]] || : > "$KGLOBAL_FILE"
 
 analysis_file="$(mktemp)"
@@ -158,12 +160,25 @@ if [[ -f "$HOME/.local/share/icons/catppuccin-vibes/apps-vibrant.svg" ]]; then
   launcher_icon="$HOME/.local/share/icons/catppuccin-vibes/apps-vibrant.svg"
 fi
 
+cat > "$ROFI_LAUNCHER_BIN" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v rofi-wayland >/dev/null 2>&1; then
+  printf '[rofi-launcher] ERROR: rofi-wayland is required but not installed.\n' >&2
+  exit 1
+fi
+
+exec rofi-wayland -no-lazy-grab -show drun
+EOF
+chmod +x "$ROFI_LAUNCHER_BIN"
+
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Rofi Application Launcher
-Comment=Launch applications with rofi
-Exec=rofi -show drun
+Comment=Launch applications with rofi-wayland
+Exec=${ROFI_LAUNCHER_BIN}
 Icon=${launcher_icon}
 Terminal=false
 Categories=Utility;

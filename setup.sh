@@ -123,13 +123,15 @@ sudo apt install -y \
   fastfetch \
   plasma-systemmonitor
 
-# Rofi launcher package name differs across Debian derivatives.
+# Rofi launcher (Wayland-only in this setup).
 if apt-cache show rofi-wayland >/dev/null 2>&1; then
   sudo apt install -y rofi-wayland
-elif apt-cache show rofi >/dev/null 2>&1; then
-  sudo apt install -y rofi
+  # Ensure we do not keep the X11-only rofi package as the active launcher path.
+  if dpkg -s rofi >/dev/null 2>&1; then
+    sudo apt remove -y rofi || true
+  fi
 else
-  warn "No rofi package found in APT repositories; rofi setup will be skipped"
+  warn "rofi-wayland package not found in APT repositories; rofi setup will be skipped"
 fi
 
 # Debian/Ubuntu package naming differs for Plasma addons.
@@ -618,11 +620,11 @@ fi
 # ---------------------------------------------------------------------------
 info "Phase 8b · Rofi launcher shortcut"
 
-if command -v rofi &>/dev/null; then
+if command -v rofi-wayland &>/dev/null; then
   bash "$REPO_DIR/scripts/configure-rofi-shortcut.sh"
-  ok "Rofi launcher configured (Meta+Space preferred when available)"
+  ok "Rofi launcher configured via rofi-wayland (Meta+Space preferred when available)"
 else
-  warn "rofi binary not found; skipping rofi shortcut configuration."
+  warn "rofi-wayland binary not found; skipping rofi shortcut configuration."
 fi
 
 # ---------------------------------------------------------------------------

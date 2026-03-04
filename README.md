@@ -56,7 +56,7 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 
 | Phase | What happens |
 |---|---|
-| 1 | APT base packages (git, zsh, kitty, rofi, fzf, zoxide, kvantum, papirus, fastfetch…) |
+| 1 | APT base packages (git, zsh, kitty, rofi-wayland, fzf, zoxide, kvantum, papirus, fastfetch…) |
 | 1b | Node.js LTS via nodesource (skipped if already present) |
 | 1c | Neovim latest stable prebuilt + LSP tools (skipped if already at latest) |
 | 2 | Fonts — Inter (APT) + JetBrains Mono Nerd Font (skipped if already present) |
@@ -135,7 +135,7 @@ Linux-Setup/
 | `Meta + ~` | Switch between windows of same application |
 | `Meta + D` | Show desktop |
 | `Meta + L` | Lock screen |
-| `Meta + Space` | Rofi app launcher (`rofi -show drun`) when available |
+| `Meta + Space` | Rofi app launcher (`rofi-wayland -show drun`) when available |
 | `Meta + E` | Open file manager (Dolphin) |
 | `Meta + Shift + Q` | Close active window |
 | `Meta + PgUp/PgDn` | Move window to previous/next virtual desktop |
