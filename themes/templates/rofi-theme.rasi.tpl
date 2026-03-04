@@ -30,7 +30,7 @@ mainbox {
 }
 
 inputbar {
-  children: [ "prompt", "entry" ];
+  children: [ "entry" ];
   padding: 10px 12px;
   border: 1px;
   border-color: @border-color;
@@ -40,7 +40,7 @@ inputbar {
 }
 
 prompt {
-  enabled: true;
+  enabled: false;
   background-color: @accent;
   text-color: @bg;
   padding: 2px 10px;
@@ -53,7 +53,7 @@ entry {
   placeholder: "Search apps";
   placeholder-color: @fg-muted;
   text-color: @fg;
-  margin: 0 0 0 8px;
+  margin: 0;
 }
 
 listview {
