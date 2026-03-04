@@ -20,6 +20,8 @@
     # Git
     ~/.gitconfig:
       path: gitconfig
+      # Avoid install abort when ~/.gitconfig already exists as a regular file.
+      force: true
 
     # Neovim
     ~/.config/nvim:
