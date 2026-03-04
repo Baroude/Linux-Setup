@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "defaults": {
+    "theme": "catppuccin",
+    "flavor": "mocha",
+    "accent": "mauve"
+  },
+  "themes": {
+    "catppuccin": {
+      "manifest": "themes/manifests/catppuccin.yaml",
+      "flavors": ["latte", "frappe", "macchiato", "mocha"],
+      "accents": [
+        "rosewater",
+        "flamingo",
+        "pink",
+        "mauve",
+        "red",
+        "maroon",
+        "peach",
+        "yellow",
+        "green",
+        "teal",
+        "sky",
+        "sapphire",
+        "blue",
+        "lavender"
+      ],
+      "components": {
+        "kde": true,
+        "kvantum": true,
+        "gtk": true,
+        "icons": true,
+        "panel": true,
+        "terminal": true,
+        "editors": true,
+        "cli": true
+      }
+    }
+  }
+}

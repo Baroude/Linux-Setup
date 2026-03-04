@@ -5,8 +5,7 @@
 #   Top bar (transparent): Pager | Spacer | Clock | Spacer | Weather | AppMenu |
 #             Media | CPU/RAM/Temp | SysTray | Lock/Logout | PanelColorizer(hidden)
 #
-# Panel Colorizer applies catppuccin Mocha pill islands — each widget gets its
-# own distinct accent colour.
+# Panel Colorizer styling is resolved from the active theme state.
 #
 # Requires a running plasmashell session. Safe to re-run.
 
@@ -15,6 +14,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DBUS_CMD="qdbus6"
 command -v qdbus6 &>/dev/null || DBUS_CMD="qdbus"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/theme-common.sh"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/theme-apply-panel.sh"
 
 # ── Panel Colorizer install guard ──────────────────────────────────────────
 if ! kpackagetool6 --list --type Plasma/Applet 2>/dev/null \
@@ -297,222 +300,46 @@ if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
     echo "Floating mode applied to dock containment ${DOCK_ID}"
 fi
 
-# ── Panel Colorizer: catppuccin Mocha pill islands ─────────────────────────
-# Applet IDs are discovered via the live JS API (not the appletsrc file) to
-# avoid a race condition where Plasma hasn't yet flushed the newly-created
-# panel to disk. kwriteconfig6 always writes to disk for reboot persistence;
-# JS writeConfig also fires configChanged for immediate live application.
+# -- Panel Colorizer: apply active theme styling ----------------------------
 if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
-    # Install preset file so Panel Colorizer can also load it from the UI
-    PC_PRESET_DIR="$HOME/.config/panel-colorizer/presets/Catppuccin Mocha Mauve"
-    mkdir -p "$PC_PRESET_DIR"
-    cp "${SCRIPT_DIR}/panel-colorizer-catppuccin.json" "$PC_PRESET_DIR/settings.json"
-    echo "Panel Colorizer preset installed → $PC_PRESET_DIR/settings.json"
+    DEFAULTS_JSON="$(theme_defaults_json)"
+    DEFAULT_THEME="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["theme"])' <<<"$DEFAULTS_JSON")"
+    DEFAULT_FLAVOR="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["flavor"])' <<<"$DEFAULTS_JSON")"
+    DEFAULT_ACCENT="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["accent"])' <<<"$DEFAULTS_JSON")"
 
-    # ── Discover applet IDs via live JS API (no file-read race condition) ──
-    PC_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
-        org.kde.PlasmaShell.evaluateScript \
-        "var p=panelById(${TOP_ID}); var ws=p.widgets(['luisbocanegra.panel.colorizer']); print(ws.length>0?ws[0].id:'NOT_FOUND');" \
-        2>/dev/null | tail -1)
-    [[ "${PC_ID:-}" =~ ^[0-9]+$ ]] || {
-        echo "ERROR: Panel Colorizer not found in top panel" >&2; exit 1; }
-    echo "Panel Colorizer applet id: ${PC_ID}"
-
-    SPACER_IDS_JSON=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
-        org.kde.PlasmaShell.evaluateScript \
-        "var p=panelById(${TOP_ID}); var ws=p.widgets(['org.kde.plasma.panelspacer']); var ids=[]; ws.forEach(function(w){ids.push(w.id);}); print(JSON.stringify(ids));" \
-        2>/dev/null | tail -1)
-    echo "Spacer applet ids: ${SPACER_IDS_JSON}"
-
-    TOP_WIDGETS_JSON=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
-        org.kde.PlasmaShell.evaluateScript \
-        "var p=panelById(${TOP_ID}); var ws=p.widgets(); var out=[]; ws.forEach(function(w){out.push({id:w.id,name:w.type});}); print(JSON.stringify(out));" \
-        2>/dev/null | tail -1)
-    echo "Top panel widgets: ${TOP_WIDGETS_JSON}"
-    if [[ -n "${TITLE_WIDGET_ID:-}" ]] && ! echo "${TOP_WIDGETS_JSON}" | grep -Fq "\"name\":\"${TITLE_WIDGET_ID}\""; then
-        echo "WARNING: Title widget (${TITLE_WIDGET_ID}) was not added to the top panel." >&2
-        echo "         Try: systemctl --user restart plasma-plasmashell.service" >&2
-        echo "         Then re-run: bash scripts/configure-dock.sh" >&2
+    STATE_THEME=""
+    STATE_FLAVOR=""
+    STATE_ACCENT=""
+    if readarray -t STATE_TRIPLET < <(theme_read_state_selection 2>/dev/null); then
+        STATE_THEME="${STATE_TRIPLET[0]:-}"
+        STATE_FLAVOR="${STATE_TRIPLET[1]:-}"
+        STATE_ACCENT="${STATE_TRIPLET[2]:-}"
     fi
 
-    # ── Build JSON configs and write via kwriteconfig6 + JS writeConfig ────
-    PANEL_ID="$TOP_ID" \
-    APPLET_ID="$PC_ID" \
-    PRESET_FILE="${SCRIPT_DIR}/panel-colorizer-catppuccin.json" \
-    SPACER_IDS_JSON="${SPACER_IDS_JSON:-[]}" \
-    TOP_WIDGETS_JSON="${TOP_WIDGETS_JSON:-[]}" \
-    python3 << 'PYEOF'
-import copy, os, json, re, subprocess, sys
+    SELECTED_THEME="${STATE_THEME:-$DEFAULT_THEME}"
+    SELECTED_FLAVOR="${STATE_FLAVOR:-$DEFAULT_FLAVOR}"
+    SELECTED_ACCENT="${STATE_ACCENT:-$DEFAULT_ACCENT}"
+    if ! theme_validate_selection "$SELECTED_THEME" "$SELECTED_FLAVOR" "$SELECTED_ACCENT"; then
+        SELECTED_THEME="$DEFAULT_THEME"
+        SELECTED_FLAVOR="$DEFAULT_FLAVOR"
+        SELECTED_ACCENT="$DEFAULT_ACCENT"
+    fi
 
-config_file = os.path.expanduser("~/.config/plasma-org.kde.plasma.desktop-appletsrc")
-preset_file = os.environ['PRESET_FILE']
-top_id      = os.environ['PANEL_ID']
-pc_id       = os.environ['APPLET_ID']
-spacer_ids  = json.loads(os.environ.get('SPACER_IDS_JSON', '[]'))
-top_widgets = json.loads(os.environ.get('TOP_WIDGETS_JSON', '[]'))
+    THEME_CONTEXT_JSON="$(theme_build_context_json "$SELECTED_THEME" "$SELECTED_FLAVOR" "$SELECTED_ACCENT")"
+    export THEME_CONTEXT_JSON
+    theme_panel_prepare_assets
 
-print(f"Panel Colorizer applet id: {pc_id}")
-print(f"Spacer applet ids: {spacer_ids}")
-print(f"Top panel widgets: {top_widgets}")
+    PANEL_PRESET_NAME="Catppuccin ${SELECTED_FLAVOR^} ${SELECTED_ACCENT^}"
+    PC_PRESET_DIR="$HOME/.config/panel-colorizer/presets/${PANEL_PRESET_NAME}"
+    mkdir -p "$PC_PRESET_DIR"
+    cp "$THEME_PANEL_PRESET_FILE" "$PC_PRESET_DIR/settings.json"
+    echo "Panel Colorizer preset installed -> $PC_PRESET_DIR/settings.json"
 
-# ── Load preset ────────────────────────────────────────────────────────────
-with open(preset_file) as f:
-    preset = json.load(f)
-
-gs = preset['globalSettings']
-gs['unifiedBackground'] = []
-# Disable positional list-based coloring; use explicit per-widget overrides.
-widget_bg = gs.setdefault('widgets', {}).setdefault('normal', {}).setdefault('backgroundColor', {})
-widget_bg['sourceType'] = 0
-widget_bg['list'] = []
-widget_bg['custom'] = '#313244'
-widget_bg['enabled'] = True
-gs_str = json.dumps(gs, separators=(',', ':'))
-
-off = {
-    "disabledFallback": True,
-    "normal": {"enabled": False},
-    "busy": {"enabled": False},
-    "hovered": {"enabled": False},
-    "needsAttention": {"enabled": False},
-    "expanded": {"enabled": False},
-}
-
-def make_color_override(bg_hex, fg_hex="#1e1e2e"):
-    normal = copy.deepcopy(gs.get("widgets", {}).get("normal", {}))
-    normal["enabled"] = True
-    bg_cfg = normal.setdefault("backgroundColor", {})
-    bg_cfg.update({
-        "enabled": True,
-        "sourceType": 0,
-        "custom": bg_hex,
-        "alpha": 1,
-        "list": [],
-    })
-    fg_cfg = normal.setdefault("foregroundColor", {})
-    fg_cfg.update({
-        "enabled": True,
-        "sourceType": 0,
-        "custom": fg_hex,
-        "alpha": 1,
-        "list": [],
-    })
-    return {
-        "disabledFallback": True,
-        "normal": normal,
-        "busy": {"enabled": False},
-        "hovered": {"enabled": False},
-        "needsAttention": {"enabled": False},
-        "expanded": {"enabled": False},
-    }
-
-widget_colors = {
-    "org.kde.plasma.pager": "#b4befe",
-    "org.kde.plasma.windowtitle": "#a6adc8",
-    "com.github.antroids.application-title-bar": "#f5c2e7",  # Pink (unused accent)
-    "org.kde.plasma.digitalclock": "#cba6f7",
-    "org.kde.plasma.weather": "#89b4fa",
-    "org.kde.plasma.appmenu": "#a6e3a1",
-    "org.kde.plasma.mediacontroller": "#94e2d5",
-    "org.kde.plasma.systemmonitor": "#fab387",
-    "org.kde.plasma.systemtray": "#89dceb",
-    "org.kde.plasma.lock_logout": "#f38ba8",
-}
-
-def override_name(widget_name):
-    return "color_" + re.sub(r"[^a-zA-Z0-9_]+", "_", widget_name).strip("_")
-
-overrides = {
-    "spacer_off": off,
-    "colorizer_off": off,
-}
-associations = []
-seen_associations = set()
-
-def add_association(widget_id, widget_name, preset_name):
-    key = (int(widget_id), widget_name, preset_name)
-    if key in seen_associations:
-        return
-    seen_associations.add(key)
-    associations.append({
-        "id": int(widget_id),
-        "name": widget_name,
-        "presets": [preset_name],
-    })
-
-# Spacers sometimes report plasmoid.id as -1; keep both specific IDs and generic.
-add_association(-1, "org.kde.plasma.panelspacer", "spacer_off")
-for sid in spacer_ids:
-    add_association(int(sid), "org.kde.plasma.panelspacer", "spacer_off")
-
-for widget in top_widgets:
-    name = widget.get("name")
-    wid = widget.get("id", -1)
-    if not name:
-        continue
-    if name == "org.kde.plasma.panelspacer":
-        add_association(int(wid), name, "spacer_off")
-        continue
-    if name == "luisbocanegra.panel.colorizer":
-        add_association(int(wid), name, "colorizer_off")
-        continue
-    if name not in widget_colors:
-        continue
-    ov_name = override_name(name)
-    if ov_name not in overrides:
-        overrides[ov_name] = make_color_override(widget_colors[name])
-    add_association(int(wid), name, ov_name)
-
-co = {
-    "overrides": overrides,
-    "associations": associations,
-}
-co_str = json.dumps(co, separators=(',', ':'))
-
-# ── 1. kwriteconfig6: write to disk (persists across reboots) ─────────────
-base = ['kwriteconfig6', '--file', config_file,
-        '--group', 'Containments', '--group', top_id,
-        '--group', 'Applets',       '--group', pc_id,
-        '--group', 'Configuration', '--group', 'General']
-subprocess.run(base + ['--key', 'isEnabled',              'true'],   check=True)
-subprocess.run(base + ['--key', 'hideWidget',             'true'],   check=True)
-subprocess.run(base + ['--key', 'globalSettings',          gs_str],  check=True)
-subprocess.run(base + ['--key', 'configurationOverrides',  co_str],  check=True)
-print(f"Panel Colorizer config written to disk (applet id={pc_id})")
-
-# ── 2. JS writeConfig: apply in live session (fires configChanged) ─────────
-dbus_cmd = 'qdbus6'
-if subprocess.run(['which', 'qdbus6'], capture_output=True).returncode != 0:
-    dbus_cmd = 'qdbus'
-js_gs = gs_str.replace('\\', '\\\\').replace("'", "\\'")
-js_co = co_str.replace('\\', '\\\\').replace("'", "\\'")
-js_code = (
-    f"var p=panelById({top_id});"
-    "var ws=p.widgets(['luisbocanegra.panel.colorizer']);"
-    "if(ws.length>0){"
-    "  var w=ws[0]; w.currentConfigGroup=['General'];"
-    "  w.writeConfig('isEnabled','true');"
-    "  w.writeConfig('hideWidget','true');"
-    f"  w.writeConfig('globalSettings','{js_gs}');"
-    f"  w.writeConfig('configurationOverrides','{js_co}');"
-    "  print('Panel Colorizer live-configured id='+w.id);"
-    "}else{ print('WARNING: Panel Colorizer not found for live config'); }"
-)
-result = subprocess.run(
-    [dbus_cmd, 'org.kde.plasmashell', '/PlasmaShell',
-     'org.kde.PlasmaShell.evaluateScript', js_code],
-    capture_output=True, text=True
-)
-if result.stdout.strip():
-    print(result.stdout.strip())
-if result.returncode != 0:
-    print(f"WARNING: JS live config failed (disk config was written): {result.stderr.strip()}",
-          file=sys.stderr)
-
-print(f"Panel Colorizer configured (applet id={pc_id})")
-PYEOF
-
-    echo "Panel Colorizer catppuccin islands applied to top bar"
+    if theme_panel_apply_live 1; then
+        echo "Panel Colorizer themed islands applied to top bar"
+    else
+        echo "WARNING: Panel Colorizer applet not ready; run scripts/apply-panel-colorizer.sh after login" >&2
+    fi
 fi
 
 # ── Register autostart to re-apply Panel Colorizer on every login ──────────

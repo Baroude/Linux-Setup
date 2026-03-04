@@ -1,10 +1,57 @@
 #!/usr/bin/env bash
-# setup.sh — KDE Plasma 6 · Catppuccin Mocha · Debian 13 · Wayland
+# setup.sh — KDE Plasma 6 · Catppuccin (modular) · Debian 13 · Wayland
 # Run as your normal user (sudo available). Idempotent — safe to re-run.
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+THEME_NAME="catppuccin"
+THEME_FLAVOR="mocha"
+THEME_ACCENT="mauve"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --theme)
+      THEME_NAME="${2:-}"
+      shift 2
+      ;;
+    --flavor)
+      THEME_FLAVOR="${2:-}"
+      shift 2
+      ;;
+    --accent)
+      THEME_ACCENT="${2:-}"
+      shift 2
+      ;;
+    -h|--help)
+      cat << 'EOF'
+Usage: ./setup.sh [--theme catppuccin] [--flavor <latte|frappe|macchiato|mocha>] [--accent <accent>]
+EOF
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+THEME_FLAVOR="${THEME_FLAVOR,,}"
+THEME_ACCENT="${THEME_ACCENT,,}"
+if [[ "$THEME_NAME" != "catppuccin" ]]; then
+  echo "Only --theme catppuccin is supported in this setup version." >&2
+  exit 1
+fi
+
+case "$THEME_FLAVOR" in
+  mocha|macchiato|frappe|latte) ;;
+  *) echo "Unsupported flavor: $THEME_FLAVOR" >&2; exit 1 ;;
+esac
+
+case "$THEME_ACCENT" in
+  rosewater|flamingo|pink|mauve|red|maroon|peach|yellow|green|teal|sky|sapphire|blue|lavender) ;;
+  *) echo "Unsupported accent: $THEME_ACCENT" >&2; exit 1 ;;
+esac
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -168,28 +215,7 @@ git config --global core.pager delta
 git config --global interactive.diffFilter "delta --color-only"
 git config --global delta.navigate true
 git config --global delta.dark true
-git config --global delta.syntax-theme "Catppuccin Mocha"
-
-
-# bat — Catppuccin Mocha theme
-BAT_CFG="$HOME/.config/bat"
-mkdir -p "$BAT_CFG/themes"
-curl -fLo "$BAT_CFG/themes/Catppuccin Mocha.tmTheme" \
-  "https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Mocha.tmTheme"
-if command -v batcat &>/dev/null; then batcat cache --build
-elif command -v bat &>/dev/null; then bat cache --build; fi
-[[ ! -f "$BAT_CFG/config" ]] && printf -- '--theme="Catppuccin Mocha"\n--style=numbers,changes,header\n' > "$BAT_CFG/config"
-ok "bat Catppuccin Mocha theme installed"
-
-# btop — Catppuccin Mocha theme
-mkdir -p "$HOME/.config/btop/themes"
-curl -fLo "$HOME/.config/btop/themes/catppuccin_mocha.theme" \
-  "https://github.com/catppuccin/btop/raw/main/themes/catppuccin_mocha.theme"
-if [[ ! -f "$HOME/.config/btop/btop.conf" ]]; then
-  printf 'color_theme = "catppuccin_mocha"\ntheme_background = False\n' \
-    > "$HOME/.config/btop/btop.conf"
-fi
-ok "btop Catppuccin Mocha theme installed"
+info "CLI theming is applied later by scripts/theme-switch.sh (Phase 14b)"
 
 ok "Modern CLI tools installed"
 
@@ -218,81 +244,16 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Phase 3 — catppuccin/kde (global theme, colors, decorations, cursors)
+# Phase 3 — Modular theme apply moved to theme-switch (Phase 14b)
 # ---------------------------------------------------------------------------
-info "Phase 3 · catppuccin/kde"
-
-clone_fresh /tmp/catppuccin-kde https://github.com/catppuccin/kde
-cd /tmp/catppuccin-kde
-# Args: Mocha=1, Mauve=4, Modern decorations=1
-# printf answers the two confirmation prompts without broken-pipe from 'yes'
-printf 'y\ny\n' | ./install.sh 1 4 1
-cd "$REPO_DIR"
-rm -rf /tmp/catppuccin-kde
-
-plasma-apply-colorscheme CatppuccinMochaMauve
-plasma-apply-lookandfeel --apply Catppuccin-Mocha-Mauve
-ok "catppuccin/kde applied"
+info "Phase 3 · Theme apply deferred to scripts/theme-switch.sh (Phase 14b)"
 
 # ---------------------------------------------------------------------------
-# Phase 4 — Kvantum Qt app style
+# Phase 6 — Dock icon assets (catppuccin-vibes)
 # ---------------------------------------------------------------------------
-info "Phase 4 · Kvantum"
+info "Phase 6 · Dock icon assets"
 
-clone_fresh /tmp/catppuccin-kvantum https://github.com/catppuccin/kvantum.git
-mkdir -p ~/.config/Kvantum
-cp -r /tmp/catppuccin-kvantum/themes/catppuccin-mocha-mauve ~/.config/Kvantum/
-rm -rf /tmp/catppuccin-kvantum
-
-kvantummanager --set catppuccin-mocha-mauve
-kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
-ok "Kvantum configured"
-
-# ---------------------------------------------------------------------------
-# Phase 5 — GTK bridge (catppuccin/gtk for non-Qt apps)
-# ---------------------------------------------------------------------------
-info "Phase 5 · GTK bridge"
-
-curl -LsSo /tmp/catppuccin-gtk-install.py \
-  "https://raw.githubusercontent.com/catppuccin/gtk/v1.0.3/install.py"
-# Wipe gtk-4.0 dir to avoid FileExistsError for any pre-existing symlinks/files
-rm -rf ~/.config/gtk-4.0
-python3 /tmp/catppuccin-gtk-install.py mocha mauve --link
-rm /tmp/catppuccin-gtk-install.py
-
-# Flatpak filesystem access for GTK theming
-if command -v flatpak &>/dev/null; then
-  sudo flatpak override --filesystem=xdg-config/gtk-3.0:ro
-  sudo flatpak override --filesystem=xdg-config/gtk-4.0:ro
-  sudo flatpak override --filesystem=~/.themes:ro
-  sudo flatpak override --filesystem=~/.icons:ro
-  sudo flatpak override --env=GTK_THEME=catppuccin-mocha-mauve-standard+default
-fi
-ok "GTK bridge configured"
-
-# ---------------------------------------------------------------------------
-# Phase 6 — Icons (Papirus-Dark + catppuccin/papirus-folders)
-# ---------------------------------------------------------------------------
-info "Phase 6 · Icons"
-
-clone_fresh /tmp/catppuccin-papirus https://github.com/catppuccin/papirus-folders.git
-sudo cp -r /tmp/catppuccin-papirus/src/* /usr/share/icons/Papirus/
-rm -rf /tmp/catppuccin-papirus
-
-curl -fLo /tmp/papirus-folders \
-  "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders"
-chmod +x /tmp/papirus-folders
-/tmp/papirus-folders -C cat-mocha-mauve --theme Papirus-Dark
-rm /tmp/papirus-folders
-ok "Papirus-Dark + cat-mocha-mauve folders configured"
-
-# Papirus-Dark is the system-wide icon theme (full KDE + hicolor coverage).
-# catppuccin-vibes is NOT a full theme — it's 15 SVGs used only as custom
-# icons for pinned dock launchers (see .desktop overrides below).
-kwriteconfig6 --file kdeglobals --group Icons --key Theme Papirus-Dark
-ok "Icons configured (Papirus-Dark + cat-mocha-mauve folders)"
-
-# catppuccin-vibes dock icons — download SVGs and create .desktop overrides
+# catppuccin-vibes dock icons — downloaded once and used by pinned launchers.
 # so the four pinned launchers show catppuccin-styled icons in the dock.
 VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
 mkdir -p "$VIBES_DIR"
@@ -806,7 +767,15 @@ ok "GRUB theme applied"
 info "Phase 14 · Dotfiles (dotbot)"
 
 "$REPO_DIR/install"
-ok "Base dotfiles linked (zshrc, zshenv, kitty, starship, gitconfig, kvantum, gtk, envvars)"
+ok "Base dotfiles linked (zshrc, zshenv, kitty, gitconfig, nvim, fastfetch, envvars)"
+
+info "Phase 14b · Theme switch apply"
+bash "$REPO_DIR/scripts/theme-switch.sh" \
+  --theme "$THEME_NAME" \
+  --flavor "$THEME_FLAVOR" \
+  --accent "$THEME_ACCENT" \
+  --non-interactive
+ok "Theme applied via scripts/theme-switch.sh (${THEME_NAME}/${THEME_FLAVOR}/${THEME_ACCENT})"
 
 # Desktop wallpaper — applied by setup-first-login.sh on first login (needs plasmashell)
 
@@ -816,7 +785,7 @@ kwriteconfig6 --file kscreenlockerrc \
   --key Image "file://$REPO_DIR/images/evening-sky.png"
 ok "Lock screen wallpaper applied (evening-sky.png)"
 
-warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kdeglobals, kscreenlockerrc)."
+warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kscreenlockerrc, kwinrulesrc)."
 warn "Skip this before major KDE upgrades."
 
 # ---------------------------------------------------------------------------

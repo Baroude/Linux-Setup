@@ -1,7 +1,7 @@
 # Linux Setup — KDE Plasma 6
 
 A fully automated, idempotent dotfiles setup for **Debian 13** running **KDE Plasma 6 on Wayland**.
-Theme: **Catppuccin Mocha Mauve** end-to-end (shell, terminal, KDE, GTK, GRUB, SDDM).
+Theme system: **Catppuccin modular switching** (default: `mocha/mauve`) for KDE, GTK, Kvantum, terminal, prompt, editors, and CLI tools.
 
 ---
 
@@ -10,7 +10,7 @@ Theme: **Catppuccin Mocha Mauve** end-to-end (shell, terminal, KDE, GTK, GRUB, S
 | Layer | Choice |
 |---|---|
 | DE | KDE Plasma 6 (Wayland) |
-| Theme | Catppuccin Mocha — accent Mauve `#cba6f7` |
+| Theme | Catppuccin modular (default: Mocha + Mauve) |
 | Terminal | Kitty (opacity 0.90, blur 64) |
 | Shell | Zsh + oh-my-zsh |
 | Prompt | Starship — Catppuccin Powerline |
@@ -32,15 +32,23 @@ cd ~/.dotfiles
 ./setup.sh
 ```
 
+Optional theme selection at install time:
+
+```bash
+./setup.sh --theme catppuccin --flavor macchiato --accent blue
+```
+
 The script is **idempotent** — safe to re-run at any time. Already-installed
 components are detected and skipped.
 
 After the script finishes, optionally link plasma config files (kwinrc,
-kdeglobals, kscreenlockerrc). Skip this before a major KDE upgrade:
+kscreenlockerrc, kwinrulesrc). Skip this before a major KDE upgrade:
 
 ```bash
 ./install -c install-plasma.conf.yaml
 ```
+
+Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/settings.ini`, and `kdeglobals` are now theme-managed outputs written by `scripts/theme-switch.sh` (not Dotbot-linked targets).
 
 ---
 
@@ -52,10 +60,8 @@ kdeglobals, kscreenlockerrc). Skip this before a major KDE upgrade:
 | 1b | Node.js LTS via nodesource (skipped if already present) |
 | 1c | Neovim latest stable prebuilt + LSP tools (skipped if already at latest) |
 | 2 | Fonts — Inter (APT) + JetBrains Mono Nerd Font (skipped if already present) |
-| 3 | catppuccin/kde — global theme, color scheme, window decorations, cursors |
-| 4 | Kvantum — `catppuccin-mocha-mauve` Qt app style |
-| 5 | GTK bridge — catppuccin/gtk v1.0.3 + Flatpak overrides |
-| 6 | Icons — Papirus-Dark + catppuccin papirus-folders (cat-mocha-mauve) |
+| 3 | Modular theme apply deferred to `scripts/theme-switch.sh` (Phase 14b) |
+| 6 | Dock icon assets (`catppuccin-vibes`) + launcher overrides |
 | 6b | Firefox — install Catppuccin Mocha Mauve theme extension (system-wide) |
 | 7 | KWin — blur (strength 9, noise 2) + rounded corners (radius 12) + Dolphin opacity rule |
 | 7b | kwin-better-blur built from source (forces blur behind any semi-transparent window) |
@@ -65,7 +71,27 @@ kdeglobals, kscreenlockerrc). Skip this before a major KDE upgrade:
 | 11 | Zsh + oh-my-zsh + plugins + Starship |
 | 12 | SDDM — catppuccin-mocha-mauve theme + evening-sky wallpaper |
 | 13 | GRUB — catppuccin-mocha theme |
-| 14 | Dotbot — links all dotfiles, applies desktop + lock screen wallpaper |
+| 14 | Dotbot links base dotfiles + `theme-switch.sh` applies selected theme |
+
+---
+
+## Theme Commands
+
+```bash
+# List supported combinations
+bash scripts/theme-switch.sh --list
+
+# Show active state
+bash scripts/theme-switch.sh --current
+
+# Switch post-install
+bash scripts/theme-switch.sh --theme catppuccin --flavor frappe --accent lavender --non-interactive
+
+# Preview only
+bash scripts/theme-switch.sh --theme catppuccin --flavor mocha --accent mauve --dry-run
+```
+
+Full details: `docs/themes.md`
 
 ---
 

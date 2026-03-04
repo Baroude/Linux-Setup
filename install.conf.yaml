@@ -17,10 +17,6 @@
     ~/.config/kitty/kitty.conf:
       path: kitty/kitty.conf
 
-    # Prompt
-    ~/.config/starship.toml:
-      path: starship.toml
-
     # Git
     ~/.gitconfig:
       path: gitconfig
@@ -35,15 +31,7 @@
     ~/.config/fastfetch/debian-cattpuccin.png:
       path: fastfetch/debian-cattpuccin.png
 
-    # Qt style (Kvantum) — force: kvantummanager creates the file during Phase 4
-    ~/.config/Kvantum/kvantum.kvconfig:
-      path: kvantum/kvantum.kvconfig
-      force: true
-
     # GTK theming — force: may exist from system or previous gtk install
-    ~/.config/gtk-3.0/settings.ini:
-      path: gtk/gtk-3.0-settings.ini
-      force: true
     ~/.config/gtk-4.0/gtk.css:
       path: gtk/gtk-4.0-gtk.css
       force: true

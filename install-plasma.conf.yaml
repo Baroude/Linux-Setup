@@ -4,6 +4,5 @@
 
 - link:
     ~/.config/kwinrc:          plasma/kwinrc
-    ~/.config/kdeglobals:      plasma/kdeglobals
     ~/.config/kscreenlockerrc: plasma/kscreenlockerrc
     ~/.config/kwinrulesrc:     plasma/kwinrulesrc
