@@ -7,8 +7,14 @@ widgetStyle=kvantum
 ColorScheme=CatppuccinMochaMauve
 Name=CatppuccinMochaMauve
 shadeSortColumn=true
+font=Inter,10,-1,5,50,0,0,0,0,0
+menuFont=Inter,10,-1,5,50,0,0,0,0,0
+toolBarFont=Inter,10,-1,5,50,0,0,0,0,0
+smallestReadableFont=Inter,9,-1,5,50,0,0,0,0,0
+fixed=JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0
 
 [WM]
+activeFont=Inter,10,-1,5,50,0,0,0,0,0
 activeBackground=30,30,46
 activeBlend=203,166,247
 activeForeground=205,214,244

@@ -281,17 +281,27 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     echo "Transparent top bar applied to containment ${TOP_ID}"
 fi
 
-# ── Enable floating mode on bottom dock ────────────────────────────────────
+# ── Enable floating mode and transparency on bottom dock ───────────────────
 if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
         --group "Containments" --group "$DOCK_ID" \
         --group "Configuration" --group "General" \
         --key "floating" "1"
+    kwriteconfig6 \
+        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
+        --group "Containments" --group "$DOCK_ID" \
+        --group "Configuration" --group "General" \
+        --key "backgroundHints" "0"
+    kwriteconfig6 \
+        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
+        --group "Containments" --group "$DOCK_ID" \
+        --group "Configuration" --group "General" \
+        --key "panelOpacity" "2"
     $DBUS_CMD org.kde.plasmashell /PlasmaShell \
         org.kde.PlasmaShell.evaluateScript \
         "var p = panelById(${DOCK_ID}); if(p) p.reloadConfig();" 2>/dev/null || true
-    echo "Floating mode applied to dock containment ${DOCK_ID}"
+    echo "Floating transparent dock applied to containment ${DOCK_ID}"
 fi
 
 # -- Panel Colorizer: apply active theme styling ----------------------------

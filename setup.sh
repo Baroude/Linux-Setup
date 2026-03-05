@@ -309,6 +309,20 @@ else
   fi
 fi
 
+# Apply Inter as KDE system font (all roles)
+# Qt font string: family,size,weight,style,stretch,…  (weight 50=Normal, style 0=Normal)
+INTER_FONT="Inter,10,-1,5,50,0,0,0,0,0"
+INTER_SMALL="Inter,9,-1,5,50,0,0,0,0,0"
+INTER_TOOLBAR="Inter,10,-1,5,50,0,0,0,0,0"
+INTER_FIXED="JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0"
+for KEY in font menuFont toolBarFont; do
+  kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "General" --key "$KEY" "$INTER_FONT"
+done
+kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "General" --key "smallestReadableFont" "$INTER_SMALL"
+kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "General" --key "fixed"               "$INTER_FIXED"
+kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "WM"      --key "activeFont"          "$INTER_FONT"
+ok "Inter set as KDE system font"
+
 # ---------------------------------------------------------------------------
 # Phase 3 — Modular theme apply moved to theme-switch (Phase 14b)
 # ---------------------------------------------------------------------------
