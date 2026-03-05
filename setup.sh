@@ -123,15 +123,13 @@ sudo apt install -y \
   fastfetch \
   plasma-systemmonitor
 
-# Rofi launcher (Wayland-only in this setup).
+# Rofi launcher package varies across distributions/releases.
 if apt-cache show rofi-wayland >/dev/null 2>&1; then
   sudo apt install -y rofi-wayland
-  # Ensure we do not keep the X11-only rofi package as the active launcher path.
-  if dpkg -s rofi >/dev/null 2>&1; then
-    sudo apt remove -y rofi || true
-  fi
+elif apt-cache show rofi >/dev/null 2>&1; then
+  sudo apt install -y rofi
 else
-  warn "rofi-wayland package not found in APT repositories; rofi setup will be skipped"
+  warn "Neither rofi-wayland nor rofi package found in APT repositories; rofi setup will be skipped"
 fi
 
 # Debian/Ubuntu package naming differs for Plasma addons.

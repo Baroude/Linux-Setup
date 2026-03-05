@@ -56,7 +56,7 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 
 | Phase | What happens |
 |---|---|
-| 1 | APT base packages (git, zsh, kitty, rofi-wayland, fzf, zoxide, kvantum, papirus, fastfetch…) |
+| 1 | APT base packages (git, zsh, kitty, rofi-wayland/rofi, fzf, zoxide, kvantum, papirus, fastfetch…) |
 | 1b | Node.js LTS via nodesource (skipped if already present) |
 | 1c | Neovim latest stable prebuilt + LSP tools (skipped if already at latest) |
 | 2 | Fonts — Inter (APT) + JetBrains Mono Nerd Font (skipped if already present) |
