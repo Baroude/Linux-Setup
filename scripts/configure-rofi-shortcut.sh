@@ -189,20 +189,10 @@ if [[ ! -x "\$ROFI_BIN" ]]; then
   exit 1
 fi
 
-# Default to normal rofi overlay mode.
-# Set ROFI_FORCE_NORMAL_WINDOW=1 to always use normal-window mode.
-if [[ "\${ROFI_FORCE_NORMAL_WINDOW:-0}" == "1" ]]; then
-  if ! "\$ROFI_BIN" -show drun -normal-window; then
-    exec "\$ROFI_BIN" -no-config -show drun -normal-window
-  fi
-else
-  if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
-    # Fallback if focus/input fails in overlay mode on some KDE Wayland setups.
-    if ! "\$ROFI_BIN" -show drun -normal-window; then
-      exec "\$ROFI_BIN" -no-config -show drun -normal-window
-    fi
-  fi
-fi
+# Use -normal-window so KWin handles focus properly on KDE Wayland with tiling.
+# Overlay mode cannot reliably grab keyboard input when Krohnkite is active.
+# A KWin window rule + Krohnkite floatRules entry keeps the window floating/centered.
+exec "\$ROFI_BIN" -show drun -normal-window
 EOF
 chmod +x "$ROFI_LAUNCHER_BIN"
 

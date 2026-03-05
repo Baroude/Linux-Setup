@@ -1,5 +1,5 @@
 [General]
-count=1
+count=2
 
 [1]
 Description=Dolphin — transparency + blur + borderless
@@ -12,3 +12,15 @@ opacityinactive=88
 opacityinactiverule=2
 noborder=true
 noborderrule=2
+
+[2]
+Description=Rofi — float + center
+wmclass=rofi
+wmclasscomplete=false
+wmclassmatch=2
+above=true
+aboverule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2

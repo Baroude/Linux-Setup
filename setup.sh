@@ -459,6 +459,38 @@ kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key noborder tr
 kwriteconfig6 --file kwinrulesrc --group "$dolphin_rule_group" --key noborderrule 2
 ok "KWin blur + rounded corners + Dolphin borderless rule written"
 
+# Rofi window rule — keep it floating and centered when launched with -normal-window.
+# Needed because Krohnkite would otherwise tile the window, and the float rule
+# ensures it appears as a proper centered launcher overlay.
+rofi_rule_group="$(
+  awk -F'[][]' '
+    /^\[[0-9]+\]$/ { grp = $2 }
+    /^wmclass=rofi$/ { print grp; exit }
+  ' "$HOME/.config/kwinrulesrc" 2>/dev/null || true
+)"
+
+if [[ -z "$rofi_rule_group" ]]; then
+  existing_rule_count="$(kreadconfig6 --file kwinrulesrc --group General --key count 2>/dev/null || true)"
+  if [[ "$existing_rule_count" =~ ^[0-9]+$ ]]; then
+    rofi_rule_group="$((existing_rule_count + 1))"
+  else
+    rofi_rule_group="1"
+  fi
+  kwriteconfig6 --file kwinrulesrc --group General --key count "$rofi_rule_group"
+fi
+
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key Description  "Rofi — float + center"
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key wmclass       "rofi"
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key wmclasscomplete false
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key wmclassmatch  2
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key above         true
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key aboverule     2
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key skiptaskbar   true
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key skiptaskbarrule 2
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key skippager     true
+kwriteconfig6 --file kwinrulesrc --group "$rofi_rule_group" --key skippagerrule 2
+ok "KWin rofi float+center rule written"
+
 # Magic Lamp minimize animation (replaces the default Scale effect)
 kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled true
 kwriteconfig6 --file kwinrc --group Plugins --key scaleEnabled false
@@ -604,7 +636,9 @@ else
   kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapBottom  8
   kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapLeft    8
   kwriteconfig6 --file kwinrc --group Script-krohnkite --key screenGapRight   8
-  ok "Krohnkite installed and enabled (8 px gaps)"
+  # Float rofi so it isn't tiled when launched in -normal-window mode.
+  kwriteconfig6 --file kwinrc --group Script-krohnkite --key floatRules "rofi"
+  ok "Krohnkite installed and enabled (8 px gaps, rofi floated)"
 
   # Vim-style keybinds — written to kglobalshortcutsrc before first login.
   # Format: "shortcut,default,description"
