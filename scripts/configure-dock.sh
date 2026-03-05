@@ -268,7 +268,7 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
         --group "Containments" --group "$TOP_ID" \
-        --group "Configuration" --group "General" \
+        --group "General" \
         --key "backgroundHints" "0"
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
@@ -288,10 +288,12 @@ if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
         --group "Containments" --group "$DOCK_ID" \
         --group "Configuration" --group "General" \
         --key "floating" "1"
+    # backgroundHints is a containment property → [Containments][ID][General]
+    # panelOpacity is a PanelView property    → [Containments][ID][Configuration][General]
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
         --group "Containments" --group "$DOCK_ID" \
-        --group "Configuration" --group "General" \
+        --group "General" \
         --key "backgroundHints" "0"
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
