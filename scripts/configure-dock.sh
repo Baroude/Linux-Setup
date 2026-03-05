@@ -123,23 +123,29 @@ panelIds.forEach(function(id) {
 // ── Bottom dock ────────────────────────────────────────────────────────────
 // lengthMode = 'fit'  → dock shrinks to content (pill style)
 // floating applied afterwards via kwriteconfig6 (JS API cannot write it)
-// backgroundHints=0 → NoBackground: removes the pill/frame entirely (icons only)
+// Panel Colorizer (hidden) suppresses the native panel background via
+// nativePanel.background.opacity=0 — backgroundHints is not used because
+// Plasma 6 derives it from panelOpacity in QML and ignores direct writes.
 var dock = new Panel;
 dock.location   = 'bottom';
 dock.height     = 56;
 dock.alignment  = 'center';
 dock.lengthMode = 'fit';
-dock.currentConfigGroup = ['General'];
-dock.writeConfig('backgroundHints', '0');
 
 var tasks = dock.addWidget('org.kde.plasma.icontasks');
 tasks.currentConfigGroup = ['General'];
 tasks.writeConfig('launchers', '${LAUNCHERS}');
 tasks.writeConfig('showOnlyCurrentDesktop', 'false');
 
+// Panel Colorizer on dock — hidden, no widget styling, only native bg suppressed.
+var dockColorizer = dock.addWidget('luisbocanegra.panel.colorizer');
+dockColorizer.currentConfigGroup = ['General'];
+dockColorizer.writeConfig('hideWidget', 'true');
+dockColorizer.writeConfig('isEnabled', 'true');
+dockColorizer.writeConfig('globalSettings', '{\"nativePanel\":{\"background\":{\"enabled\":true,\"opacity\":0,\"shadow\":false}}}');
+
 // ── Top bar ────────────────────────────────────────────────────────────────
-// backgroundHints=0 → NoBackground: fully transparent bar (belt-and-braces;
-// kwriteconfig6 below also sets panelOpacity=2 for the compositor layer).
+// Transparency is handled by Panel Colorizer (nativePanel.background.opacity=0).
 var top = new Panel;
 top.location   = 'top';
 top.height     = 36;
@@ -281,29 +287,50 @@ if [[ -n "${TOP_ID:-}" && "$TOP_ID" =~ ^[0-9]+$ ]]; then
     echo "Transparent top bar applied to containment ${TOP_ID}"
 fi
 
-# ── Enable floating mode and transparency on bottom dock ───────────────────
+# ── Enable floating mode on bottom dock ────────────────────────────────────
 if [[ -n "${DOCK_ID:-}" && "$DOCK_ID" =~ ^[0-9]+$ ]]; then
     kwriteconfig6 \
         --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
         --group "Containments" --group "$DOCK_ID" \
         --group "Configuration" --group "General" \
         --key "floating" "1"
-    # backgroundHints is a containment property → [Containments][ID][General]
-    # panelOpacity is a PanelView property    → [Containments][ID][Configuration][General]
-    kwriteconfig6 \
-        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
-        --group "Containments" --group "$DOCK_ID" \
-        --group "General" \
-        --key "backgroundHints" "0"
-    kwriteconfig6 \
-        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" \
-        --group "Containments" --group "$DOCK_ID" \
-        --group "Configuration" --group "General" \
-        --key "panelOpacity" "2"
     $DBUS_CMD org.kde.plasmashell /PlasmaShell \
         org.kde.PlasmaShell.evaluateScript \
         "var p = panelById(${DOCK_ID}); if(p) p.reloadConfig();" 2>/dev/null || true
-    echo "Floating transparent dock applied to containment ${DOCK_ID}"
+    echo "Floating dock applied to containment ${DOCK_ID}"
+fi
+
+# ── Panel Colorizer on dock — suppress native panel background ──────────────
+DOCK_PC_ID=$($DBUS_CMD org.kde.plasmashell /PlasmaShell \
+    org.kde.PlasmaShell.evaluateScript \
+    "var p=panelById(${DOCK_ID}); var ws=p ? p.widgets(['luisbocanegra.panel.colorizer']) : []; print(ws.length>0?ws[0].id:'NOT_FOUND');" \
+    2>/dev/null | tail -1)
+
+DOCK_PC_GS='{"nativePanel":{"background":{"enabled":true,"opacity":0,"shadow":false}}}'
+
+if [[ -n "${DOCK_PC_ID:-}" && "$DOCK_PC_ID" =~ ^[0-9]+$ ]]; then
+    BASE_ARGS=(kwriteconfig6
+        --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+        --group "Containments" --group "$DOCK_ID"
+        --group "Applets"      --group "$DOCK_PC_ID"
+        --group "Configuration" --group "General")
+    "${BASE_ARGS[@]}" --key "isEnabled"      "true"
+    "${BASE_ARGS[@]}" --key "hideWidget"     "true"
+    "${BASE_ARGS[@]}" --key "globalSettings" "$DOCK_PC_GS"
+
+    JS_GS="${DOCK_PC_GS//\\/\\\\}"
+    JS_GS="${JS_GS//\'/\'}"
+    $DBUS_CMD org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "var p=panelById(${DOCK_ID}); var ws=p?p.widgets(['luisbocanegra.panel.colorizer']):[];
+         if(ws.length>0){var w=ws[0]; w.currentConfigGroup=['General'];
+           w.writeConfig('isEnabled','true'); w.writeConfig('hideWidget','true');
+           w.writeConfig('globalSettings','${JS_GS}');
+           print('Dock Panel Colorizer applied id='+w.id);
+         }" 2>/dev/null || true
+    echo "Dock Panel Colorizer native-bg suppression applied (applet ${DOCK_PC_ID})"
+else
+    echo "WARNING: Panel Colorizer not found on dock (ID=${DOCK_PC_ID:-unknown})" >&2
 fi
 
 # -- Panel Colorizer: apply active theme styling ----------------------------
