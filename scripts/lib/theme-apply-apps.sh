@@ -146,37 +146,45 @@ theme_apply_tidal_css_theme() {
 }
 
 theme_apply_rofi_theme() {
-  local flavor rofi_dir rofi_default rofi_flavor rofi_config
-  flavor="$(theme_context_get "flavor")"
+  local rofi_dir rofi_config rofi_layout_dir rofi_layout_shared rofi_colors_dir
+  local rofi_style rofi_shared_colors rofi_shared_fonts rofi_catppuccin
   rofi_dir="$HOME/.config/rofi"
-  rofi_default="${rofi_dir}/catppuccin-default.rasi"
-  rofi_flavor="${rofi_dir}/catppuccin-${flavor}.rasi"
   rofi_config="${rofi_dir}/config.rasi"
+  rofi_layout_dir="${rofi_dir}/launchers/type-2"
+  rofi_layout_shared="${rofi_layout_dir}/shared"
+  rofi_colors_dir="${rofi_dir}/colors"
+  rofi_style="${rofi_layout_dir}/style-9.rasi"
+  rofi_shared_colors="${rofi_layout_shared}/colors.rasi"
+  rofi_shared_fonts="${rofi_layout_shared}/fonts.rasi"
+  rofi_catppuccin="${rofi_colors_dir}/catppuccin.rasi"
 
   theme_run "create rofi config dir" mkdir -p "$rofi_dir"
+  theme_run "create rofi layout dirs" mkdir -p "$rofi_layout_shared" "$rofi_colors_dir"
 
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-    echo "[dry-run] download official rofi theme ${rofi_default}"
-    echo "[dry-run] download official rofi flavor ${rofi_flavor}"
-    echo "[dry-run] enable flavor import catppuccin-${flavor} in ${rofi_default}"
+    echo "[dry-run] download adi1090x launcher style ${rofi_style}"
+    echo "[dry-run] download adi1090x shared colors ${rofi_shared_colors}"
+    echo "[dry-run] download adi1090x shared fonts ${rofi_shared_fonts}"
+    echo "[dry-run] download adi1090x catppuccin colors ${rofi_catppuccin}"
+    echo "[dry-run] force ${rofi_shared_colors} to import ~/.config/rofi/colors/catppuccin.rasi"
   else
-    curl -fsSL -o "$rofi_default" \
-      "https://raw.githubusercontent.com/catppuccin/rofi/main/catppuccin-default.rasi"
-    curl -fsSL -o "$rofi_flavor" \
-      "https://raw.githubusercontent.com/catppuccin/rofi/main/themes/catppuccin-${flavor}.rasi"
+    curl -fsSL -o "$rofi_style" \
+      "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/style-9.rasi"
+    curl -fsSL -o "$rofi_shared_colors" \
+      "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/shared/colors.rasi"
+    curl -fsSL -o "$rofi_shared_fonts" \
+      "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/shared/fonts.rasi"
+    curl -fsSL -o "$rofi_catppuccin" \
+      "https://raw.githubusercontent.com/adi1090x/rofi/master/files/colors/catppuccin.rasi"
 
-    sed -i -E "s|^// @import \"catppuccin-${flavor}\"|@import \"catppuccin-${flavor}\"|" "$rofi_default"
-    for other_flavor in latte frappe macchiato mocha; do
-      if [[ "$other_flavor" == "$flavor" ]]; then
-        continue
-      fi
-      sed -i -E "s|^@import \"catppuccin-${other_flavor}\"|// @import \"catppuccin-${other_flavor}\"|" "$rofi_default"
-    done
+    sed -i -E \
+      's|^@import "~/.config/rofi/colors/[A-Za-z0-9_-]+\.rasi"|@import "~/.config/rofi/colors/catppuccin.rasi"|' \
+      "$rofi_shared_colors"
   fi
 
   theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-config.rasi.tpl" "$rofi_config"
 
-  theme_info "Rofi theme written from official catppuccin/rofi (${flavor})"
+  theme_info "Rofi launcher theme set to adi1090x type-2/style-9 (catppuccin preset)"
 }
 
 theme_apply_apps_adapter() {

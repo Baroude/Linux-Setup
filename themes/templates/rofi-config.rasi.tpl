@@ -8,4 +8,4 @@ configuration {
   icon-theme: "Papirus-Dark";
 }
 
-@theme "~/.config/rofi/catppuccin-default.rasi"
+@theme "~/.config/rofi/launchers/type-2/style-9.rasi"
