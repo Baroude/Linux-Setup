@@ -14,7 +14,27 @@ LOCAL_BIN_DIR="$HOME/.local/bin"
 ROFI_LAUNCHER_BIN="${LOCAL_BIN_DIR}/rofi-launcher"
 ROFI_GROUP="rofi-app-launcher.desktop"
 ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
-ROFI_BIN="$(command -v rofi-wayland || command -v rofi || true)"
+ROFI_BIN=""
+
+pick_rofi_bin() {
+  local candidate=""
+
+  if candidate="$(command -v rofi-wayland 2>/dev/null)"; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  if candidate="$(command -v rofi 2>/dev/null)"; then
+    if "$candidate" -help 2>&1 | grep -q -- "-global-kb"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+ROFI_BIN="$(pick_rofi_bin || true)"
 
 if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   warn "kwriteconfig6 not found; cannot configure KDE shortcut."
@@ -22,7 +42,8 @@ if ! command -v kwriteconfig6 >/dev/null 2>&1; then
 fi
 
 if [[ -z "$ROFI_BIN" ]]; then
-  warn "Neither rofi-wayland nor rofi was found in PATH; cannot configure launcher shortcut."
+  warn "No Wayland-capable rofi binary found."
+  warn "Install rofi-wayland, or a rofi build with Wayland support; X11-only rofi cannot reliably receive keyboard input on KDE Wayland."
   exit 0
 fi
 
@@ -185,9 +206,13 @@ if [[ ! -x "\$ROFI_BIN" ]]; then
   exit 1
 fi
 
-if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
-  # Fallback for invalid/missing theme config so shortcut still opens a launcher.
-  exec "\$ROFI_BIN" -no-config -show drun
+# KDE Wayland can occasionally leave layer-shell launchers without text focus.
+# Start in normal-window mode first so the entry reliably receives keyboard input.
+if ! "\$ROFI_BIN" -show drun -normal-window; then
+  if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
+    # Last-resort fallback for invalid theme config.
+    exec "\$ROFI_BIN" -no-config -show drun -normal-window
+  fi
 fi
 EOF
 chmod +x "$ROFI_LAUNCHER_BIN"

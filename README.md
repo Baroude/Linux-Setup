@@ -145,6 +145,9 @@ Linux-Setup/
 If `Meta + Space` is already taken by a non-KRunner action, setup falls back to
 the first free binding in: `Meta + R`, `Meta + /`, `Alt + Space`.
 
+Note: On KDE Wayland, use a Wayland-capable rofi build (`rofi-wayland` package
+or `rofi` built with Wayland support). X11-only rofi can open but not accept typing.
+
 ### Krohnkite — tiling
 
 Krohnkite uses `Meta` as the modifier and vim-style keys for movement.

@@ -132,6 +132,13 @@ else
   warn "Neither rofi-wayland nor rofi package found in APT repositories; rofi setup will be skipped"
 fi
 
+if command -v rofi >/dev/null 2>&1; then
+  if ! rofi -help 2>&1 | grep -q -- "-global-kb"; then
+    warn "Installed rofi appears X11-only; keyboard input can fail on KDE Wayland."
+    warn "Prefer rofi-wayland (or another Wayland-capable rofi build)."
+  fi
+fi
+
 # Debian/Ubuntu package naming differs for Plasma addons.
 if apt-cache show kdeplasma-addons >/dev/null 2>&1; then
   sudo apt install -y kdeplasma-addons
