@@ -135,7 +135,7 @@ Linux-Setup/
 | `Meta + ~` | Switch between windows of same application |
 | `Meta + D` | Show desktop |
 | `Meta + L` | Lock screen |
-| `Meta + Space` | Rofi app launcher (`rofi-wayland -show drun`) when available |
+| `Meta + Space` | Rofi app launcher (`rofi-wayland` or `rofi`, `-show drun`) when available |
 | `Meta + E` | Open file manager (Dolphin) |
 | `Meta + Shift + Q` | Close active window |
 | `Meta + PgUp/PgDn` | Move window to previous/next virtual desktop |

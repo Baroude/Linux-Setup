@@ -14,15 +14,15 @@ LOCAL_BIN_DIR="$HOME/.local/bin"
 ROFI_LAUNCHER_BIN="${LOCAL_BIN_DIR}/rofi-launcher"
 ROFI_GROUP="rofi-app-launcher.desktop"
 ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
-ROFI_WAYLAND_BIN="$(command -v rofi-wayland || true)"
+ROFI_BIN="$(command -v rofi-wayland || command -v rofi || true)"
 
 if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   warn "kwriteconfig6 not found; cannot configure KDE shortcut."
   exit 0
 fi
 
-if [[ -z "$ROFI_WAYLAND_BIN" ]]; then
-  warn "rofi-wayland not found in PATH; cannot configure launcher shortcut."
+if [[ -z "$ROFI_BIN" ]]; then
+  warn "Neither rofi-wayland nor rofi was found in PATH; cannot configure launcher shortcut."
   exit 0
 fi
 
@@ -170,14 +170,18 @@ cat > "$ROFI_LAUNCHER_BIN" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROFI_BIN="${ROFI_WAYLAND_BIN}"
+ROFI_BIN="${ROFI_BIN}"
 
 if [[ ! -x "\$ROFI_BIN" ]] && command -v rofi-wayland >/dev/null 2>&1; then
   ROFI_BIN="\$(command -v rofi-wayland)"
 fi
 
+if [[ ! -x "\$ROFI_BIN" ]] && command -v rofi >/dev/null 2>&1; then
+  ROFI_BIN="\$(command -v rofi)"
+fi
+
 if [[ ! -x "\$ROFI_BIN" ]]; then
-  printf '[rofi-launcher] ERROR: rofi-wayland is required but not installed.\n' >&2
+  printf '[rofi-launcher] ERROR: neither rofi-wayland nor rofi is available.\n' >&2
   exit 1
 fi
 
@@ -192,7 +196,7 @@ cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Rofi Application Launcher
-Comment=Launch applications with rofi-wayland
+Comment=Launch applications with rofi
 Exec=${ROFI_LAUNCHER_BIN}
 Icon=${launcher_icon}
 Terminal=false

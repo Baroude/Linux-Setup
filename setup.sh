@@ -620,11 +620,11 @@ fi
 # ---------------------------------------------------------------------------
 info "Phase 8b · Rofi launcher shortcut"
 
-if command -v rofi-wayland &>/dev/null; then
+if command -v rofi-wayland &>/dev/null || command -v rofi &>/dev/null; then
   bash "$REPO_DIR/scripts/configure-rofi-shortcut.sh"
-  ok "Rofi launcher configured via rofi-wayland (Meta+Space preferred when available)"
+  ok "Rofi launcher configured (rofi-wayland/rofi, Meta+Space preferred when available)"
 else
-  warn "rofi-wayland binary not found; skipping rofi shortcut configuration."
+  warn "rofi binary not found (checked rofi-wayland and rofi); skipping rofi shortcut configuration."
 fi
 
 # ---------------------------------------------------------------------------
