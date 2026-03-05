@@ -189,12 +189,18 @@ if [[ ! -x "\$ROFI_BIN" ]]; then
   exit 1
 fi
 
-# KDE Wayland can occasionally leave layer-shell launchers without text focus.
-# Start in normal-window mode first so the entry reliably receives keyboard input.
-if ! "\$ROFI_BIN" -show drun -normal-window; then
-  if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
-    # Last-resort fallback for invalid theme config.
+# Default to normal rofi overlay mode.
+# Set ROFI_FORCE_NORMAL_WINDOW=1 to always use normal-window mode.
+if [[ "\${ROFI_FORCE_NORMAL_WINDOW:-0}" == "1" ]]; then
+  if ! "\$ROFI_BIN" -show drun -normal-window; then
     exec "\$ROFI_BIN" -no-config -show drun -normal-window
+  fi
+else
+  if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
+    # Fallback if focus/input fails in overlay mode on some KDE Wayland setups.
+    if ! "\$ROFI_BIN" -show drun -normal-window; then
+      exec "\$ROFI_BIN" -no-config -show drun -normal-window
+    fi
   fi
 fi
 EOF
