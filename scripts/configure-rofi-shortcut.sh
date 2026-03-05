@@ -14,9 +14,15 @@ LOCAL_BIN_DIR="$HOME/.local/bin"
 ROFI_LAUNCHER_BIN="${LOCAL_BIN_DIR}/rofi-launcher"
 ROFI_GROUP="rofi-app-launcher.desktop"
 ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
+ROFI_WAYLAND_BIN="$(command -v rofi-wayland || true)"
 
 if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   warn "kwriteconfig6 not found; cannot configure KDE shortcut."
+  exit 0
+fi
+
+if [[ -z "$ROFI_WAYLAND_BIN" ]]; then
+  warn "rofi-wayland not found in PATH; cannot configure launcher shortcut."
   exit 0
 fi
 
@@ -160,16 +166,25 @@ if [[ -f "$HOME/.local/share/icons/catppuccin-vibes/apps-vibrant.svg" ]]; then
   launcher_icon="$HOME/.local/share/icons/catppuccin-vibes/apps-vibrant.svg"
 fi
 
-cat > "$ROFI_LAUNCHER_BIN" <<'EOF'
+cat > "$ROFI_LAUNCHER_BIN" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v rofi-wayland >/dev/null 2>&1; then
+ROFI_BIN="${ROFI_WAYLAND_BIN}"
+
+if [[ ! -x "\$ROFI_BIN" ]] && command -v rofi-wayland >/dev/null 2>&1; then
+  ROFI_BIN="\$(command -v rofi-wayland)"
+fi
+
+if [[ ! -x "\$ROFI_BIN" ]]; then
   printf '[rofi-launcher] ERROR: rofi-wayland is required but not installed.\n' >&2
   exit 1
 fi
 
-exec rofi-wayland -no-lazy-grab -show drun
+if ! "\$ROFI_BIN" -no-lazy-grab -show drun; then
+  # Fallback for invalid/missing theme config so shortcut still opens a launcher.
+  exec "\$ROFI_BIN" -no-config -show drun
+fi
 EOF
 chmod +x "$ROFI_LAUNCHER_BIN"
 
