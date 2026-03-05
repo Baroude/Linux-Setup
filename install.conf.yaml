@@ -16,6 +16,8 @@
     # Terminal
     ~/.config/kitty/kitty.conf:
       path: kitty/kitty.conf
+    ~/.config/starship.toml:
+      path: starship.toml
 
     # Git
     ~/.gitconfig:
