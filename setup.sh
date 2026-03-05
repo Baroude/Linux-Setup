@@ -134,8 +134,8 @@ fi
 
 if command -v rofi >/dev/null 2>&1; then
   if ! rofi -help 2>&1 | grep -q -- "-global-kb"; then
-    warn "Installed rofi appears X11-only; keyboard input can fail on KDE Wayland."
-    warn "Prefer rofi-wayland (or another Wayland-capable rofi build)."
+    warn "Installed rofi does not advertise -global-kb; wayland support cannot be auto-verified."
+    warn "If typing fails in launcher mode, prefer rofi-wayland or use normal-window fallback."
   fi
 fi
 

@@ -14,27 +14,7 @@ LOCAL_BIN_DIR="$HOME/.local/bin"
 ROFI_LAUNCHER_BIN="${LOCAL_BIN_DIR}/rofi-launcher"
 ROFI_GROUP="rofi-app-launcher.desktop"
 ROFI_SERVICE_GROUP="services/${ROFI_GROUP}"
-ROFI_BIN=""
-
-pick_rofi_bin() {
-  local candidate=""
-
-  if candidate="$(command -v rofi-wayland 2>/dev/null)"; then
-    printf '%s\n' "$candidate"
-    return 0
-  fi
-
-  if candidate="$(command -v rofi 2>/dev/null)"; then
-    if "$candidate" -help 2>&1 | grep -q -- "-global-kb"; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  fi
-
-  return 1
-}
-
-ROFI_BIN="$(pick_rofi_bin || true)"
+ROFI_BIN="$(command -v rofi-wayland || command -v rofi || true)"
 
 if ! command -v kwriteconfig6 >/dev/null 2>&1; then
   warn "kwriteconfig6 not found; cannot configure KDE shortcut."
@@ -42,9 +22,12 @@ if ! command -v kwriteconfig6 >/dev/null 2>&1; then
 fi
 
 if [[ -z "$ROFI_BIN" ]]; then
-  warn "No Wayland-capable rofi binary found."
-  warn "Install rofi-wayland, or a rofi build with Wayland support; X11-only rofi cannot reliably receive keyboard input on KDE Wayland."
+  warn "Neither rofi-wayland nor rofi was found in PATH; cannot configure launcher shortcut."
   exit 0
+fi
+
+if [[ "$(basename "$ROFI_BIN")" == "rofi" ]] && ! "$ROFI_BIN" -help 2>&1 | grep -q -- "-global-kb"; then
+  warn "Using rofi from PATH without explicit wayland feature detection; proceeding because it may still work on this distro build."
 fi
 
 mkdir -p "$HOME/.config" "$DESKTOP_DIR" "$LOCAL_BIN_DIR"
