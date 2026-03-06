@@ -4,6 +4,7 @@
     - ~/.config/kitty
     - ~/.config/fastfetch
     - ~/.config/plasma-workspace/env
+    - ~/.config/Kvantum
 
 - link:
     # Shell — force: oh-my-zsh creates ~/.zshrc as a real file during install
@@ -18,6 +19,7 @@
       path: kitty/kitty.conf
     ~/.config/starship.toml:
       path: starship.toml
+      force: true
 
     # Git
     ~/.gitconfig:
@@ -32,8 +34,12 @@
     # Fastfetch
     ~/.config/fastfetch/config.jsonc:
       path: fastfetch/config.jsonc
-    ~/.config/fastfetch/debian-cattpuccin.png:
-      path: fastfetch/debian-cattpuccin.png
+    ~/.config/fastfetch/debian-catppuccin.png:
+      path: fastfetch/debian-catppuccin.png
+
+    # Kvantum Qt style
+    ~/.config/Kvantum/kvantum.kvconfig:
+      path: kvantum/kvantum.kvconfig
 
     # GTK theming — force: may exist from system or previous gtk install
     ~/.config/gtk-4.0/gtk.css:

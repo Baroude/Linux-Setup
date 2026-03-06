@@ -4,7 +4,7 @@
 
 THEME_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 THEME_REPO_DIR="$(cd "${THEME_LIB_DIR}/../.." && pwd)"
-THEME_CATALOG_FILE="${THEME_REPO_DIR}/themes/catalog.yaml"
+THEME_CATALOG_FILE="${THEME_REPO_DIR}/themes/catalog.json"
 THEME_STATE_FILE="${HOME}/.config/linux-setup/theme-state.json"
 THEME_CONTEXT_FILE="${HOME}/.config/linux-setup/theme-context.json"
 THEME_DRY_RUN="${THEME_DRY_RUN:-0}"

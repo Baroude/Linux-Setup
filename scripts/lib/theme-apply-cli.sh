@@ -64,5 +64,9 @@ theme_apply_cli_adapter() {
   fi
 
   theme_run "set git delta syntax theme" git config --global delta.syntax-theme "$delta_theme"
+
+  theme_run "create fzf config dir" mkdir -p "$HOME/.config/fzf"
+  theme_render_template "${THEME_REPO_DIR}/themes/templates/fzf-colors.zsh.tpl" "$HOME/.config/fzf/colors.zsh"
+
   theme_info "CLI adapter completed (${flavor})"
 }

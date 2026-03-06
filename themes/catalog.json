@@ -7,7 +7,7 @@
   },
   "themes": {
     "catppuccin": {
-      "manifest": "themes/manifests/catppuccin.yaml",
+      "manifest": "themes/manifests/catppuccin.json",
       "flavors": ["latte", "frappe", "macchiato", "mocha"],
       "accents": [
         "rosewater",

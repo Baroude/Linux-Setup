@@ -273,11 +273,7 @@ else
   skip "delta"
 fi
 
-# Wire delta into git as the diff/pager
-git config --global core.pager delta
-git config --global interactive.diffFilter "delta --color-only"
-git config --global delta.navigate true
-git config --global delta.dark true
+# delta wired as git pager via gitconfig (linked by dotbot in Phase 14)
 info "CLI theming is applied later by scripts/theme-switch.sh (Phase 14b)"
 
 ok "Modern CLI tools installed"
