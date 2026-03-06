@@ -1,0 +1,12 @@
+# Plasma-specific dotbot profile.
+# Run separately: ./install -c install-plasma.conf.yaml
+# Skip before major KDE upgrades; re-run after verifying config compatibility.
+
+- link:
+    ~/.config/kwinrc:          plasma/kwinrc
+    ~/.config/kscreenlockerrc: plasma/kscreenlockerrc
+    ~/.config/kwinrulesrc:     plasma/kwinrulesrc
+# Note: plasma/kdeglobals is intentionally NOT linked here.
+# Font settings are written by setup.sh (Phase 2) and color scheme by
+# scripts/theme-switch.sh (kde adapter) via kwriteconfig6 / plasma-apply-*.
+# Use scripts/backup-plasma.sh to sync the live file back to plasma/.

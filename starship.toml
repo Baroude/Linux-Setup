@@ -1,120 +1,165 @@
 # ~/.config/starship.toml
+# Catppuccin Mocha — Nerd Font inline style
 #
+# Segments: os  directory  git  languages  docker  cmd_duration    time (right)
+# No backgrounds, no powerline. Colored symbols + text only.
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+palette = 'catppuccin_mocha'
+
 format = """
-(#7aa2f7)$username$hostname$directory$git_branch$rust$package$time
-[➜](#7aa2f7) """
-[line_break]
-disabled = true
+$os$directory$git_branch$git_status\
+$c$rust$golang$nodejs$php$java$kotlin$haskell$python\
+$docker_context$cmd_duration
+$character"""
 
-#format = """
-#[┌───────────────────](#7aa2f7)
-#[│](#7aa2f7)$username$hostname$directory$git_branch$rust$package$time
-#[└─>](#7aa2f7) """
-#[line_break]
-#disabled = true
+right_format = '$time'
 
-# Remove the "❯" symbol in the prompt
-[character]                     
-success_symbol = "[➜](bold green)"       #No success_symbol
-error_symbol = " [✗](bold red)"     #error_symbol in red
-
-
-[username]
-format = "[$user](#96c466)[@](#88c0d0)"
-#format ="[❯](#BF616A)[❯](#02e830)[❯](#88C0D0)[❯](#EBCB8B) "
-style_user = "#5fff5f"
-show_always = true
-
-#[[battery.display]]
-#threshold = 30
-#style = "bold red"
-
-[cmd_duration]
-show_milliseconds = true
-format = "took [$duration](bold yellow)"
-disabled = true
-
-[directory]
-truncation_length = 5
-format = "[$path](#88c0d0)[$lock_symbol]($lock_style) "
-
-[hostname]
-ssh_only = false
-format = "[$hostname](#96c466) "
-trim_at = "-"
-style = "#5fff5f"
+# --- OS icon ---
+[os]
 disabled = false
+format   = '[$symbol](fg:red)'
 
-[aws]
-symbol = " "
+[os.symbols]
+Linux   = "󰌽 "
+Debian  = "󰣚 "
+Ubuntu  = "󰕈 "
+Windows = " "
+Macos   = "󰀵 "
+Arch    = "󰣇 "
+Fedora  = "󰣛 "
+Manjaro = " "
 
-[conda]
-symbol = " "
+# --- Username (SSH / root only) ---
+[username]
+show_always = false
+style_user  = "fg:subtext0"
+style_root  = "fg:red bold"
+format      = '[$user ](style)'
 
-[dart]
-symbol = " "
+# --- Directory ---
+[directory]
+style             = "fg:peach bold"
+format            = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
 
-[docker_context]
-symbol = " "
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music"     = "󰝚 "
+"Pictures"  = " "
 
-[elixir]
-symbol = " "
-
-[elm]
-symbol = " "
-
+# --- Git ---
 [git_branch]
-symbol = " "
+symbol = " "
+format = '[$symbol$branch ](fg:yellow)'
 
-[golang]
-symbol = " "
+[git_status]
+format     = '([$all_status$ahead_behind ](fg:yellow))'
+up_to_date = ''
+modified   = '~${count}'
+staged     = '+${count}'
+untracked  = '?${count}'
+deleted    = '✘${count}'
+renamed    = '»${count}'
+stashed    = '≡'
+ahead      = '⇡${count}'
+behind     = '⇣${count}'
+diverged   = '⇕⇡${ahead_count}⇣${behind_count}'
+conflicted = '⚡${count}'
 
-#[haskell]
-#symbol = " "
-
-[hg_branch]
-symbol = " "
-
-[java]
-symbol = " "
-
-[julia]
-symbol = " "
-
-[nim]
-symbol = " "
-
-[nix_shell]
-symbol = " "
-
-[nodejs]
-symbol = " "
-
-[package]
-symbol = " "
-
-[perl]
-symbol = " "
-
-[php]
-symbol = " "
-
-[python]
-symbol = " "
-
-[ruby]
-symbol = " "
+# --- Languages (only shown when in a matching project) ---
+[c]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
 
 [rust]
-symbol = " "
+symbol = " "
+format = '[$symbol$version ](fg:green)'
 
-[swift]
-symbol = "ﯣ "
+[golang]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
 
+[nodejs]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+[php]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+[java]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+[kotlin]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+[haskell]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+[python]
+symbol = " "
+format = '[$symbol$version ](fg:green)'
+
+# --- Docker ---
+[docker_context]
+symbol = " "
+format = '[$symbol$context ](fg:sapphire)'
+
+# --- Command duration (inline, subtle) ---
+[cmd_duration]
+disabled          = false
+min_time          = 2000
+show_milliseconds = false
+format            = '[took $duration ](fg:overlay1)'
+
+# --- Time (right-aligned) ---
 [time]
-time_format = "%T"
-format = "🕙 [$time](bold #D08770)"
-disabled = true
+disabled    = false
+time_format = "%R"
+format      = '[  $time](fg:lavender)'
 
+# --- Prompt character ---
+[character]
+disabled                  = false
+success_symbol            = '[❯](bold fg:green)'
+error_symbol              = '[❯](bold fg:red)'
+vimcmd_symbol             = '[❮](bold fg:green)'
+vimcmd_replace_one_symbol = '[❮](bold fg:lavender)'
+vimcmd_replace_symbol     = '[❮](bold fg:lavender)'
+vimcmd_visual_symbol      = '[❮](bold fg:yellow)'
 
-
+# --- Catppuccin Mocha palette ---
+[palettes.catppuccin_mocha]
+rosewater = '#f5e0dc'
+flamingo  = '#f2cdcd'
+pink      = '#f5c2e7'
+mauve     = '#cba6f7'
+red       = '#f38ba8'
+maroon    = '#eba0ac'
+peach     = '#fab387'
+yellow    = '#f9e2af'
+green     = '#a6e3a1'
+teal      = '#94e2d5'
+sky       = '#89dceb'
+sapphire  = '#74c7ec'
+blue      = '#89b4fa'
+lavender  = '#b4befe'
+text      = '#cdd6f4'
+subtext1  = '#bac2de'
+subtext0  = '#a6adc8'
+overlay2  = '#9399b2'
+overlay1  = '#7f849c'
+overlay0  = '#6c7086'
+surface2  = '#585b70'
+surface1  = '#45475a'
+surface0  = '#313244'
+base      = '#1e1e2e'
+mantle    = '#181825'
+crust     = '#11111b'

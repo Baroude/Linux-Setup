@@ -1,0 +1,8 @@
+[Daemon]
+Autolock=true
+LockGrace=5
+LockOnResume=true
+Timeout=10
+
+[Greeter]
+Theme=Catppuccin-Mocha-Mauve

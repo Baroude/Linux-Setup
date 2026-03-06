@@ -1,0 +1,15 @@
+# ~/.zshenv — sourced for every zsh invocation (login, interactive, scripts)
+# Keep this minimal: only XDG vars, EDITOR, and PATH additions.
+
+# XDG base dirs
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+
+# Default editor
+export EDITOR=nvim
+export VISUAL=nvim
+
+# Local binaries
+export PATH="$HOME/.local/bin:$PATH"

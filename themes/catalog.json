@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "defaults": {
+    "theme": "catppuccin",
+    "flavor": "mocha",
+    "accent": "mauve"
+  },
+  "themes": {
+    "catppuccin": {
+      "manifest": "themes/manifests/catppuccin.json",
+      "flavors": ["latte", "frappe", "macchiato", "mocha"],
+      "accents": [
+        "rosewater",
+        "flamingo",
+        "pink",
+        "mauve",
+        "red",
+        "maroon",
+        "peach",
+        "yellow",
+        "green",
+        "teal",
+        "sky",
+        "sapphire",
+        "blue",
+        "lavender"
+      ],
+      "components": {
+        "kde": true,
+        "kvantum": true,
+        "gtk": true,
+        "icons": true,
+        "panel": true,
+        "terminal": true,
+        "editors": true,
+        "cli": true,
+        "apps": true,
+        "rofi": true
+      }
+    },
+    "rosepine": {
+      "supported": false,
+      "description": "Rose Pine — placeholder, not yet implemented"
+    },
+    "tokyonight": {
+      "supported": false,
+      "description": "Tokyo Night — placeholder, not yet implemented"
+    }
+  }
+}

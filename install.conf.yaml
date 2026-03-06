@@ -1,9 +1,51 @@
-- clean: ['~']
+- clean: ['~', '~/.config']
+
+- create:
+    - ~/.config/kitty
+    - ~/.config/fastfetch
+    - ~/.config/plasma-workspace/env
+    - ~/.config/Kvantum
 
 - link:
-      ~/.zshrc : zshrc
-      ~/.config/nvim : nvim
-      ~/.config/starship.toml : starship.toml
-      ~/.config/terminator : terminator
-      ~/.gitconfig : gitconfig
+    # Shell — force: oh-my-zsh creates ~/.zshrc as a real file during install
+    ~/.zshrc:
+      path: zshrc
+      force: true
+    ~/.zshenv:
+      path: zsh/zshenv
 
+    # Terminal
+    ~/.config/kitty/kitty.conf:
+      path: kitty/kitty.conf
+    ~/.config/starship.toml:
+      path: starship.toml
+      force: true
+
+    # Git
+    ~/.gitconfig:
+      path: gitconfig
+      # Avoid install abort when ~/.gitconfig already exists as a regular file.
+      force: true
+
+    # Neovim
+    ~/.config/nvim:
+      path: nvim
+
+    # Fastfetch
+    ~/.config/fastfetch/config.jsonc:
+      path: fastfetch/config.jsonc
+    ~/.config/fastfetch/debian-catppuccin.png:
+      path: fastfetch/debian-catppuccin.png
+
+    # Kvantum Qt style
+    ~/.config/Kvantum/kvantum.kvconfig:
+      path: kvantum/kvantum.kvconfig
+
+    # GTK theming — force: may exist from system or previous gtk install
+    ~/.config/gtk-4.0/gtk.css:
+      path: gtk/gtk-4.0-gtk.css
+      force: true
+
+    # Wayland / Plasma environment variables
+    ~/.config/plasma-workspace/env/envvars.sh:
+      path: environment/envvars.sh

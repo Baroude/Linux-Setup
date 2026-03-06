@@ -1,0 +1,26 @@
+[General]
+count=2
+
+[1]
+Description=Dolphin — transparency + blur + borderless
+wmclass=dolphin
+wmclasscomplete=false
+wmclassmatch=2
+opacityactive=90
+opacityactiverule=2
+opacityinactive=88
+opacityinactiverule=2
+noborder=true
+noborderrule=2
+
+[2]
+Description=Rofi — float + center
+wmclass=rofi
+wmclasscomplete=false
+wmclassmatch=2
+above=true
+aboverule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2

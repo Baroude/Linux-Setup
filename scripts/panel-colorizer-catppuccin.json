@@ -1,0 +1,135 @@
+{
+    "globalSettings": {
+        "panel": {
+            "normal": {
+                "enabled": false,
+                "blurBehind": false,
+                "backgroundColor": {
+                    "enabled": false,
+                    "sourceType": 0,
+                    "custom": "#1e1e2e",
+                    "alpha": 1,
+                    "lightnessValue": 0.5,
+                    "saturationValue": 0.5,
+                    "systemColor": "backgroundColor",
+                    "systemColorSet": "Window",
+                    "list": [],
+                    "followColor": 0,
+                    "saturationEnabled": false,
+                    "lightnessEnabled": false,
+                    "animation": {"enabled": false, "interval": 3000, "smoothing": 800}
+                },
+                "foregroundColor": {"enabled": false},
+                "radius": {"enabled": false, "corner": {"topLeft": 5, "topRight": 5, "bottomRight": 5, "bottomLeft": 5}},
+                "margin": {"enabled": false, "side": {"right": 0, "left": 0, "top": 0, "bottom": 0}},
+                "padding": {"enabled": false, "side": {"right": 0, "left": 0, "top": 0, "bottom": 0}},
+                "border": {
+                    "enabled": false, "customSides": false,
+                    "custom": {"widths": {"left": 0, "bottom": 0, "right": 0, "top": 0}, "margin": {"enabled": false, "side": {"right": 0, "left": 0, "top": 0, "bottom": 0}}, "radius": {"enabled": false, "corner": {"topLeft": 5, "topRight": 5, "bottomRight": 5, "bottomLeft": 5}}},
+                    "width": 0,
+                    "color": {"alpha": 1, "custom": "#cba6f7", "enabled": false, "followColor": 0, "lightnessEnabled": false, "lightnessValue": 0.5, "saturationEnabled": false, "saturationValue": 0.5, "systemColor": "highlightColor", "systemColorSet": "View", "list": [], "animation": {"enabled": false, "interval": 3000, "smoothing": 800}, "sourceType": 0}
+                },
+                "shadow": {
+                    "background": {"enabled": false, "color": {"alpha": 1, "custom": "#000000", "enabled": false}, "size": 0, "xOffset": 0, "yOffset": 0},
+                    "foreground": {"enabled": false, "color": {"alpha": 1, "custom": "#000000", "enabled": false}, "size": 0, "xOffset": 0, "yOffset": 0}
+                }
+            }
+        },
+        "widgets": {
+            "normal": {
+                "enabled": true,
+                "blurBehind": false,
+                "backgroundColor": {
+                    "enabled": true,
+                    "sourceType": 2,
+                    "custom": "#cba6f7",
+                    "alpha": 1.0,
+                    "lightnessValue": 0.5,
+                    "saturationValue": 0.5,
+                    "systemColor": "highlightColor",
+                    "systemColorSet": "Window",
+                    "list": [
+                        "#b4befe",
+                        "#a6adc8",
+                        "#1e1e2e",
+                        "#cba6f7",
+                        "#1e1e2e",
+                        "#89b4fa",
+                        "#a6e3a1",
+                        "#94e2d5",
+                        "#fab387",
+                        "#89dceb",
+                        "#f38ba8",
+                        "#313244"
+                    ],
+                    "followColor": 0,
+                    "saturationEnabled": false,
+                    "lightnessEnabled": false,
+                    "animation": {"enabled": false, "interval": 3000, "smoothing": 800}
+                },
+                "foregroundColor": {
+                    "enabled": true,
+                    "sourceType": 0,
+                    "custom": "#1e1e2e",
+                    "alpha": 1,
+                    "lightnessValue": 0.5,
+                    "saturationValue": 0.5,
+                    "systemColor": "textColor",
+                    "systemColorSet": "Window",
+                    "list": [],
+                    "followColor": 0,
+                    "saturationEnabled": false,
+                    "lightnessEnabled": false,
+                    "animation": {"enabled": false, "interval": 3000, "smoothing": 800}
+                },
+                "radius": {"enabled": true, "corner": {"topLeft": 12, "topRight": 12, "bottomRight": 12, "bottomLeft": 12}},
+                "margin": {"enabled": true, "side": {"right": 2, "left": 2, "top": 4, "bottom": 4}},
+                "spacing": 6,
+                "border": {
+                    "enabled": false, "customSides": false,
+                    "custom": {"widths": {"left": 0, "bottom": 0, "right": 0, "top": 0}, "margin": {"enabled": false, "side": {"right": 0, "left": 0, "top": 0, "bottom": 0}}, "radius": {"enabled": false, "corner": {"topLeft": 12, "topRight": 12, "bottomRight": 12, "bottomLeft": 12}}},
+                    "width": 0,
+                    "color": {"alpha": 1, "custom": "#cba6f7", "enabled": false, "followColor": 0, "lightnessEnabled": false, "lightnessValue": 0.5, "saturationEnabled": false, "saturationValue": 0.5, "systemColor": "highlightColor", "systemColorSet": "View", "list": [], "animation": {"enabled": false, "interval": 3000, "smoothing": 800}, "sourceType": 0}
+                },
+                "shadow": {
+                    "background": {"enabled": false, "color": {"alpha": 0.5, "custom": "#000000", "enabled": false}, "size": 5, "xOffset": 0, "yOffset": 0},
+                    "foreground": {"enabled": false, "color": {"alpha": 1, "custom": "#000000", "enabled": false}, "size": 5, "xOffset": 0, "yOffset": 0}
+                },
+                "opacity": 1
+            }
+        },
+        "trayWidgets": {
+            "normal": {
+                "enabled": false,
+                "blurBehind": false,
+                "backgroundColor": {"enabled": false, "sourceType": 0, "custom": "#313244", "alpha": 0.8, "lightnessValue": 0.5, "saturationValue": 0.5, "systemColor": "backgroundColor", "systemColorSet": "Header", "list": [], "followColor": 0, "saturationEnabled": false, "lightnessEnabled": false, "animation": {"enabled": false, "interval": 3000, "smoothing": 800}},
+                "foregroundColor": {"enabled": false},
+                "radius": {"enabled": false, "corner": {"topLeft": 8, "topRight": 8, "bottomRight": 8, "bottomLeft": 8}},
+                "margin": {"enabled": false, "side": {"right": 2, "left": 2, "top": 4, "bottom": 4}},
+                "border": {"enabled": false, "customSides": false, "custom": {"widths": {"left": 0, "bottom": 0, "right": 0, "top": 0}, "margin": {"enabled": false, "side": {"right": 0, "left": 0, "top": 0, "bottom": 0}}, "radius": {"enabled": false, "corner": {"topLeft": 8, "topRight": 8, "bottomRight": 8, "bottomLeft": 8}}}, "width": 0, "color": {"alpha": 1, "custom": "#cba6f7", "enabled": false, "followColor": 0, "lightnessEnabled": false, "lightnessValue": 0.5, "saturationEnabled": false, "saturationValue": 0.5, "systemColor": "highlightColor", "systemColorSet": "View", "list": [], "animation": {"enabled": false, "interval": 3000, "smoothing": 800}, "sourceType": 0}},
+                "shadow": {"background": {"enabled": false, "color": {"alpha": 0.5, "custom": "#000000", "enabled": false}, "size": 5, "xOffset": 0, "yOffset": 0}, "foreground": {"enabled": false, "color": {"alpha": 1, "custom": "#000000", "enabled": false}, "size": 5, "xOffset": 0, "yOffset": 0}}
+            }
+        },
+        "stockPanelSettings": {
+            "position":   {"enabled": false, "value": "top"},
+            "alignment":  {"enabled": false, "value": "center"},
+            "lengthMode": {"enabled": false, "value": "fill"},
+            "visibility": {"enabled": false, "value": "none"},
+            "opacity":    {"enabled": false, "value": "translucent"},
+            "floating":   {"enabled": false, "value": false},
+            "thickness":  {"enabled": false, "value": 36},
+            "visible":    {"enabled": false, "value": true}
+        },
+        "nativePanel": {
+            "background": {"enabled": true, "opacity": 0, "shadow": false},
+            "floatingDialogs": false,
+            "floatingDialogsAllowOverride": false
+        },
+        "configurationOverrides": {
+            "overrides": {},
+            "associations": []
+        },
+        "unifiedBackground": [],
+        "forceForegroundColor": {"widgets": [], "reloadInterval": 250}
+    }
+}
