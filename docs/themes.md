@@ -2,14 +2,40 @@
 
 This repository uses a modular theme runtime for user-space theming.
 
-## Supported Themes (v1)
+## Supported Themes
 
-Only `catppuccin` is fully implemented. Two additional entries (`rosepine`, `tokyonight`) exist as unsupported placeholders in the catalog and will be rejected with an error if selected.
+Three theme families are fully implemented.
 
 ### catppuccin
 
 - Flavors: `latte`, `frappe`, `macchiato`, `mocha`
 - Accents: `rosewater`, `flamingo`, `pink`, `mauve`, `red`, `maroon`, `peach`, `yellow`, `green`, `teal`, `sky`, `sapphire`, `blue`, `lavender`
+
+### rosepine
+
+- Flavors: `main`, `moon`, `dawn` (`dawn` is the light variant)
+- Accents: `love`, `gold`, `rose`, `pine`, `foam`, `iris`
+- Note: Kvantum is skipped for Rose Pine (no official theme). The widget style remains whatever was last set.
+
+### tokyonight
+
+- Flavors: `night`, `storm`, `moon`, `day` (`day` is the light variant)
+- Accents: `default` — Tokyo Night has no accent concept; `default` maps to the theme's blue. Accent-specific installer steps (e.g. Firefox XPI filename) are skipped.
+- Note: No Firefox extension is available for Tokyo Night; the Firefox step is skipped automatically.
+
+## `--list` output
+
+```
+theme: catppuccin
+  flavors: latte, frappe, macchiato, mocha
+  accents: rosewater, flamingo, pink, mauve, red, maroon, peach, yellow, green, teal, sky, sapphire, blue, lavender
+theme: rosepine
+  flavors: main, moon, dawn
+  accents: love, gold, rose, pine, foam, iris
+theme: tokyonight
+  flavors: night, storm, moon, day
+  accents: default
+```
 
 ## Install-Time Selection
 
@@ -36,13 +62,15 @@ bash scripts/theme-switch.sh --current
 Switch theme:
 
 ```bash
+bash scripts/theme-switch.sh --theme rosepine --flavor moon --accent iris
+bash scripts/theme-switch.sh --theme tokyonight --flavor night --accent default
 bash scripts/theme-switch.sh --theme catppuccin --flavor frappe --accent blue --non-interactive
 ```
 
 Preview operations without writing:
 
 ```bash
-bash scripts/theme-switch.sh --theme catppuccin --flavor macchiato --accent lavender --dry-run
+bash scripts/theme-switch.sh --theme rosepine --flavor main --accent pine --dry-run
 ```
 
 All CLI flags:
@@ -60,19 +88,22 @@ All CLI flags:
 
 ## Adapters
 
-The switcher runs six adapters in order. Each is independent; a failure in one does not block the others.
+The switcher runs six adapters in order. Each is independent; a failure in one does not block the others. All adapters are now theme-agnostic: install method, URLs, and palette tokens are read from the theme manifest at runtime.
 
 ### kde
 
-Applies the full KDE/Qt visual stack for `catppuccin`:
+Applies the full KDE/Qt visual stack. Behavior is driven by `kde_install_config`, `kvantum_config`, and `gtk_install_config` in the manifest.
 
-- Clones `catppuccin/kde` and runs `install.sh` to install the color scheme and look-and-feel package.
-- Applies `plasma-apply-colorscheme` and `plasma-apply-lookandfeel`.
-- Sets the lock screen greeter theme via `kwriteconfig6`.
-- Clones `catppuccin/kvantum`, installs the matching theme directory under `~/.config/Kvantum/`, and activates it with `kvantummanager`.
-- Sets the KDE widget style to `kvantum` in `kdeglobals`.
-- Runs the `catppuccin/gtk` v1.0.3 installer for the selected flavor/accent and applies Flatpak GTK/icon overrides.
-- Clones `catppuccin/papirus-folders`, copies accent icons, and sets the folder color via `papirus-folders`.
+**KDE install methods:**
+- `catppuccin_script` — clones the repo and runs its numbered `install.sh` (Catppuccin only).
+- `lookandfeel` — clones the repo, installs all top-level look-and-feel packages via `kpackagetool6`, then applies the selected one with `plasma-apply-lookandfeel` (used by Rose Pine and Tokyo Night).
+- `plasma_package` — installs the whole repo as a single package.
+
+**Common to all themes:**
+- Applies `plasma-apply-colorscheme` and sets the lock screen greeter theme via `kwriteconfig6`.
+- Installs and activates Kvantum if `kvantum_config.enabled` is true (Rose Pine skips this step).
+- Installs GTK via `catppuccin_install_py` or `gtk_repo` (clone + `install.sh` or copy to `~/.themes`), then applies Flatpak GTK/icon overrides.
+- Clones `catppuccin/papirus-folders` and sets accent folder colors only when `papirus_folder_code` is present in derived patterns (Catppuccin only).
 - Writes `~/.config/gtk-3.0/settings.ini` from a template.
 - Sets the icon theme to `Papirus-Dark` and the default terminal to `kitty` in `kdeglobals`.
 
@@ -80,7 +111,7 @@ Applies the full KDE/Qt visual stack for `catppuccin`:
 
 - Ensures `~/.config/kitty/kitty.conf` includes `./theme.conf`.
 - Renders `~/.config/kitty/theme.conf` from a template with palette tokens for the selected flavor/accent.
-- Renders `~/.config/starship.toml` from a template.
+- Renders `~/.config/starship.toml` from a template. The palette is always defined inline; no built-in Starship preset is required.
 
 ### editors
 
@@ -88,24 +119,24 @@ Applies the full KDE/Qt visual stack for `catppuccin`:
   ```lua
   return "<flavor>"
   ```
-  The Neovim colorscheme plugin reads this file at startup to select the correct Catppuccin flavor. The tracked file `nvim/lua/plugins/colorscheme.lua` is not modified.
+  The Neovim colorscheme plugin reads this file at startup. The tracked file `nvim/lua/plugins/colorscheme.lua` is not modified.
 
 ### cli
 
-- Downloads the matching `bat` `.tmTheme` file from `catppuccin/bat` and rebuilds the bat cache.
+- Downloads the `bat` `.tmTheme` file from `bat_theme_config.repo` and rebuilds the bat cache.
 - Writes or updates `~/.config/bat/config` to set `--theme`.
-- Downloads the matching `btop` `.theme` file from `catppuccin/btop`.
+- Downloads the `btop` `.theme` file from `btop_theme_config.repo`.
 - Writes or updates `~/.config/btop/btop.conf` to set `color_theme`.
 - Sets `delta.syntax-theme` in the global git config.
 - Renders `~/.config/fzf/colors.zsh` from a template for fzf color integration.
 
 ### apps
 
-Only runs for the `catppuccin` theme family.
+Runs for all themes. Steps that are not applicable to a theme are skipped gracefully.
 
-- **Firefox**: Downloads the `catppuccin_<flavor>_<accent>.xpi` from `catppuccin/firefox` releases and installs it system-wide under `/usr/lib/firefox*/distribution/extensions/`. Manual activation is still required inside the Firefox Add-ons UI if the extension does not activate automatically.
-- **TIDAL Hi-Fi**: Renders `~/.config/tidal-hifi/catppuccin-<flavor>-<accent>.css` from a template and copies it to `~/.config/tidal-hifi/catppuccin.css`. Manual activation is required in tidal-hifi Settings > Theming. Also writes a `.desktop` override at `~/.local/share/applications/com.mastermindzh.tidal-hifi.desktop` with correct Wayland flags.
-- **Rofi**: Downloads the adi1090x `type-2/style-9` launcher layout and the `catppuccin.rasi` color preset, patches `shared/colors.rasi` to import the catppuccin preset, and renders `~/.config/rofi/config.rasi` from a template.
+- **Firefox**: Downloads the XPI from `firefox_config.repo` using `firefox_config.file_pattern` and installs it system-wide under `/usr/lib/firefox*/distribution/extensions/`. Skipped entirely when `firefox_config.method` is `"none"` (Tokyo Night). Manual activation is still required inside the Firefox Add-ons UI if the extension does not activate automatically.
+- **TIDAL Hi-Fi**: Renders `~/.config/tidal-hifi/catppuccin-<flavor>-<accent>.css` from a template and copies it to `~/.config/tidal-hifi/catppuccin.css`. Manual activation is required in tidal-hifi Settings > Theming. Also writes a `.desktop` override with correct Wayland flags.
+- **Rofi**: Downloads the adi1090x `type-2/style-9` launcher layout and the `catppuccin.rasi` color preset, patches `shared/colors.rasi` to import the preset, and renders `~/.config/rofi/config.rasi` from a template.
 
 ### panel
 
@@ -141,9 +172,11 @@ The switcher persists two files under `~/.config/linux-setup/`:
 | `restart_pending` | boolean | True if panel apply was deferred |
 | `last_applied` | string | ISO8601 UTC timestamp |
 
-## v1 Caveats
+## Caveats
 
 - SDDM and GRUB remain setup-managed and are not switched post-install.
 - Firefox and tidal-hifi require manual activation in each app UI after the adapter installs or generates their theme files.
 - The panel adapter sets `restart_pending: true` when it cannot reach the Panel Colorizer applet. The autostart script `scripts/apply-panel-colorizer.sh` handles reapplication on the next login session automatically; no manual intervention is needed unless the autostart is not registered.
-- `rosepine` and `tokyonight` appear in `--list` output as unsupported placeholders and cannot be selected.
+- Rose Pine: Kvantum is skipped; the Qt widget style will remain as-is from the previous theme.
+- Tokyo Night: No Firefox extension is available; the Firefox install step is skipped automatically.
+- Tokyo Night: All accents resolve to the same `default` value. The `--accent` flag is accepted but has no visual effect beyond token substitution.
