@@ -106,13 +106,13 @@ Linux-Setup/
 ├── install.conf.yaml         # Base dotbot links (always safe)
 ├── install-plasma.conf.yaml  # Plasma-specific links (skip before KDE upgrade)
 ├── zshrc                     # → ~/.zshrc
-├── starship.toml             # → ~/.config/starship.toml
+├── starship.toml             # theme-managed (written by theme-switch.sh, not dotbot-linked)
 ├── gitconfig                 # → ~/.gitconfig
 ├── kitty/kitty.conf          # → ~/.config/kitty/kitty.conf
 ├── zsh/zshenv                # → ~/.zshenv
 ├── fastfetch/                # → ~/.config/fastfetch/
 ├── plasma/                   # kwinrc, kdeglobals, kscreenlockerrc
-├── kvantum/kvantum.kvconfig  # → ~/.config/Kvantum/kvantum.kvconfig
+├── kvantum/kvantum.kvconfig  # theme-managed (written by kvantummanager, not dotbot-linked)
 ├── gtk/                      # gtk-3.0-settings.ini, gtk-4.0-gtk.css
 ├── environment/envvars.sh    # → ~/.config/plasma-workspace/env/envvars.sh
 ├── images/evening-sky.png    # Wallpaper (desktop, lock screen, SDDM)
@@ -196,6 +196,17 @@ Krohnkite uses `Meta` as the modifier and vim-style keys for movement.
 | `Ctrl + T` | fzf file picker |
 | `Alt + C` | fzf cd into subdirectory |
 | `z <name>` | Jump to frecent directory (zoxide) |
+
+---
+
+## Verifying the setup
+
+```bash
+bash scripts/doctor.sh
+```
+
+Checks packages, symlinks, theme-managed outputs, KDE config values, and theme
+state without making any changes. Exits non-zero if any check fails.
 
 ---
 

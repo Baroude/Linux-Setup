@@ -17,9 +17,8 @@
     # Terminal
     ~/.config/kitty/kitty.conf:
       path: kitty/kitty.conf
-    ~/.config/starship.toml:
-      path: starship.toml
-      force: true
+    # Note: ~/.config/starship.toml is theme-managed (written by scripts/theme-switch.sh).
+    # Do not link it here — ./install would overwrite the active switched theme file.
 
     # Git
     ~/.gitconfig:
@@ -37,9 +36,8 @@
     ~/.config/fastfetch/debian-catppuccin.png:
       path: fastfetch/debian-catppuccin.png
 
-    # Kvantum Qt style
-    ~/.config/Kvantum/kvantum.kvconfig:
-      path: kvantum/kvantum.kvconfig
+    # Note: ~/.config/Kvantum/kvantum.kvconfig is theme-managed (written by kvantummanager via
+    # scripts/theme-switch.sh). Do not link it here — ./install would overwrite the active theme.
 
     # GTK theming — force: may exist from system or previous gtk install
     ~/.config/gtk-4.0/gtk.css:
