@@ -1,3 +1,4 @@
 nvim/autoload
 nvim/lua/colorscheme-flavor.lua
 .claude/
+.worktrees/
