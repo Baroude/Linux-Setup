@@ -155,6 +155,32 @@
       "lavender": 14
     }
   },
+  "kde_install_config": {
+    "method": "catppuccin_script",
+    "repo": "https://github.com/catppuccin/kde"
+  },
+  "kvantum_config": {
+    "enabled": true,
+    "method": "catppuccin_repo",
+    "repo": "https://github.com/catppuccin/kvantum"
+  },
+  "gtk_install_config": {
+    "method": "catppuccin_install_py",
+    "version": "v1.0.3"
+  },
+  "bat_theme_config": {
+    "repo": "https://github.com/catppuccin/bat",
+    "file_pattern": "Catppuccin ${FlavorTitle}.tmTheme"
+  },
+  "btop_theme_config": {
+    "repo": "https://github.com/catppuccin/btop",
+    "file_pattern": "catppuccin_${flavor}.theme"
+  },
+  "firefox_config": {
+    "method": "github_xpi",
+    "repo": "catppuccin/firefox",
+    "file_pattern": "catppuccin_${flavor}_${accent}.xpi"
+  },
   "derived_patterns": {
     "kde_scheme": "Catppuccin${FlavorTitle}${AccentTitle}",
     "kde_lookandfeel": "Catppuccin-${FlavorTitle}-${AccentTitle}",

@@ -175,11 +175,11 @@ for key, pattern in manifest["derived_patterns"].items():
     derived[key] = Template(pattern).safe_substitute(params)
 
 widget_colors = {}
-for widget, slot in manifest["widget_slot_map"].items():
+for widget, slot in manifest.get("widget_slot_map", {}).items():
     if slot == "accent":
         widget_colors[widget] = accent_hex
     else:
-        widget_colors[widget] = palette[slot]
+        widget_colors[widget] = palette.get(slot, accent_hex)
 
 tokens = {k.upper(): v for k, v in palette.items()}
 tokens["ACCENT"] = accent_hex
@@ -187,9 +187,19 @@ tokens["FLAVOR"] = flavor
 tokens["ACCENT_NAME"] = accent
 tokens["THEME"] = theme
 
-tokens["GTK_THEME"] = derived["gtk_theme"]
-tokens["GTK_CURSOR_THEME"] = derived["gtk_cursor_theme"]
-tokens["STARSHIP_PALETTE_NAME"] = derived["starship_palette"]
+if "gtk_theme" in derived:
+    tokens["GTK_THEME"] = derived["gtk_theme"]
+if "gtk_cursor_theme" in derived:
+    tokens["GTK_CURSOR_THEME"] = derived["gtk_cursor_theme"]
+if "starship_palette" in derived:
+    tokens["STARSHIP_PALETTE_NAME"] = derived["starship_palette"]
+
+# Resolve install configs with template substitution
+def resolve_config(cfg):
+    if not cfg:
+        return cfg
+    return {k: Template(v).safe_substitute(params) if isinstance(v, str) else v
+            for k, v in cfg.items()}
 
 context = {
     "theme": theme,
@@ -199,7 +209,13 @@ context = {
     "accent_hex": accent_hex,
     "tokens": tokens,
     "derived": derived,
-    "kde_installer_index": manifest["kde_installer_index"],
+    "kde_installer_index": manifest.get("kde_installer_index", {}),
+    "kde_install_config": resolve_config(manifest.get("kde_install_config", {})),
+    "kvantum_config": resolve_config(manifest.get("kvantum_config", {"enabled": False})),
+    "gtk_install_config": resolve_config(manifest.get("gtk_install_config", {})),
+    "bat_theme_config": resolve_config(manifest.get("bat_theme_config", {})),
+    "btop_theme_config": resolve_config(manifest.get("btop_theme_config", {})),
+    "firefox_config": resolve_config(manifest.get("firefox_config", {"method": "none"})),
     "widget_colors": widget_colors,
     "components": entry.get("components", {}),
 }
