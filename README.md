@@ -67,7 +67,8 @@ Note: `starship.toml`, `~/.config/Kvantum/kvantum.kvconfig`, `~/.config/gtk-3.0/
 | 7b | kwin-better-blur built from source (forces blur behind any semi-transparent window) |
 | 8 | Krohnkite tiling script (install or upgrade) + 8 px gaps (`screenGapBetween` + screen edges) |
 | 8b | Rofi launcher shortcut (prefers `Meta + Space`, falls back only on conflicts) |
-| 9 | Dock — floating bottom panel (Icons-only Task Manager + tray + clock) |
+| 9 | Dock — registers `~/.config/autostart/kde-post-install.desktop`; `setup-first-login.sh` fires on next login to build the floating dock + wallpaper rotation via live Plasma session |
+| 9b | Panel Colorizer v6.8.1 — installed via `kpackagetool6` (no live session needed) |
 | 10 | Kitty config directory (dotbot links `kitty/kitty.conf`) |
 | 11 | Zsh + oh-my-zsh + plugins + Starship |
 | 11b | Tidal (tidal-hifi Flatpak), Wayland launcher override, and generated Catppuccin CSS |
@@ -117,10 +118,12 @@ Linux-Setup/
 ├── environment/envvars.sh    # → ~/.config/plasma-workspace/env/envvars.sh
 ├── images/evening-sky.png    # Wallpaper (desktop, lock screen, SDDM)
 └── scripts/
-    ├── configure-dock.sh     # Plasma JS script — rebuilds the dock
+    ├── setup-first-login.sh        # Runs once on first KDE login (autostart) — builds dock + wallpaper
+    ├── configure-dock.sh           # Plasma JS script — rebuilds the dock (called by setup-first-login.sh)
+    ├── apply-wallpaper-rotation.sh # Sets up wallpaper slideshow (called by setup-first-login.sh)
     ├── configure-rofi-shortcut.sh  # Assigns rofi global shortcut after conflict scan
-    ├── backup-plasma.sh      # Copies live KDE configs back into repo
-    └── restore-plasma.sh     # Re-runs install-plasma profile
+    ├── backup-plasma.sh            # Copies live KDE configs back into repo
+    └── restore-plasma.sh           # Re-runs install-plasma profile
 ```
 
 ---
@@ -230,8 +233,12 @@ qdbus6 org.kde.KWin /KWin reconfigure
 
 ## Manual steps after first run
 
-1. **Dock** — Phase 9 runs automatically, but verify the floating bottom
-   panel has: Icons-only Task Manager + System Tray + Digital Clock.
+1. **Dock** — Phase 9 registers a KDE autostart entry. On your **first login** after
+   running `setup.sh`, `setup-first-login.sh` fires automatically (via
+   `~/.config/autostart/kde-post-install.desktop`), rebuilds the floating bottom panel
+   using Plasma JS scripting, and sets up wallpaper rotation. The autostart entry
+   removes itself after running. Verify the dock has: Icons-only Task Manager + System
+   Tray + Digital Clock.
 2. **kwin-better-blur** — go to System Settings → Desktop Effects → Better Blur
    → Configure → enable **Blur all windows** and set blur strength to taste
    (10–15 is a good starting point). The stock KWin blur effect is disabled
