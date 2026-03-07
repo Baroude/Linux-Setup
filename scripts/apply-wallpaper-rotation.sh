@@ -4,8 +4,31 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-WALLPAPER_DIR="${REPO_DIR}/images/wallpaper-rotation"
 SLIDE_INTERVAL_SECONDS="${SLIDE_INTERVAL_SECONDS:-7200}"
+
+# Resolve active theme: prefer --theme arg, then theme-state.json, then "catppuccin"
+_active_theme=""
+for _arg in "$@"; do
+  case "$_arg" in
+    --theme=*) _active_theme="${_arg#--theme=}" ;;
+  esac
+done
+if [[ -z "$_active_theme" ]]; then
+  _state_file="${HOME}/.config/linux-setup/theme-state.json"
+  if [[ -f "$_state_file" ]]; then
+    _active_theme="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['theme'])" \
+      "$_state_file" 2>/dev/null)" || _active_theme=""
+  fi
+fi
+_active_theme="${_active_theme:-catppuccin}"
+
+# Use theme-specific subfolder if it exists, otherwise fall back to rotation root
+_theme_dir="${REPO_DIR}/images/wallpaper-rotation/${_active_theme}"
+if [[ -d "$_theme_dir" ]]; then
+  WALLPAPER_DIR="$_theme_dir"
+else
+  WALLPAPER_DIR="${REPO_DIR}/images/wallpaper-rotation"
+fi
 
 if ! [[ -d "$WALLPAPER_DIR" ]]; then
   echo "Wallpaper directory not found: $WALLPAPER_DIR" >&2
@@ -69,4 +92,4 @@ PY
 
 "$QDBUS_BIN" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$js_script" >/dev/null
 
-echo "KDE wallpaper slideshow configured from: $WALLPAPER_DIR"
+echo "KDE wallpaper slideshow configured (theme: ${_active_theme}, dir: $WALLPAPER_DIR)"
