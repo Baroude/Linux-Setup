@@ -39,12 +39,38 @@
       }
     },
     "rosepine": {
-      "supported": false,
-      "description": "Rose Pine — placeholder, not yet implemented"
+      "manifest": "themes/manifests/rosepine.json",
+      "flavors": ["main", "moon", "dawn"],
+      "accents": ["love", "gold", "rose", "pine", "foam", "iris"],
+      "components": {
+        "kde": true,
+        "kvantum": false,
+        "gtk": true,
+        "icons": true,
+        "panel": true,
+        "terminal": true,
+        "editors": true,
+        "cli": true,
+        "apps": true,
+        "rofi": true
+      }
     },
     "tokyonight": {
-      "supported": false,
-      "description": "Tokyo Night — placeholder, not yet implemented"
+      "manifest": "themes/manifests/tokyonight.json",
+      "flavors": ["night", "storm", "moon", "day"],
+      "accents": ["default"],
+      "components": {
+        "kde": true,
+        "kvantum": true,
+        "gtk": true,
+        "icons": true,
+        "panel": true,
+        "terminal": true,
+        "editors": true,
+        "cli": true,
+        "apps": true,
+        "rofi": true
+      }
     }
   }
 }

@@ -4,11 +4,19 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/theme-common.sh"
 
 theme_apply_firefox_theme() {
-  local flavor accent xpi_name firefox_url firefox_tmp firefox_id firefox_installed
-  flavor="$(theme_context_get "flavor")"
-  accent="$(theme_context_get "accent")"
-  xpi_name="catppuccin_${flavor}_${accent}.xpi"
-  firefox_url="https://github.com/catppuccin/firefox/releases/download/old/${xpi_name}"
+  local firefox_method firefox_repo firefox_file_pattern xpi_name firefox_url firefox_tmp firefox_id firefox_installed
+  firefox_method="$(theme_context_get "firefox_config.method")"
+  firefox_repo="$(theme_context_get "firefox_config.repo")"
+  firefox_file_pattern="$(theme_context_get "firefox_config.file_pattern")"
+
+  if [[ "$firefox_method" == "none" || -z "$firefox_method" ]]; then
+    theme_info "Firefox theme skipped (method: none)"
+    return 0
+  fi
+
+  # github_xpi method:
+  xpi_name="$firefox_file_pattern"
+  firefox_url="https://github.com/${firefox_repo}/releases/download/old/${xpi_name}"
   firefox_installed=0
 
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
@@ -21,7 +29,7 @@ theme_apply_firefox_theme() {
   firefox_tmp="$(mktemp --suffix=.xpi)"
   if ! curl -fsSL -o "$firefox_tmp" "$firefox_url"; then
     rm -f "$firefox_tmp"
-    theme_warn "Firefox theme archive not found for ${flavor}/${accent}; skipped."
+    theme_warn "Firefox theme archive not found (${xpi_name}); skipped."
     return 0
   fi
 
@@ -77,8 +85,8 @@ PY
   rm -f "$firefox_tmp"
 
   if [[ "$firefox_installed" -eq 1 ]]; then
-    theme_info "Firefox theme installed (${flavor}/${accent})"
-    theme_warn "Manual step: if Firefox keeps the default look, open Add-ons and Themes and select Catppuccin ${flavor^} - ${accent^}."
+    theme_info "Firefox theme installed (${xpi_name})"
+    theme_warn "Manual step: if Firefox keeps the default look, open Add-ons and Themes and enable the installed extension."
   else
     theme_warn "Firefox not found under /usr/lib/firefox or /usr/lib/firefox-esr; skipped theme install."
   fi
@@ -188,14 +196,6 @@ theme_apply_rofi_theme() {
 }
 
 theme_apply_apps_adapter() {
-  local theme
-  theme="$(theme_context_get "theme")"
-
-  if [[ "$theme" != "catppuccin" ]]; then
-    theme_warn "apps adapter currently supports only 'catppuccin'; skipping"
-    return 0
-  fi
-
   theme_apply_firefox_theme
   theme_apply_tidal_desktop_override
   theme_apply_tidal_css_theme

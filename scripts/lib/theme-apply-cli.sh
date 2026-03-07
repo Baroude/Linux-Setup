@@ -5,19 +5,28 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/theme-common.sh"
 
 theme_apply_cli_adapter() {
   local bat_theme btop_theme delta_theme
+  local bat_repo bat_file_pattern btop_repo btop_file_pattern
   bat_theme="$(theme_context_get "derived.bat_theme")"
   btop_theme="$(theme_context_get "derived.btop_theme")"
   delta_theme="$(theme_context_get "derived.delta_theme")"
+  bat_repo="$(theme_context_get "bat_theme_config.repo")"
+  bat_file_pattern="$(theme_context_get "bat_theme_config.file_pattern")"
+  btop_repo="$(theme_context_get "btop_theme_config.repo")"
+  btop_file_pattern="$(theme_context_get "btop_theme_config.file_pattern")"
 
   local flavor
   flavor="$(theme_context_get "flavor")"
 
+  local bat_url bat_url_encoded_pattern
+  bat_url_encoded_pattern="${bat_file_pattern// /%20}"
+  bat_url="${bat_repo}/raw/main/themes/${bat_url_encoded_pattern}"
+
   theme_run "create bat theme dir" mkdir -p "$HOME/.config/bat/themes"
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-    echo "[dry-run] download bat theme ${bat_theme}"
+    echo "[dry-run] download bat theme from ${bat_url}"
   else
-    curl -fLo "$HOME/.config/bat/themes/${bat_theme}.tmTheme" \
-      "https://github.com/catppuccin/bat/raw/main/themes/${bat_theme// /%20}.tmTheme"
+    curl -fLo "$HOME/.config/bat/themes/${bat_file_pattern}" \
+      "${bat_url}"
     if command -v batcat &>/dev/null; then
       batcat cache --build
     elif command -v bat &>/dev/null; then
@@ -40,12 +49,16 @@ theme_apply_cli_adapter() {
     fi
   fi
 
+  local btop_url btop_url_encoded_pattern
+  btop_url_encoded_pattern="${btop_file_pattern// /%20}"
+  btop_url="${btop_repo}/raw/main/themes/${btop_url_encoded_pattern}"
+
   theme_run "create btop theme dir" mkdir -p "$HOME/.config/btop/themes"
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-    echo "[dry-run] download btop theme ${btop_theme}"
+    echo "[dry-run] download btop theme from ${btop_url}"
   else
-    curl -fLo "$HOME/.config/btop/themes/${btop_theme}.theme" \
-      "https://github.com/catppuccin/btop/raw/main/themes/${btop_theme}.theme"
+    curl -fLo "$HOME/.config/btop/themes/${btop_file_pattern}" \
+      "${btop_url}"
   fi
 
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
