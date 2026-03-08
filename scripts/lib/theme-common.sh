@@ -53,7 +53,7 @@ theme_clone_fresh() {
     return 0
   fi
   rm -rf "$target"
-  git clone --depth=1 "$url" "$target"
+  GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$url" "$target"
 }
 
 theme_defaults_json() {

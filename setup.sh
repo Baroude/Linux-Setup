@@ -69,7 +69,7 @@ warn()  { echo -e "\033[1;33mWRN\033[0m $*"; }
 skip()  { echo -e "\033[1;36mSKP\033[0m $* (already installed)"; }
 
 # Clone to a fixed /tmp path, wiping any previous partial clone.
-clone_fresh() { rm -rf "$1"; git clone --depth=1 "$2" "$1"; }
+clone_fresh() { rm -rf "$1"; GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$2" "$1"; }
 
 # Resolve latest release tag with API first, then GitHub redirect fallback.
 # This avoids hard failures when unauthenticated API calls are rate-limited.
