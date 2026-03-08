@@ -133,7 +133,13 @@
     "repo": "https://github.com/rose-pine/kde"
   },
   "kvantum_config": {
-    "enabled": false
+    "enabled": true,
+    "method": "tarball_release",
+    "base_url": "https://raw.githubusercontent.com/rose-pine/kvantum/master/dist",
+    "file_pattern": "rose-pine-${flavor}-${accent}.tar.gz",
+    "files_by_flavor": {
+      "main": "rose-pine-${accent}.tar.gz"
+    }
   },
   "gtk_install_config": {
     "method": "gtk_repo",
@@ -168,7 +174,6 @@
     "kde_scheme": "RosePine${FlavorTitle}",
     "kde_lookandfeel": "com.github.rose-pine.kde.${flavor}",
     "kscreenlock_theme": "com.github.rose-pine.kde.${flavor}",
-    "kvantum_theme": "RosePine",
     "gtk_theme": "rose-pine-${flavor}",
     "gtk_cursor_theme": "rose-pine-${flavor}-cursors",
     "starship_palette": "rosepine_${flavor}",
