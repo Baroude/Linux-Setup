@@ -133,10 +133,12 @@
   },
   "bat_theme_config": {
     "repo": "https://github.com/folke/tokyonight.nvim",
+    "subpath": "extras/bat",
     "file_pattern": "tokyonight_${flavor}.tmTheme"
   },
   "btop_theme_config": {
     "repo": "https://github.com/nicknisi/dotfiles",
+    "subpath": "config/btop/themes",
     "file_pattern": "tokyo-night.theme"
   },
   "firefox_config": {

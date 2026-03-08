@@ -17,9 +17,10 @@ theme_apply_cli_adapter() {
   local flavor
   flavor="$(theme_context_get "flavor")"
 
-  local bat_url bat_url_encoded_pattern
+  local bat_subpath bat_url bat_url_encoded_pattern
+  bat_subpath="$(theme_context_get "bat_theme_config.subpath" 2>/dev/null || echo "themes")"
   bat_url_encoded_pattern="${bat_file_pattern// /%20}"
-  bat_url="${bat_repo}/raw/main/themes/${bat_url_encoded_pattern}"
+  bat_url="${bat_repo}/raw/main/${bat_subpath}/${bat_url_encoded_pattern}"
 
   theme_run "create bat theme dir" mkdir -p "$HOME/.config/bat/themes"
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
@@ -49,9 +50,10 @@ theme_apply_cli_adapter() {
     fi
   fi
 
-  local btop_url btop_url_encoded_pattern
+  local btop_subpath btop_url btop_url_encoded_pattern
+  btop_subpath="$(theme_context_get "btop_theme_config.subpath" 2>/dev/null || echo "themes")"
   btop_url_encoded_pattern="${btop_file_pattern// /%20}"
-  btop_url="${btop_repo}/raw/main/themes/${btop_url_encoded_pattern}"
+  btop_url="${btop_repo}/raw/main/${btop_subpath}/${btop_url_encoded_pattern}"
 
   theme_run "create btop theme dir" mkdir -p "$HOME/.config/btop/themes"
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
