@@ -156,7 +156,8 @@
     "starship_palette": "tokyonight_${flavor}",
     "bat_theme": "tokyonight_${flavor}",
     "btop_theme": "tokyo-night",
-    "delta_theme": "tokyonight_${flavor}"
+    "delta_theme": "tokyonight_${flavor}",
+    "papirus_folder_code": "blue"
   },
   "widget_slot_map": {
     "org.kde.plasma.pager": "lavender",

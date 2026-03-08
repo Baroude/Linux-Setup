@@ -25,5 +25,12 @@ theme_apply_terminal_adapter() {
   theme_render_template "${THEME_REPO_DIR}/themes/templates/kitty-theme.conf.tpl" "$kitty_theme"
   theme_render_template "${THEME_REPO_DIR}/themes/templates/starship.toml.tpl" "$starship_out"
 
+  # Reload kitty live if running (USR1 signal triggers config reload)
+  if [[ "${THEME_DRY_RUN}" == "1" ]]; then
+    echo "[dry-run] pkill -USR1 kitty"
+  else
+    pkill -USR1 kitty 2>/dev/null || true
+  fi
+
   theme_info "Terminal adapter completed"
 }

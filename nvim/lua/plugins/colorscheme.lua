@@ -2,8 +2,8 @@
 -- That file is gitignored so the repo never gets dirtied by a theme switch.
 local ok, active = pcall(require, "colorscheme-flavor")
 if not ok or type(active) ~= "table" then
-  -- Legacy bare string or missing file — fall back to catppuccin/mocha
-  local fallback = type(active) == "string" and active or "mocha"
+  -- Legacy bare string (old format: return "mocha") or missing file — fall back to catppuccin/mocha
+  local fallback = (ok and type(active) == "string") and active or "mocha"
   active = { plugin = "catppuccin", flavor = fallback }
 end
 
