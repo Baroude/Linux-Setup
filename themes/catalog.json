@@ -35,7 +35,9 @@
         "editors": true,
         "cli": true,
         "apps": true,
-        "rofi": true
+        "rofi": true,
+        "sddm": true,
+        "grub": true
       }
     },
     "rosepine": {
@@ -52,7 +54,9 @@
         "editors": true,
         "cli": true,
         "apps": true,
-        "rofi": true
+        "rofi": true,
+        "sddm": true,
+        "grub": true
       }
     },
     "tokyonight": {
@@ -69,7 +73,9 @@
         "editors": true,
         "cli": true,
         "apps": true,
-        "rofi": true
+        "rofi": true,
+        "sddm": true,
+        "grub": true
       }
     }
   }
