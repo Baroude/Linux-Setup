@@ -207,5 +207,17 @@
     "org.kde.plasma.systemmonitor": "peach",
     "org.kde.plasma.systemtray": "sky",
     "org.kde.plasma.lock_logout": "red"
+  },
+  "sddm_config": {
+    "method": "catppuccin_release",
+    "repo": "catppuccin/sddm",
+    "zip_pattern": "catppuccin-${flavor}-${accent}-sddm.zip",
+    "target_name_pattern": "catppuccin-${flavor}-${accent}"
+  },
+  "grub_config": {
+    "method": "catppuccin_git",
+    "repo": "https://github.com/catppuccin/grub",
+    "theme_subdir_pattern": "catppuccin-${flavor}-grub-theme",
+    "target_name_pattern": "catppuccin-${flavor}-grub-theme"
   }
 }
