@@ -83,13 +83,15 @@ _kde_install_kvantum() {
     return 0
   fi
 
-  local kvantum_method kvantum_repo kvantum_theme
+  local kvantum_method kvantum_theme
   kvantum_method="$(theme_context_get "kvantum_config.method")"
-  kvantum_repo="$(theme_context_get "kvantum_config.repo")"
-  kvantum_theme="$(theme_context_get "derived.kvantum_theme")"
+  # kvantum_theme is read here as default; tarball_release overrides it below
+  kvantum_theme="$(theme_context_get "derived.kvantum_theme" 2>/dev/null)" || kvantum_theme=""
 
   case "$kvantum_method" in
     catppuccin_repo)
+      local kvantum_repo
+      kvantum_repo="$(theme_context_get "kvantum_config.repo")"
       theme_clone_fresh /tmp/theme-kvantum "$kvantum_repo"
       theme_run "create kvantum dir" mkdir -p "$HOME/.config/Kvantum"
       theme_run "remove previous kvantum theme dir" rm -rf "$HOME/.config/Kvantum/${kvantum_theme}"
@@ -98,6 +100,8 @@ _kde_install_kvantum() {
       ;;
 
     kvantum_repo)
+      local kvantum_repo
+      kvantum_repo="$(theme_context_get "kvantum_config.repo")"
       # Generic: clone repo, find directory matching kvantum_theme name, copy it
       theme_clone_fresh /tmp/theme-kvantum "$kvantum_repo"
       theme_run "create kvantum dir" mkdir -p "$HOME/.config/Kvantum"
@@ -113,6 +117,22 @@ _kde_install_kvantum() {
           theme_warn "Kvantum theme dir '${kvantum_theme}' not found in repo; skipping"
         fi
         rm -rf /tmp/theme-kvantum
+      fi
+      ;;
+
+    tarball_release)
+      local base_url resolved_file
+      base_url="$(theme_context_get "kvantum_config.base_url")"
+      resolved_file="$(theme_context_get "kvantum_config.resolved_file")"
+      kvantum_theme="$(theme_context_get "kvantum_config.resolved_theme")"
+      theme_run "create kvantum dir" mkdir -p "$HOME/.config/Kvantum"
+      theme_run "remove previous kvantum theme dir" rm -rf "$HOME/.config/Kvantum/${kvantum_theme}"
+      if [[ "${THEME_DRY_RUN}" == "1" ]]; then
+        echo "[dry-run] curl ${base_url}/${resolved_file} | tar -xz -C ~/.config/Kvantum/"
+      else
+        curl -fLso /tmp/theme-kvantum.tar.gz "${base_url}/${resolved_file}"
+        tar -xz -C "$HOME/.config/Kvantum/" -f /tmp/theme-kvantum.tar.gz
+        rm -f /tmp/theme-kvantum.tar.gz
       fi
       ;;
 
