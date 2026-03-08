@@ -18,6 +18,10 @@ source "${SCRIPT_DIR}/lib/theme-apply-cli.sh"
 source "${SCRIPT_DIR}/lib/theme-apply-apps.sh"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/theme-apply-panel.sh"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/theme-apply-sddm.sh"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/theme-apply-grub.sh"
 
 arg_theme=""
 arg_flavor=""
@@ -153,6 +157,9 @@ else
   theme_warn "Adapter failed: panel"
   failed=$((failed + 1))
 fi
+
+run_adapter "sddm" theme_apply_sddm_adapter || true
+run_adapter "grub" theme_apply_grub_adapter || true
 
 status="applied"
 if [[ "${#completed[@]}" -eq 0 ]]; then
