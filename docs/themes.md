@@ -15,7 +15,7 @@ Three theme families are fully implemented.
 
 - Flavors: `main`, `moon`, `dawn` (`dawn` is the light variant)
 - Accents: `love`, `gold`, `rose`, `pine`, `foam`, `iris`
-- Note: Kvantum is skipped for Rose Pine (no official theme). The widget style remains whatever was last set.
+- Note: Kvantum is installed per flavor+accent from `rose-pine/kvantum` prebuilt tarballs.
 
 ### tokyonight
 
@@ -177,6 +177,5 @@ The switcher persists two files under `~/.config/linux-setup/`:
 - SDDM and GRUB remain setup-managed and are not switched post-install.
 - Firefox and tidal-hifi require manual activation in each app UI after the adapter installs or generates their theme files.
 - The panel adapter sets `restart_pending: true` when it cannot reach the Panel Colorizer applet. The autostart script `scripts/apply-panel-colorizer.sh` handles reapplication on the next login session automatically; no manual intervention is needed unless the autostart is not registered.
-- Rose Pine: Kvantum is skipped; the Qt widget style will remain as-is from the previous theme.
 - Tokyo Night: No Firefox extension is available; the Firefox install step is skipped automatically.
 - Tokyo Night: All accents resolve to the same `default` value. The `--accent` flag is accepted but has no visual effect beyond token substitution.
