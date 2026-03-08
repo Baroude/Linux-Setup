@@ -611,6 +611,11 @@ kwriteconfig6 --file klassyrc --group Windeco --key ButtonIconStyle             
 kwriteconfig6 --file klassyrc --group Windeco --key CornerRadius                  2.5
 kwriteconfig6 --file klassyrc --group Windeco --key ActiveWindowTitleBarOpacity   90
 kwriteconfig6 --file klassyrc --group Windeco --key InactiveWindowTitleBarOpacity 85
+
+# Signal KWin to reload its configuration immediately (no-op when headless).
+if [[ -n "${XDG_CURRENT_DESKTOP:-}" ]]; then
+  qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+fi
 ok "Klassy decoration applied (circles, 2.5 px corners, 90/85 % titlebar opacity)"
 
 # ---------------------------------------------------------------------------
