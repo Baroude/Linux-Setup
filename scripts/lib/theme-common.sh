@@ -201,15 +201,23 @@ def resolve_config(cfg):
     return {k: Template(v).safe_substitute(params) if isinstance(v, str) else v
             for k, v in cfg.items()}
 
-bat_cfg  = resolve_config(manifest.get("bat_theme_config", {}))
-btop_cfg = resolve_config(manifest.get("btop_theme_config", {}))
+bat_cfg     = resolve_config(manifest.get("bat_theme_config", {}))
+btop_cfg    = resolve_config(manifest.get("btop_theme_config", {}))
+kvantum_cfg = resolve_config(manifest.get("kvantum_config", {"enabled": False}))
 
-# Resolve per-flavor file overrides for bat and btop.
+# Resolve per-flavor file overrides for bat, btop, and kvantum.
 # files_by_flavor[flavor] takes precedence over the generic file_pattern.
 for cfg in (bat_cfg, btop_cfg):
     if cfg:
         override = cfg.get("files_by_flavor", {}).get(flavor)
         cfg["resolved_file"] = override if override else cfg.get("file_pattern", "")
+
+# kvantum: also derive resolved_theme (directory name = filename minus .tar.gz)
+if kvantum_cfg and kvantum_cfg.get("file_pattern"):
+    override = kvantum_cfg.get("files_by_flavor", {}).get(flavor)
+    raw = Template(override if override else kvantum_cfg.get("file_pattern", "")).safe_substitute(params)
+    kvantum_cfg["resolved_file"] = raw
+    kvantum_cfg["resolved_theme"] = raw.removesuffix(".tar.gz")
 
 context = {
     "theme": theme,
@@ -221,7 +229,7 @@ context = {
     "derived": derived,
     "kde_installer_index": manifest.get("kde_installer_index", {}),
     "kde_install_config": resolve_config(manifest.get("kde_install_config", {})),
-    "kvantum_config": resolve_config(manifest.get("kvantum_config", {"enabled": False})),
+    "kvantum_config": kvantum_cfg,
     "gtk_install_config": resolve_config(manifest.get("gtk_install_config", {})),
     "bat_theme_config": bat_cfg,
     "btop_theme_config": btop_cfg,
