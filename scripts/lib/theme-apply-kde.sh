@@ -127,7 +127,7 @@ _kde_install_kvantum() {
       ;;
   esac
 
-  theme_run "activate kvantum theme" kvantummanager --set "$kvantum_theme"
+  theme_run_shell "activate kvantum theme" "printf '[General]\ntheme=${kvantum_theme}\n' > ${HOME}/.config/Kvantum/kvantum.kvconfig"
   theme_run "set KDE widget style" kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
 }
 
