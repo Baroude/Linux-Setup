@@ -874,55 +874,35 @@ ok "Catppuccin Mocha CSS theme written to ~/.config/tidal-hifi/catppuccin-mocha.
 warn "Manual step: Open tidal-hifi → Settings → Theming → choose ~/.config/tidal-hifi/catppuccin-mocha.css"
 
 # ---------------------------------------------------------------------------
-# Phase 12 — SDDM (Catppuccin Mocha Mauve theme)
+# Phase 12 — SDDM (via theme adapter)
 # ---------------------------------------------------------------------------
 info "Phase 12 · SDDM"
-
-sudo apt install -y --no-install-recommends \
-  qml-module-qtquick-layouts \
-  qml-module-qtquick-controls2 \
-  libqt6svg6
-
-cd /tmp
-curl -LOsS https://github.com/catppuccin/sddm/releases/latest/download/catppuccin-mocha-mauve-sddm.zip
-unzip -o catppuccin-mocha-mauve-sddm.zip
-sudo rm -rf /usr/share/sddm/themes/catppuccin-mocha-mauve
-sudo mv catppuccin-mocha-mauve /usr/share/sddm/themes/
-rm catppuccin-mocha-mauve-sddm.zip
-
-sudo mkdir -p /etc/sddm.conf.d
-sudo tee /etc/sddm.conf.d/10-catppuccin.conf > /dev/null << 'EOF'
-[Theme]
-Current=catppuccin-mocha-mauve
-EOF
-
-# Set evening-sky.png as SDDM background via theme.conf.user (no theme edit needed)
-sudo mkdir -p /usr/share/sddm/themes/catppuccin-mocha-mauve/backgrounds
-sudo cp "$REPO_DIR/images/evening-sky.png" \
-  /usr/share/sddm/themes/catppuccin-mocha-mauve/backgrounds/evening-sky.png
-sudo tee /usr/share/sddm/themes/catppuccin-mocha-mauve/theme.conf.user > /dev/null << 'EOF'
-[General]
-CustomBackground=true
-Background="backgrounds/evening-sky.png"
-EOF
-
-cd "$REPO_DIR"
-ok "SDDM theme installed (catppuccin-mocha-mauve) with evening-sky.png background"
+(
+  cd "$REPO_DIR"
+  # shellcheck disable=SC1091
+  source scripts/lib/theme-common.sh
+  # shellcheck disable=SC1091
+  source scripts/lib/theme-apply-sddm.sh
+  export THEME_CONTEXT_JSON
+  THEME_CONTEXT_JSON="$(theme_build_context_json "$THEME_NAME" "$THEME_FLAVOR" "$THEME_ACCENT")"
+  theme_apply_sddm_adapter
+)
+ok "SDDM theme installed"
 
 # ---------------------------------------------------------------------------
-# Phase 13 — GRUB (catppuccin/grub)
+# Phase 13 — GRUB (via theme adapter)
 # ---------------------------------------------------------------------------
 info "Phase 13 · GRUB"
-
-clone_fresh /tmp/catppuccin-grub https://github.com/catppuccin/grub.git
-sudo rm -rf /usr/share/grub/themes/catppuccin-mocha-grub-theme
-sudo cp -r /tmp/catppuccin-grub/src/catppuccin-mocha-grub-theme /usr/share/grub/themes/
-rm -rf /tmp/catppuccin-grub
-
-GRUB_FILE=/etc/default/grub
-sudo sed -i 's|^#\?GRUB_THEME=.*|GRUB_THEME="/usr/share/grub/themes/catppuccin-mocha-grub-theme/theme.txt"|' "$GRUB_FILE"
-sudo sed -i 's|^#\?GRUB_GFXMODE=.*|GRUB_GFXMODE=1920x1080|' "$GRUB_FILE"
-sudo update-grub
+(
+  cd "$REPO_DIR"
+  # shellcheck disable=SC1091
+  source scripts/lib/theme-common.sh
+  # shellcheck disable=SC1091
+  source scripts/lib/theme-apply-grub.sh
+  export THEME_CONTEXT_JSON
+  THEME_CONTEXT_JSON="$(theme_build_context_json "$THEME_NAME" "$THEME_FLAVOR" "$THEME_ACCENT")"
+  theme_apply_grub_adapter
+)
 ok "GRUB theme applied"
 
 # ---------------------------------------------------------------------------
