@@ -101,7 +101,7 @@ theme_print_current_state() {
   python3 - "$THEME_STATE_FILE" <<'PY'
 import json, sys
 
-ALL_ADAPTERS = ["kde", "terminal", "editors", "cli", "apps", "panel"]
+ALL_ADAPTERS = ["kde", "terminal", "editors", "cli", "apps", "panel", "sddm", "grub"]
 
 state = json.load(open(sys.argv[1], encoding='utf-8'))
 theme   = state.get("theme", "?")
