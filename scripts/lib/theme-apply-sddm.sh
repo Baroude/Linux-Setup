@@ -23,10 +23,13 @@ _sddm_post_install() {
 
   local bg_src="${THEME_REPO_DIR}/images/evening-sky.png"
   if [[ -f "$bg_src" ]]; then
-    theme_run "create sddm backgrounds dir" sudo mkdir -p "${install_dir}/backgrounds"
-    theme_run "copy sddm background" sudo cp "$bg_src" "${install_dir}/backgrounds/evening-sky.png"
+    # Detect existing backgrounds dir casing (themes vary: Backgrounds/ vs backgrounds/)
+    local bg_dir="backgrounds"
+    [[ -d "${install_dir}/Backgrounds" ]] && bg_dir="Backgrounds"
+    theme_run "create sddm backgrounds dir" sudo mkdir -p "${install_dir}/${bg_dir}"
+    theme_run "copy sddm background" sudo cp "$bg_src" "${install_dir}/${bg_dir}/evening-sky.png"
     theme_run_shell "write sddm theme.conf.user" \
-      "printf '[General]\nBackground=backgrounds/evening-sky.png\n' | sudo tee '${install_dir}/theme.conf.user' > /dev/null"
+      "printf '[General]\nBackground=${bg_dir}/evening-sky.png\n' | sudo tee '${install_dir}/theme.conf.user' > /dev/null"
   fi
 }
 
