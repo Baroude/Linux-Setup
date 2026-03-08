@@ -245,7 +245,7 @@ ctx = json.loads(os.environ['THEME_CONTEXT_JSON'])
 cur = ctx
 for part in path:
     cur = cur[part]
-if isinstance(cur, (dict, list)):
+if isinstance(cur, (dict, list, bool)):
     print(json.dumps(cur, separators=(',', ':')))
 else:
     print(cur)
