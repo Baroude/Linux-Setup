@@ -118,7 +118,7 @@ theme_apply_tidal_desktop_override() {
   cat > "$desktop_file" <<'EOF'
 [Desktop Entry]
 Name=TIDAL Hi-Fi
-Comment=Tidal music streaming (Catppuccin)
+Comment=Tidal music streaming
 Exec=flatpak run com.mastermindzh.tidal-hifi -- --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations,WaylandLinuxDmabuf --enable-wayland-ime
 Icon=com.mastermindzh.tidal-hifi
 Terminal=false
@@ -135,12 +135,13 @@ EOF
 }
 
 theme_apply_tidal_css_theme() {
-  local flavor accent theme_dir variant_css stable_css
+  local theme flavor accent theme_dir variant_css stable_css
+  theme="$(theme_context_get "theme")"
   flavor="$(theme_context_get "flavor")"
   accent="$(theme_context_get "accent")"
   theme_dir="$HOME/.config/tidal-hifi"
-  variant_css="${theme_dir}/catppuccin-${flavor}-${accent}.css"
-  stable_css="${theme_dir}/catppuccin.css"
+  variant_css="${theme_dir}/${theme}-${flavor}-${accent}.css"
+  stable_css="${theme_dir}/active.css"
 
   theme_render_template "${THEME_REPO_DIR}/themes/templates/tidal-hifi.css.tpl" "$variant_css"
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
@@ -155,7 +156,9 @@ theme_apply_tidal_css_theme() {
 
 theme_apply_rofi_theme() {
   local rofi_dir rofi_config rofi_layout_dir rofi_layout_shared rofi_colors_dir
-  local rofi_style rofi_shared_colors rofi_shared_fonts rofi_catppuccin
+  local rofi_style rofi_shared_colors rofi_shared_fonts rofi_color_file rofi_color_file_name
+  local theme
+  theme="$(theme_context_get "theme")"
   rofi_dir="$HOME/.config/rofi"
   rofi_config="${rofi_dir}/config.rasi"
   rofi_layout_dir="${rofi_dir}/launchers/type-2"
@@ -164,7 +167,8 @@ theme_apply_rofi_theme() {
   rofi_style="${rofi_layout_dir}/style-9.rasi"
   rofi_shared_colors="${rofi_layout_shared}/colors.rasi"
   rofi_shared_fonts="${rofi_layout_shared}/fonts.rasi"
-  rofi_catppuccin="${rofi_colors_dir}/catppuccin.rasi"
+  rofi_color_file_name="${theme}.rasi"
+  rofi_color_file="${rofi_colors_dir}/${rofi_color_file_name}"
 
   theme_run "create rofi config dir" mkdir -p "$rofi_dir"
   theme_run "create rofi layout dirs" mkdir -p "$rofi_layout_shared" "$rofi_colors_dir"
@@ -173,8 +177,6 @@ theme_apply_rofi_theme() {
     echo "[dry-run] download adi1090x launcher style ${rofi_style}"
     echo "[dry-run] download adi1090x shared colors ${rofi_shared_colors}"
     echo "[dry-run] download adi1090x shared fonts ${rofi_shared_fonts}"
-    echo "[dry-run] download adi1090x catppuccin colors ${rofi_catppuccin}"
-    echo "[dry-run] force ${rofi_shared_colors} to import ~/.config/rofi/colors/catppuccin.rasi"
   else
     curl -fsSL -o "$rofi_style" \
       "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/style-9.rasi"
@@ -182,17 +184,21 @@ theme_apply_rofi_theme() {
       "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/shared/colors.rasi"
     curl -fsSL -o "$rofi_shared_fonts" \
       "https://raw.githubusercontent.com/adi1090x/rofi/master/files/launchers/type-2/shared/fonts.rasi"
-    curl -fsSL -o "$rofi_catppuccin" \
-      "https://raw.githubusercontent.com/adi1090x/rofi/master/files/colors/catppuccin.rasi"
+  fi
 
+  theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-colors.rasi.tpl" "$rofi_color_file"
+
+  if [[ "${THEME_DRY_RUN}" == "1" ]]; then
+    echo "[dry-run] patch ${rofi_shared_colors} to import ${rofi_color_file_name}"
+  else
     sed -i -E \
-      's|^@import "~/.config/rofi/colors/[A-Za-z0-9_-]+\.rasi"|@import "~/.config/rofi/colors/catppuccin.rasi"|' \
+      "s|^@import \"~/.config/rofi/colors/[A-Za-z0-9_.+-]+\\.rasi\"|@import \"~/.config/rofi/colors/${rofi_color_file_name}\"|" \
       "$rofi_shared_colors"
   fi
 
   theme_render_template "${THEME_REPO_DIR}/themes/templates/rofi-config.rasi.tpl" "$rofi_config"
 
-  theme_info "Rofi launcher theme set to adi1090x type-2/style-9 (catppuccin preset)"
+  theme_info "Rofi launcher theme set to adi1090x type-2/style-9 (${theme} colors)"
 }
 
 theme_apply_apps_adapter() {

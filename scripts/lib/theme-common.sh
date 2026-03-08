@@ -201,6 +201,16 @@ def resolve_config(cfg):
     return {k: Template(v).safe_substitute(params) if isinstance(v, str) else v
             for k, v in cfg.items()}
 
+bat_cfg  = resolve_config(manifest.get("bat_theme_config", {}))
+btop_cfg = resolve_config(manifest.get("btop_theme_config", {}))
+
+# Resolve per-flavor file overrides for bat and btop.
+# files_by_flavor[flavor] takes precedence over the generic file_pattern.
+for cfg in (bat_cfg, btop_cfg):
+    if cfg:
+        override = cfg.get("files_by_flavor", {}).get(flavor)
+        cfg["resolved_file"] = override if override else cfg.get("file_pattern", "")
+
 context = {
     "theme": theme,
     "flavor": flavor,
@@ -213,8 +223,8 @@ context = {
     "kde_install_config": resolve_config(manifest.get("kde_install_config", {})),
     "kvantum_config": resolve_config(manifest.get("kvantum_config", {"enabled": False})),
     "gtk_install_config": resolve_config(manifest.get("gtk_install_config", {})),
-    "bat_theme_config": resolve_config(manifest.get("bat_theme_config", {})),
-    "btop_theme_config": resolve_config(manifest.get("btop_theme_config", {})),
+    "bat_theme_config": bat_cfg,
+    "btop_theme_config": btop_cfg,
     "firefox_config": resolve_config(manifest.get("firefox_config", {"method": "none"})),
     "widget_colors": widget_colors,
     "components": entry.get("components", {}),

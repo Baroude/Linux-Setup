@@ -141,11 +141,21 @@
   },
   "bat_theme_config": {
     "repo": "https://github.com/rose-pine/bat",
-    "file_pattern": "rose-pine-${flavor}.tmTheme"
+    "file_pattern": "rose-pine-${flavor}.tmTheme",
+    "files_by_flavor": {
+      "main": "rose-pine.tmTheme",
+      "moon": "rose-pine-moon.tmTheme",
+      "dawn": "rose-pine-dawn.tmTheme"
+    }
   },
   "btop_theme_config": {
     "repo": "https://github.com/rose-pine/btop",
-    "file_pattern": "rose-pine-${flavor}.theme"
+    "file_pattern": "rose-pine-${flavor}.theme",
+    "files_by_flavor": {
+      "main": "rose-pine.theme",
+      "moon": "rose-pine-moon.theme",
+      "dawn": "rose-pine-dawn.theme"
+    }
   },
   "firefox_config": {
     "method": "github_xpi",
@@ -153,6 +163,8 @@
     "file_pattern": "rose-pine-${flavor}.xpi"
   },
   "derived_patterns": {
+    "nvim_plugin": "rose-pine",
+    "nvim_flavor": "${flavor}",
     "kde_scheme": "RosePine${FlavorTitle}",
     "kde_lookandfeel": "com.github.rose-pine.kde.${flavor}",
     "kscreenlock_theme": "com.github.rose-pine.kde.${flavor}",

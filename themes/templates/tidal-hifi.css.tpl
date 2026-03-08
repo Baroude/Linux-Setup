@@ -1,4 +1,4 @@
-/* Generated Catppuccin theme for tidal-hifi.
+/* Generated theme for tidal-hifi.
    Selection: ${THEME}/${FLAVOR}/${ACCENT_NAME}
    Load via: Settings -> Theming -> "Choose theme file" */
 :root {

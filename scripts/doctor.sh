@@ -189,7 +189,35 @@ check_cmd  kwriteconfig6
 # ---------------------------------------------------------------------------
 _head "KDE config values"
 
-check_kconfig kdeglobals KDE widgetStyle kvantum
+# Only check Kvantum widget style when the active theme has kvantum enabled.
+_KVANTUM_ENABLED="true"
+if [[ -f "$THEME_STATE_FILE" ]]; then
+  _KVANTUM_ENABLED="$(python3 - "$THEME_STATE_FILE" "${REPO_DIR}/themes/catalog.json" "${REPO_DIR}" <<'PY'
+import json, sys
+from pathlib import Path
+state_path, catalog_path, repo_dir = sys.argv[1:]
+try:
+    state = json.load(open(state_path, encoding='utf-8'))
+    catalog = json.load(open(catalog_path, encoding='utf-8'))
+    theme_name = state.get('theme', 'catppuccin')
+    entry = catalog['themes'].get(theme_name, {})
+    manifest_rel = entry.get('manifest', '')
+    if not manifest_rel:
+        print('true')
+        raise SystemExit(0)
+    manifest = json.load(open(Path(repo_dir) / manifest_rel, encoding='utf-8'))
+    print('true' if manifest.get('kvantum_config', {}).get('enabled', True) else 'false')
+except Exception:
+    print('true')
+PY
+2>/dev/null || echo 'true')"
+fi
+
+if [[ "$_KVANTUM_ENABLED" == "true" ]]; then
+  check_kconfig kdeglobals KDE widgetStyle kvantum
+else
+  _warn "Kvantum check skipped — active theme '${THEME_NAME:-?}' does not use Kvantum"
+fi
 check_kconfig kdeglobals Icons Theme Papirus-Dark
 check_kconfig kwinrc     Plugins kwin4_effect_better_blurEnabled true
 check_kconfig kwinrc     "org.kde.kdecoration2" library org.kde.klassy

@@ -143,6 +143,8 @@
     "method": "none"
   },
   "derived_patterns": {
+    "nvim_plugin": "tokyonight",
+    "nvim_flavor": "${flavor}",
     "kde_scheme": "TokyoNight${FlavorTitle}",
     "kde_lookandfeel": "com.github.drigax.tokyonight.${flavor}",
     "kscreenlock_theme": "com.github.drigax.tokyonight.${flavor}",

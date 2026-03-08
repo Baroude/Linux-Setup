@@ -182,6 +182,7 @@
     "file_pattern": "catppuccin_${flavor}_${accent}.xpi"
   },
   "derived_patterns": {
+    "nvim_plugin": "catppuccin",
     "kde_scheme": "Catppuccin${FlavorTitle}${AccentTitle}",
     "kde_lookandfeel": "Catppuccin-${FlavorTitle}-${AccentTitle}",
     "kscreenlock_theme": "Catppuccin-${FlavorTitle}-${AccentTitle}",

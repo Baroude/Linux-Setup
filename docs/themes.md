@@ -135,8 +135,8 @@ Applies the full KDE/Qt visual stack. Behavior is driven by `kde_install_config`
 Runs for all themes. Steps that are not applicable to a theme are skipped gracefully.
 
 - **Firefox**: Downloads the XPI from `firefox_config.repo` using `firefox_config.file_pattern` and installs it system-wide under `/usr/lib/firefox*/distribution/extensions/`. Skipped entirely when `firefox_config.method` is `"none"` (Tokyo Night). Manual activation is still required inside the Firefox Add-ons UI if the extension does not activate automatically.
-- **TIDAL Hi-Fi**: Renders `~/.config/tidal-hifi/catppuccin-<flavor>-<accent>.css` from a template and copies it to `~/.config/tidal-hifi/catppuccin.css`. Manual activation is required in tidal-hifi Settings > Theming. Also writes a `.desktop` override with correct Wayland flags.
-- **Rofi**: Downloads the adi1090x `type-2/style-9` launcher layout and the `catppuccin.rasi` color preset, patches `shared/colors.rasi` to import the preset, and renders `~/.config/rofi/config.rasi` from a template.
+- **TIDAL Hi-Fi**: Renders `~/.config/tidal-hifi/<theme>-<flavor>-<accent>.css` from a template and copies it to `~/.config/tidal-hifi/active.css`. Manual activation is required in tidal-hifi Settings > Theming (select `active.css` once; subsequent switches overwrite it automatically). Also writes a `.desktop` override with correct Wayland flags.
+- **Rofi**: Downloads the adi1090x `type-2/style-9` launcher layout, generates `~/.config/rofi/colors/<theme>.rasi` from the manifest palette, patches `shared/colors.rasi` to import it, and renders `~/.config/rofi/config.rasi` from a template.
 
 ### panel
 

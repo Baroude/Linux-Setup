@@ -10,9 +10,9 @@ theme_apply_cli_adapter() {
   btop_theme="$(theme_context_get "derived.btop_theme")"
   delta_theme="$(theme_context_get "derived.delta_theme")"
   bat_repo="$(theme_context_get "bat_theme_config.repo")"
-  bat_file_pattern="$(theme_context_get "bat_theme_config.file_pattern")"
+  bat_file_pattern="$(theme_context_get "bat_theme_config.resolved_file")"
   btop_repo="$(theme_context_get "btop_theme_config.repo")"
-  btop_file_pattern="$(theme_context_get "btop_theme_config.file_pattern")"
+  btop_file_pattern="$(theme_context_get "btop_theme_config.resolved_file")"
 
   local flavor
   flavor="$(theme_context_get "flavor")"

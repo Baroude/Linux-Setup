@@ -171,7 +171,7 @@ vimcmd_replace_one_symbol = '[❮](bold fg:lavender)'
 vimcmd_replace_symbol     = '[❮](bold fg:lavender)'
 vimcmd_visual_symbol      = '[❮](bold fg:yellow)'
 
-# --- Catppuccin Mocha palette ---
+# --- ${STARSHIP_PALETTE_NAME} palette ---
 [palettes.${STARSHIP_PALETTE_NAME}]
 rosewater = '${ROSEWATER}'
 flamingo  = '${FLAMINGO}'
