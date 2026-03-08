@@ -170,5 +170,17 @@
     "org.kde.plasma.systemmonitor": "peach",
     "org.kde.plasma.systemtray": "sky",
     "org.kde.plasma.lock_logout": "red"
+  },
+  "sddm_config": {
+    "method": "git_sddm",
+    "repo": "https://github.com/siddrs/tokyo-night-sddm",
+    "theme_subdir": ".",
+    "target_name": "tokyo-night-sddm"
+  },
+  "grub_config": {
+    "method": "git_grub",
+    "repo": "https://github.com/mino29/tokyo-night-grub",
+    "theme_subdir": ".",
+    "target_name": "tokyo-night-grub"
   }
 }
