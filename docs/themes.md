@@ -101,7 +101,7 @@ Applies the full KDE/Qt visual stack. Behavior is driven by `kde_install_config`
 
 **Common to all themes:**
 - Applies `plasma-apply-colorscheme` and sets the lock screen greeter theme via `kwriteconfig6`.
-- Installs and activates Kvantum if `kvantum_config.enabled` is true (Rose Pine skips this step).
+- Installs and activates Kvantum if `kvantum_config.enabled` is true.
 - Installs GTK via `catppuccin_install_py` or `gtk_repo` (clone + `install.sh` or copy to `~/.themes`), then applies Flatpak GTK/icon overrides.
 - Clones `catppuccin/papirus-folders` and sets accent folder colors only when `papirus_folder_code` is present in derived patterns (Catppuccin only).
 - Writes `~/.config/gtk-3.0/settings.ini` from a template.

@@ -215,7 +215,7 @@ for cfg in (bat_cfg, btop_cfg):
 # kvantum: also derive resolved_theme (directory name = filename minus .tar.gz)
 if kvantum_cfg and kvantum_cfg.get("file_pattern"):
     override = kvantum_cfg.get("files_by_flavor", {}).get(flavor)
-    # files_by_flavor values are dicts and bypass resolve_config's string substitution; apply it here.
+    # files_by_flavor is a dict so resolve_config leaves it unprocessed; apply Template substitution to the string value explicitly here.
     raw = Template(override if override else kvantum_cfg.get("file_pattern", "")).safe_substitute(params)
     kvantum_cfg["resolved_file"] = raw
     kvantum_cfg["resolved_theme"] = raw.removesuffix(".tar.gz")
