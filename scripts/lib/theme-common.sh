@@ -228,6 +228,8 @@ context = {
     "firefox_config": resolve_config(manifest.get("firefox_config", {"method": "none"})),
     "widget_colors": widget_colors,
     "components": entry.get("components", {}),
+    "sddm_config": manifest.get("sddm_config", {}),
+    "grub_config": manifest.get("grub_config", {}),
 }
 print(json.dumps(context, separators=(",", ":")))
 PY
