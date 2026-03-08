@@ -217,7 +217,7 @@
   "grub_config": {
     "method": "catppuccin_git",
     "repo": "https://github.com/catppuccin/grub",
-    "theme_subdir_pattern": "catppuccin-${flavor}-grub-theme",
+    "theme_subdir_pattern": "src/catppuccin-${flavor}-grub-theme",
     "target_name_pattern": "catppuccin-${flavor}-grub-theme"
   }
 }

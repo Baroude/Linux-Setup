@@ -48,7 +48,7 @@ theme_apply_grub_adapter() {
       theme_clone_fresh /tmp/theme-grub "$repo"
       theme_run "remove old grub theme" sudo rm -rf "/usr/share/grub/themes/${target_name}"
       theme_run "install grub theme" \
-        sudo cp -r "/tmp/theme-grub/src/${theme_subdir}" "/usr/share/grub/themes/${target_name}"
+        sudo cp -r "/tmp/theme-grub/${theme_subdir}" "/usr/share/grub/themes/${target_name}"
       [[ "${THEME_DRY_RUN}" == "1" ]] || rm -rf /tmp/theme-grub
       ;;
 

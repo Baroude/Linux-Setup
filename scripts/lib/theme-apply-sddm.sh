@@ -56,10 +56,12 @@ theme_apply_sddm_adapter() {
         echo "[dry-run] download ${url}"
         echo "[dry-run] unzip ${zip_name} and sudo mv to /usr/share/sddm/themes/${target_name}"
       else
-        curl -LOsS "$url"
-        unzip -o "$zip_name"
-        sudo mv "$target_name" /usr/share/sddm/themes/
-        rm -f "$zip_name"
+        local tmp_dir
+        tmp_dir="$(mktemp -d)"
+        curl -LOsS -o "${tmp_dir}/${zip_name}" "$url"
+        unzip -o "${tmp_dir}/${zip_name}" -d "$tmp_dir"
+        sudo mv "${tmp_dir}/${target_name}" /usr/share/sddm/themes/
+        rm -rf "$tmp_dir"
       fi
       ;;
 

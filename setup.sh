@@ -874,38 +874,6 @@ ok "Catppuccin Mocha CSS theme written to ~/.config/tidal-hifi/catppuccin-mocha.
 warn "Manual step: Open tidal-hifi → Settings → Theming → choose ~/.config/tidal-hifi/catppuccin-mocha.css"
 
 # ---------------------------------------------------------------------------
-# Phase 12 — SDDM (via theme adapter)
-# ---------------------------------------------------------------------------
-info "Phase 12 · SDDM"
-(
-  cd "$REPO_DIR"
-  # shellcheck disable=SC1091
-  source scripts/lib/theme-common.sh
-  # shellcheck disable=SC1091
-  source scripts/lib/theme-apply-sddm.sh
-  export THEME_CONTEXT_JSON
-  THEME_CONTEXT_JSON="$(theme_build_context_json "$THEME_NAME" "$THEME_FLAVOR" "$THEME_ACCENT")"
-  theme_apply_sddm_adapter
-)
-ok "SDDM theme installed"
-
-# ---------------------------------------------------------------------------
-# Phase 13 — GRUB (via theme adapter)
-# ---------------------------------------------------------------------------
-info "Phase 13 · GRUB"
-(
-  cd "$REPO_DIR"
-  # shellcheck disable=SC1091
-  source scripts/lib/theme-common.sh
-  # shellcheck disable=SC1091
-  source scripts/lib/theme-apply-grub.sh
-  export THEME_CONTEXT_JSON
-  THEME_CONTEXT_JSON="$(theme_build_context_json "$THEME_NAME" "$THEME_FLAVOR" "$THEME_ACCENT")"
-  theme_apply_grub_adapter
-)
-ok "GRUB theme applied"
-
-# ---------------------------------------------------------------------------
 # Phase 14 — Dotfiles (dotbot)
 # ---------------------------------------------------------------------------
 info "Phase 14 · Dotfiles (dotbot)"
