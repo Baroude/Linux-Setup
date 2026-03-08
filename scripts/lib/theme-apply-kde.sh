@@ -125,15 +125,17 @@ _kde_install_kvantum() {
       base_url="$(theme_context_get "kvantum_config.base_url")"
       resolved_file="$(theme_context_get "kvantum_config.resolved_file")"
       kvantum_theme="$(theme_context_get "kvantum_config.resolved_theme")"
+      if [[ -z "$base_url" || -z "$resolved_file" || -z "$kvantum_theme" ]]; then
+        theme_err "tarball_release: base_url, resolved_file, or resolved_theme is empty; skipping"
+        return 1
+      fi
       theme_run "create kvantum dir" mkdir -p "$HOME/.config/Kvantum"
       theme_run "remove previous kvantum theme dir" rm -rf "$HOME/.config/Kvantum/${kvantum_theme}"
-      if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-        echo "[dry-run] curl ${base_url}/${resolved_file} | tar -xz -C ~/.config/Kvantum/"
-      else
-        curl -fLso /tmp/theme-kvantum.tar.gz "${base_url}/${resolved_file}"
-        tar -xz -C "$HOME/.config/Kvantum/" -f /tmp/theme-kvantum.tar.gz
-        rm -f /tmp/theme-kvantum.tar.gz
-      fi
+      theme_run "download kvantum tarball" curl -fLso /tmp/theme-kvantum.tar.gz "${base_url}/${resolved_file}" \
+        || { theme_err "Failed to download kvantum tarball"; rm -f /tmp/theme-kvantum.tar.gz; return 1; }
+      theme_run "extract kvantum tarball" tar -xz -C "$HOME/.config/Kvantum/" -f /tmp/theme-kvantum.tar.gz \
+        || { theme_err "Failed to extract kvantum tarball"; rm -f /tmp/theme-kvantum.tar.gz; return 1; }
+      [[ "${THEME_DRY_RUN}" == "1" ]] || rm -f /tmp/theme-kvantum.tar.gz
       ;;
 
     "")
