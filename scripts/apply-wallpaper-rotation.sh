@@ -1,38 +1,49 @@
 #!/usr/bin/env bash
-# apply-wallpaper-rotation.sh — Configure KDE desktop slideshow wallpaper.
+# apply-wallpaper-rotation.sh â€” Configure KDE desktop slideshow wallpaper.
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WALLPAPER_ROOT_DIR="${REPO_DIR}/images/wallpaper-rotation"
+THEME_STATE_FILE="${THEME_STATE_FILE:-$HOME/.config/linux-setup/theme-state.json}"
+WALLPAPER_SET="${WALLPAPER_SET:-}"
 SLIDE_INTERVAL_SECONDS="${SLIDE_INTERVAL_SECONDS:-7200}"
 
-# Resolve active theme: prefer --theme arg, then theme-state.json, then "catppuccin"
-_active_theme=""
-for _arg in "$@"; do
-  case "$_arg" in
-    --theme=*) _active_theme="${_arg#--theme=}" ;;
-  esac
-done
-if [[ -z "$_active_theme" ]]; then
-  _state_file="${HOME}/.config/linux-setup/theme-state.json"
-  if [[ -f "$_state_file" ]]; then
-    _active_theme="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['theme'])" \
-      "$_state_file" 2>/dev/null)" || _active_theme=""
-  fi
-fi
-_active_theme="${_active_theme:-catppuccin}"
-
-# Use theme-specific subfolder if it exists, otherwise fall back to rotation root
-_theme_dir="${REPO_DIR}/images/wallpaper-rotation/${_active_theme}"
-if [[ -d "$_theme_dir" ]]; then
-  WALLPAPER_DIR="$_theme_dir"
-else
-  WALLPAPER_DIR="${REPO_DIR}/images/wallpaper-rotation"
+# Resolve active theme from --theme arg if WALLPAPER_SET not set via env
+if [[ -z "$WALLPAPER_SET" ]]; then
+  for _arg in "$@"; do
+    case "$_arg" in
+      --theme=*) WALLPAPER_SET="${_arg#--theme=}" ;;
+    esac
+  done
 fi
 
-if ! [[ -d "$WALLPAPER_DIR" ]]; then
-  echo "Wallpaper directory not found: $WALLPAPER_DIR" >&2
+if ! [[ -d "$WALLPAPER_ROOT_DIR" ]]; then
+  echo "Wallpaper directory not found: $WALLPAPER_ROOT_DIR" >&2
   exit 1
+fi
+
+if [[ -z "$WALLPAPER_SET" && -f "$THEME_STATE_FILE" ]]; then
+  WALLPAPER_SET="$(python3 - "$THEME_STATE_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+state_file = Path(sys.argv[1])
+try:
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+except Exception:
+    print("")
+    raise SystemExit(0)
+
+print(payload.get("theme", ""))
+PY
+)"
+fi
+
+WALLPAPER_DIR="$WALLPAPER_ROOT_DIR"
+if [[ -n "$WALLPAPER_SET" && -d "$WALLPAPER_ROOT_DIR/$WALLPAPER_SET" ]]; then
+  WALLPAPER_DIR="$WALLPAPER_ROOT_DIR/$WALLPAPER_SET"
 fi
 
 if command -v qdbus6 >/dev/null 2>&1; then
@@ -92,4 +103,4 @@ PY
 
 "$QDBUS_BIN" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$js_script" >/dev/null
 
-echo "KDE wallpaper slideshow configured (theme: ${_active_theme}, dir: $WALLPAPER_DIR)"
+echo "KDE wallpaper slideshow configured (theme: ${WALLPAPER_SET:-default}, dir: $WALLPAPER_DIR)"
