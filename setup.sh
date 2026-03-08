@@ -38,20 +38,27 @@ done
 
 THEME_FLAVOR="${THEME_FLAVOR,,}"
 THEME_ACCENT="${THEME_ACCENT,,}"
-if [[ "$THEME_NAME" != "catppuccin" ]]; then
-  echo "Only --theme catppuccin is supported in this setup version." >&2
-  exit 1
-fi
 
-case "$THEME_FLAVOR" in
-  mocha|macchiato|frappe|latte) ;;
-  *) echo "Unsupported flavor: $THEME_FLAVOR" >&2; exit 1 ;;
-esac
-
-case "$THEME_ACCENT" in
-  rosewater|flamingo|pink|mauve|red|maroon|peach|yellow|green|teal|sky|sapphire|blue|lavender) ;;
-  *) echo "Unsupported accent: $THEME_ACCENT" >&2; exit 1 ;;
-esac
+# Validate theme/flavor/accent against catalog.json
+python3 - "$REPO_DIR/themes/catalog.json" "$THEME_NAME" "$THEME_FLAVOR" "$THEME_ACCENT" <<'PY'
+import json, sys
+catalog_path, theme, flavor, accent = sys.argv[1:]
+catalog = json.load(open(catalog_path, encoding='utf-8'))
+if theme not in catalog['themes']:
+    supported = [k for k, v in catalog['themes'].items() if v.get('supported', True)]
+    print(f"Unsupported theme '{theme}'. Available: {', '.join(sorted(supported))}", file=sys.stderr)
+    raise SystemExit(1)
+entry = catalog['themes'][theme]
+if not entry.get('supported', True):
+    print(f"Theme '{theme}' is not yet implemented.", file=sys.stderr)
+    raise SystemExit(1)
+if flavor not in entry['flavors']:
+    print(f"Unsupported flavor '{flavor}' for theme '{theme}'. Valid: {', '.join(entry['flavors'])}", file=sys.stderr)
+    raise SystemExit(1)
+if accent not in entry['accents']:
+    print(f"Unsupported accent '{accent}' for theme '{theme}'. Valid: {', '.join(entry['accents'])}", file=sys.stderr)
+    raise SystemExit(1)
+PY
 
 # ---------------------------------------------------------------------------
 # Helpers
