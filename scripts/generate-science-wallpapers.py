@@ -421,7 +421,7 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
     lines = data["lines"]
 
     # Constellation lines
-    line_alpha = 0.5
+    line_alpha = 0.65
     lw = max(0.8, W / 3840 * 1.2)
     for s1, s2 in lines:
         if s1 not in stars or s2 not in stars:
@@ -434,7 +434,7 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
     max_marker = 10 * (W / 3840)
     for sname, (sx, sy, srel) in stars.items():
         ms = max_marker * (0.4 + 0.6 * srel)
-        ax.plot(sx, sy, "o", color=accent_hex, markersize=ms, zorder=3)
+        glow_dot(ax, sx, sy, ms, accent_hex, accent01, zorder=3)
         # Tiny label
         label_offset = 0.012
         ax.text(sx + label_offset, sy + label_offset, sname,
@@ -461,6 +461,10 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
 
     display_name = name.replace("_", " ").title()
     add_label(canvas, display_name, accent_hex, W // 2, label_top)
+
+    canvas = draw_center_haze(canvas, accent_hex, opacity=0.08, radius_frac=0.45)
+    canvas = apply_vignette(canvas, strength=0.22)
+    canvas = apply_glow_bloom(canvas, accent_hex, opacity=0.22)
 
     return canvas
 
