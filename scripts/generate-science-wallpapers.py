@@ -912,7 +912,7 @@ def setup_feynman_ax(fig, ax, accent_hex):
 
 # --- individual diagrams -----------------------------------------------------
 
-def draw_electron_positron(ax, accent_hex, lw, fs, amp):
+def draw_electron_positron(ax, accent_hex, lw, fs, amp, accent01):
     """e+e- → γ → μ+μ- (X shape with wiggly center)"""
     cx, cy = 0.5, 0.5
     # Incoming: e- (bottom-left → vertex left), e+ (bottom-right → vertex right)
@@ -943,10 +943,10 @@ def draw_electron_positron(ax, accent_hex, lw, fs, amp):
 
     # Vertex dots
     for vx, vy in [vl, vr]:
-        ax.plot(vx, vy, 'o', color=accent_hex, markersize=5 * lw, zorder=6)
+        glow_dot(ax, vx, vy, 5 * lw, accent_hex, accent01, zorder=6)
 
 
-def draw_compton_scattering(ax, accent_hex, lw, fs, amp):
+def draw_compton_scattering(ax, accent_hex, lw, fs, amp, accent01):
     """Compton: e- enters bottom-left, photon enters top-left; scatter at vertex."""
     v = (0.50, 0.50)
 
@@ -966,10 +966,10 @@ def draw_compton_scattering(ax, accent_hex, lw, fs, amp):
     wiggly(ax, v[0], v[1], 0.85, 0.20, accent_hex, n=10, amp=amp, lw=lw)
     particle_label(ax, 0.85, 0.20, 'γ', accent_hex, fs=fs, ha='left', va='top')
 
-    ax.plot(v[0], v[1], 'o', color=accent_hex, markersize=6 * lw, zorder=6)
+    glow_dot(ax, v[0], v[1], 6 * lw, accent_hex, accent01, zorder=6)
 
 
-def draw_pair_production(ax, accent_hex, lw, fs, amp):
+def draw_pair_production(ax, accent_hex, lw, fs, amp, accent01):
     """Pair production: γ → e+e-"""
     v = (0.45, 0.50)
 
@@ -985,10 +985,10 @@ def draw_pair_production(ax, accent_hex, lw, fs, amp):
     arrow_line(ax, v[0], v[1], 0.85, 0.22, accent_hex, lw=lw, dashed=True)
     particle_label(ax, 0.85, 0.22, 'e⁺', accent_hex, fs=fs, ha='left', va='top')
 
-    ax.plot(v[0], v[1], 'o', color=accent_hex, markersize=6 * lw, zorder=6)
+    glow_dot(ax, v[0], v[1], 6 * lw, accent_hex, accent01, zorder=6)
 
 
-def draw_beta_decay(ax, accent_hex, lw, fs, amp):
+def draw_beta_decay(ax, accent_hex, lw, fs, amp, accent01):
     """Beta decay: n → p + W- → p + e- + ν̄_e"""
     vw = (0.50, 0.50)   # W- emission vertex
 
@@ -1012,10 +1012,10 @@ def draw_beta_decay(ax, accent_hex, lw, fs, amp):
     particle_label(ax, 0.78, 0.08, 'ν̄ₑ', accent_hex, fs=fs, ha='left', va='top')
 
     for vx, vy in [vw, vw2]:
-        ax.plot(vx, vy, 'o', color=accent_hex, markersize=5 * lw, zorder=6)
+        glow_dot(ax, vx, vy, 5 * lw, accent_hex, accent01, zorder=6)
 
 
-def draw_electron_scattering(ax, accent_hex, lw, fs, amp):
+def draw_electron_scattering(ax, accent_hex, lw, fs, amp, accent01):
     """Møller scattering: e-e- exchange virtual photon."""
     # Two electrons approach from left, leave to right; virtual photon vertical between them
     vt = (0.44, 0.70)   # top vertex
@@ -1042,7 +1042,7 @@ def draw_electron_scattering(ax, accent_hex, lw, fs, amp):
     particle_label(ax, 0.88, 0.18, 'e⁻', accent_hex, fs=fs, ha='left', va='top')
 
     for vx, vy in [vt, vb]:
-        ax.plot(vx, vy, 'o', color=accent_hex, markersize=5 * lw, zorder=6)
+        glow_dot(ax, vx, vy, 5 * lw, accent_hex, accent01, zorder=6)
 
 
 FEYNMAN_DIAGRAMS = {
@@ -1061,11 +1061,12 @@ def render_feynman(diag_name: str, draw_fn, W: int, H: int) -> Image.Image:
     fig, ax = plt.subplots(figsize=(W / dpi, H / dpi), dpi=dpi)
     setup_feynman_ax(fig, ax, accent_hex)
 
-    lw = max(1.0, 2.0 * W / 3840)
-    fs = max(7, 12 * W / 3840)
+    lw = max(1.5, 3.2 * W / 3840)
+    fs = max(9, 16 * W / 3840)
     amp = max(0.015, 0.030 * W / 3840)
 
-    draw_fn(ax, accent_hex, lw=lw, fs=fs, amp=amp)
+    accent01 = hex_to_rgb01(accent_hex)
+    draw_fn(ax, accent_hex, lw=lw, fs=fs, amp=amp, accent01=accent01)
 
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches=None, pad_inches=0, dpi=dpi)
@@ -1078,6 +1079,9 @@ def render_feynman(diag_name: str, draw_fn, W: int, H: int) -> Image.Image:
     label_top = int(H * 0.90)
     add_label(canvas, label, accent_hex, W // 2, label_top)
 
+    canvas = draw_center_haze(canvas, accent_hex, opacity=0.08, radius_frac=0.40)
+    canvas = apply_vignette(canvas, strength=0.22)
+    canvas = apply_glow_bloom(canvas, accent_hex, opacity=0.25)
     return canvas
 
 
