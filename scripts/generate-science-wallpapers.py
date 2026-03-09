@@ -405,7 +405,7 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
     ax.axis("off")
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
-    rng = random.Random(42)
+    rng = random.Random(int(hashlib.md5(name.encode()).hexdigest(), 16) % (2 ** 31))
 
     # Background star field — faint small dots
     n_bg_stars = 400

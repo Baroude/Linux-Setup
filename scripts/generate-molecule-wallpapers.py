@@ -9,7 +9,7 @@ Usage:
   python3 generate-molecule-wallpapers.py --preview   # 1920x1080 output
 """
 
-import sys, os, textwrap, math, random, hashlib
+import sys, os, math, random, hashlib
 import pubchempy as pcp
 from rdkit import Chem
 from rdkit.Chem import AllChem
