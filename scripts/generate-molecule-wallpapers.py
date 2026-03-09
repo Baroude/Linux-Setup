@@ -9,12 +9,12 @@ Usage:
   python3 generate-molecule-wallpapers.py --preview   # 1920x1080 output
 """
 
-import sys, os, textwrap, math, random
+import sys, os, textwrap, math, random, hashlib
 import pubchempy as pcp
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.Draw import rdMolDraw2D
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import io
 import numpy as np
 
@@ -79,7 +79,6 @@ def apply_vignette(canvas: Image.Image, strength: float = 0.25) -> Image.Image:
 def apply_glow_bloom(canvas: Image.Image, accent_hex: str,
                      blur_radius: int = None, opacity: float = 0.30) -> Image.Image:
     """Additive glow: blur canvas, tint toward accent, composite back."""
-    from PIL import ImageFilter
     W, H = canvas.size
     if blur_radius is None:
         blur_radius = max(20, int(80 * W / 3840))
@@ -213,11 +212,6 @@ def render_molecule(smiles: str, accent_hex: str, bg_hex: str) -> Image.Image:
     bg_rgb = hex_to_rgb(bg_hex)
     r, g, b, _ = img.split()
     # Mask: pixels that differ from bg
-    def ch_diff(ch, val):
-        import PIL.ImageChops as IC
-        from PIL import ImageFilter
-        return ch
-    import numpy as np
     arr = np.array(img)
     bg = np.array(bg_rgb, dtype=np.uint8)
     diff = np.abs(arr[:,:,:3].astype(int) - bg.astype(int)).sum(axis=2)
@@ -266,7 +260,7 @@ def make_wallpaper(name: str, accent_name: str, preview: bool = False) -> Image.
     mol_y = (H - new_h - label_h - label_gap) // 2
 
     # Background star field (seeded per molecule name for stability)
-    seed = hash(name) % (2 ** 31)
+    seed = int(hashlib.md5(name.encode()).hexdigest(), 16) % (2 ** 31)
     canvas = draw_star_field(canvas, accent_hex, seed=seed, n_stars=300)
 
     # Soft accent haze at center
