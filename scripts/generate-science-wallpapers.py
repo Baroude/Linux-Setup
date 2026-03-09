@@ -407,14 +407,13 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
 
     rng = random.Random(int(hashlib.md5(name.encode()).hexdigest(), 16) % (2 ** 31))
 
-    # Background star field — faint small dots
-    n_bg_stars = 400
+    # Background star field — varied sizes and brightness
+    n_bg_stars = 600
     for _ in range(n_bg_stars):
         sx = rng.random()
         sy = rng.random()
-        # vary size and alpha slightly
-        sz = rng.uniform(0.3, 2.0)
-        alpha = rng.uniform(0.08, 0.25)
+        sz = rng.uniform(1.0, 4.5)
+        alpha = rng.uniform(0.12, 0.40)
         ax.plot(sx, sy, "o", color=accent01, markersize=sz, alpha=alpha)
 
     stars = data["stars"]
@@ -793,7 +792,12 @@ def render_amino_mol(smiles: str, accent_hex: str) -> Image.Image:
     rmax = min(img.height - 1, rmax + pad)
     cmin = max(0, cmin - pad)
     cmax = min(img.width - 1, cmax + pad)
-    return img.crop((cmin, rmin, cmax + 1, rmax + 1))
+    cropped = img.crop((cmin, rmin, cmax + 1, rmax + 1))
+    # Make background pixels fully transparent so the canvas haze shows through
+    c_arr = np.array(cropped)
+    c_diff = np.abs(c_arr[:, :, :3].astype(int) - bg.astype(int)).sum(axis=2)
+    c_arr[:, :, 3] = np.where(c_diff > 8, 255, 0)
+    return Image.fromarray(c_arr, "RGBA")
 
 
 def smiles_for_amino(name: str) -> str:

@@ -227,7 +227,11 @@ def render_molecule(smiles: str, accent_hex: str, bg_hex: str) -> Image.Image:
     cmin = max(0, cmin - pad)
     cmax = min(img.width - 1, cmax + pad)
     cropped = img.crop((cmin, rmin, cmax+1, rmax+1))
-    return cropped
+    # Make background pixels fully transparent so the canvas haze shows through
+    c_arr = np.array(cropped)
+    c_diff = np.abs(c_arr[:, :, :3].astype(int) - bg.astype(int)).sum(axis=2)
+    c_arr[:, :, 3] = np.where(c_diff > 8, 255, 0)
+    return Image.fromarray(c_arr, "RGBA")
 
 
 def make_wallpaper(name: str, accent_name: str, preview: bool = False) -> Image.Image:
