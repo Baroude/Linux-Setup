@@ -434,11 +434,11 @@ def render_constellation(name: str, data: dict, W: int, H: int) -> Image.Image:
     for sname, (sx, sy, srel) in stars.items():
         ms = max_marker * (0.4 + 0.6 * srel)
         glow_dot(ax, sx, sy, ms, accent_hex, accent01, zorder=3)
-        # Tiny label
-        label_offset = 0.012
+        # Star name label
+        label_offset = 0.016
         ax.text(sx + label_offset, sy + label_offset, sname,
-                color=accent_hex, fontsize=max(4, 6 * W / 3840),
-                alpha=0.5, fontfamily="monospace", zorder=4,
+                color=accent_hex, fontsize=max(8, 13 * W / 3840),
+                alpha=0.75, fontfamily="monospace", zorder=4,
                 va="bottom", ha="left")
 
     # Constellation name label via PIL after rendering
