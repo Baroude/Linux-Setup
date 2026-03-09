@@ -613,6 +613,14 @@ def render_orbital(sys_name: str, data: dict, W: int, H: int) -> Image.Image:
 
         # Planet position
         ang     = angles[i]
+
+        # Short bright arc at planet position
+        trail_hw = math.radians(20)
+        trail_t = np.linspace(ang - trail_hw, ang + trail_hw, 40)
+        trail_px = ex + a * np.cos(trail_t)
+        trail_py = cy + b * np.sin(trail_t)
+        ax.plot(trail_px, trail_py, color=accent_hex,
+                lw=orbit_lw * 2.0, alpha=0.75, zorder=3)
         planet_x = ex + a * math.cos(ang)
         planet_y = cy + b * math.sin(ang)
 
@@ -646,8 +654,16 @@ def render_orbital(sys_name: str, data: dict, W: int, H: int) -> Image.Image:
     canvas = Image.open(buf).convert("RGB")
     canvas = canvas.resize((W, H), Image.LANCZOS)
 
+    # Background star field
+    seed = int(hashlib.md5(sys_name.encode()).hexdigest(), 16) % (2 ** 31)
+    canvas = draw_star_field(canvas, accent_hex, seed=seed, n_stars=250)
+
     display_name = sys_name.replace("-", " ").title()
     add_label(canvas, display_name, accent_hex, W // 2, int(H * 0.91))
+
+    canvas = draw_center_haze(canvas, accent_hex, opacity=0.10, radius_frac=0.38)
+    canvas = apply_vignette(canvas, strength=0.22)
+    canvas = apply_glow_bloom(canvas, accent_hex, opacity=0.28)
     return canvas
 
 
