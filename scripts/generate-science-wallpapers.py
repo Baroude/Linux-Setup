@@ -817,8 +817,8 @@ def make_aminoacid_wallpaper(name: str, accent_name: str, W: int, H: int) -> Ima
 
     canvas = Image.new("RGB", (W, H), hex_to_rgb(BG_HEX))
 
-    # Scale molecule to ~22% of canvas width
-    target_w = int(W * 0.22)
+    # Scale molecule to ~28% of canvas width
+    target_w = int(W * 0.28)
     mw, mh = mol_img.size
     scale = target_w / mw
     new_w = int(mw * scale)
@@ -830,12 +830,18 @@ def make_aminoacid_wallpaper(name: str, accent_name: str, W: int, H: int) -> Ima
     mol_x = (W - new_w) // 2
     mol_y = (H - new_h - label_h - label_gap) // 2
 
+    seed = int(hashlib.md5(name.encode()).hexdigest(), 16) % (2 ** 31)
+    canvas = draw_star_field(canvas, accent_hex, seed=seed, n_stars=300)
+    canvas = draw_center_haze(canvas, accent_hex, opacity=0.10, radius_frac=0.30)
+
     canvas.paste(mol_scaled, (mol_x, mol_y), mol_scaled)
 
     label = name.replace("-", " ").title()
     label_top = mol_y + new_h + label_gap
     add_label(canvas, label, accent_hex, W // 2, label_top)
 
+    canvas = apply_vignette(canvas, strength=0.22)
+    canvas = apply_glow_bloom(canvas, accent_hex, opacity=0.28)
     return canvas
 
 
