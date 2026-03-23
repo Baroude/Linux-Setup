@@ -82,17 +82,8 @@ while true; do sudo -v; sleep 60; done &
 SUDO_KEEPALIVE_PID=$!
 trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 
-# ---------------------------------------------------------------------------
-# Sciwall wallpaper generation — start immediately in background.
-# Theme is already validated above; no other phase is a prerequisite.
-# Output is captured to a log; we wait for it at Phase 14c.
-# ---------------------------------------------------------------------------
-SCIWALL_LOG="$(mktemp --suffix=.sciwall.log)"
-bash "$REPO_DIR/scripts/generate-wallpapers.sh" \
-  --theme "${THEME_NAME}-${THEME_FLAVOR}" \
-  >"$SCIWALL_LOG" 2>&1 &
-SCIWALL_PID=$!
-info "Sciwall wallpaper generation started in background (PID $SCIWALL_PID)"
+SCIWALL_LOG=""
+SCIWALL_PID=""
 
 # Clone to a fixed /tmp path, wiping any previous partial clone.
 clone_fresh() { rm -rf "$1"; GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$2" "$1"; }
@@ -145,7 +136,7 @@ sudo apt install -y \
   zsh vim \
   build-essential cmake ninja-build \
   clangd g++ pkg-config \
-  python3-pip python3-venv \
+  python3-pip python3-venv python3.13-venv \
   wl-clipboard \
   xdg-utils \
   qt6-style-kvantum \
@@ -182,6 +173,17 @@ else
 fi
 
 ok "APT base packages installed"
+
+# ---------------------------------------------------------------------------
+# Sciwall wallpaper generation — start after Phase 1 so python3-venv is present.
+# Runs in background while the remaining phases proceed.
+# ---------------------------------------------------------------------------
+SCIWALL_LOG="$(mktemp --suffix=.sciwall.log)"
+bash "$REPO_DIR/scripts/generate-wallpapers.sh" \
+  --theme "${THEME_NAME}-${THEME_FLAVOR}" \
+  >"$SCIWALL_LOG" 2>&1 &
+SCIWALL_PID=$!
+info "Sciwall wallpaper generation started in background (PID $SCIWALL_PID)"
 
 # ---------------------------------------------------------------------------
 # Phase 1b — Node.js LTS (needed for Neovim LSP tools)
