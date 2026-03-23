@@ -108,16 +108,53 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Generate wallpapers
+# Generate wallpapers — one type at a time to prevent OOM from killing
+# the entire run (e.g. reaction-diffusion can exhaust VM RAM).
+# Falls back to a single invocation if --list-types is not supported.
 # ---------------------------------------------------------------------------
 OUT_DIR="$WALLPAPER_ROOT/$SCIWALL_THEME"
 mkdir -p "$OUT_DIR"
 
-info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
-"$VENV_DIR/bin/generate-wallpapers" \
-  --theme "$SCIWALL_THEME" \
-  --out-dir "$OUT_DIR" \
-  --missing-only \
-  "${EXTRA_ARGS[@]}"
+# If caller already passed --type, honour it directly (single run)
+if [[ " ${EXTRA_ARGS[*]-} " == *" --type "* ]]; then
+  info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
+  "$VENV_DIR/bin/generate-wallpapers" \
+    --theme "$SCIWALL_THEME" \
+    --out-dir "$OUT_DIR" \
+    --missing-only \
+    "${EXTRA_ARGS[@]}"
+  ok "Wallpapers ready in: $OUT_DIR"
+  exit 0
+fi
+
+# Attempt per-type generation for crash/OOM isolation
+SCIWALL_TYPES="$("$VENV_DIR/bin/generate-wallpapers" --list-types 2>/dev/null || true)"
+
+if [[ -n "$SCIWALL_TYPES" ]]; then
+  info "Generating wallpapers per-type (theme: $SCIWALL_THEME → $OUT_DIR)..."
+  _failed_types=()
+  while IFS= read -r _type; do
+    [[ -z "$_type" ]] && continue
+    info "  → $_type"
+    if ! "$VENV_DIR/bin/generate-wallpapers" \
+        --theme "$SCIWALL_THEME" \
+        --out-dir "$OUT_DIR" \
+        --missing-only \
+        --type "$_type" \
+        "${EXTRA_ARGS[@]}"; then
+      warn "  Type '$_type' failed (OOM?) — skipping"
+      _failed_types+=("$_type")
+    fi
+  done <<< "$SCIWALL_TYPES"
+  [[ ${#_failed_types[@]} -gt 0 ]] && warn "Failed types: ${_failed_types[*]}"
+else
+  # --list-types not supported by this version; run monolithically
+  info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
+  "$VENV_DIR/bin/generate-wallpapers" \
+    --theme "$SCIWALL_THEME" \
+    --out-dir "$OUT_DIR" \
+    --missing-only \
+    "${EXTRA_ARGS[@]}"
+fi
 
 ok "Wallpapers ready in: $OUT_DIR"
