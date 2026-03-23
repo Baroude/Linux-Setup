@@ -64,13 +64,10 @@ PY
 # Helpers
 # ---------------------------------------------------------------------------
 _PHASE_START=""
-info()  { _PHASE_START="${EPOCHREALTIME}"; echo -e "\033[1;34m==>\033[0m $*"; }
+info()  { _PHASE_START="$SECONDS"; echo -e "\033[1;34m==>\033[0m $*"; }
 ok()    {
   local _elapsed=""
-  if [[ -n "$_PHASE_START" ]]; then
-    _elapsed="$(python3 -c "print(f' \033[2m({float(\"${EPOCHREALTIME}\")-float(\"${_PHASE_START}\"):.1f}s)\033[0m')" 2>/dev/null || true)"
-    _PHASE_START=""
-  fi
+  [[ -n "$_PHASE_START" ]] && _elapsed=" ($(( SECONDS - _PHASE_START ))s)" && _PHASE_START=""
   echo -e "\033[1;32m OK\033[0m $*${_elapsed}"
 }
 warn()  { echo -e "\033[1;33mWRN\033[0m $*"; }
