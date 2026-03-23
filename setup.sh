@@ -129,8 +129,7 @@ gh_latest_tag() {
 # ---------------------------------------------------------------------------
 info "Phase 1 · APT base packages"
 
-sudo apt update -y
-sudo apt upgrade -y
+sudo apt update
 sudo apt install -y \
   git curl wget unzip \
   zsh vim \
