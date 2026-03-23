@@ -787,10 +787,10 @@ info "Phase 11b · Tidal (tidal-hifi)"
 if ! command -v flatpak &>/dev/null; then
   sudo apt install -y flatpak
 fi
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
-if ! flatpak list --app | grep -q "com.mastermindzh.tidal-hifi"; then
-  flatpak install -y flathub com.mastermindzh.tidal-hifi
+if ! flatpak list --user --app | grep -q "com.mastermindzh.tidal-hifi"; then
+  flatpak install --user -y flathub com.mastermindzh.tidal-hifi
   ok "tidal-hifi installed"
 else
   skip "tidal-hifi"
