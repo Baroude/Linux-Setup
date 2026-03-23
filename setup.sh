@@ -751,16 +751,17 @@ fi
 
 # Plugins — clone all three in parallel (independent repos, disjoint target dirs)
 OMZ_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+_OMZ_PIDS=()
 [[ -d "$OMZ_CUSTOM/zsh-syntax-highlighting" ]] || \
-  git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
-    "$OMZ_CUSTOM/zsh-syntax-highlighting" &
+  { git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
+    "$OMZ_CUSTOM/zsh-syntax-highlighting" & _OMZ_PIDS+=($!); }
 [[ -d "$OMZ_CUSTOM/zsh-autosuggestions" ]] || \
-  git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git \
-    "$OMZ_CUSTOM/zsh-autosuggestions" &
+  { git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git \
+    "$OMZ_CUSTOM/zsh-autosuggestions" & _OMZ_PIDS+=($!); }
 [[ -d "$OMZ_CUSTOM/zsh-history-substring-search" ]] || \
-  git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search.git \
-    "$OMZ_CUSTOM/zsh-history-substring-search" &
-wait
+  { git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search.git \
+    "$OMZ_CUSTOM/zsh-history-substring-search" & _OMZ_PIDS+=($!); }
+(( ${#_OMZ_PIDS[@]} > 0 )) && wait "${_OMZ_PIDS[@]}"
 
 # Starship
 if command -v starship &>/dev/null; then
