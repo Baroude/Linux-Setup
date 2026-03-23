@@ -766,7 +766,7 @@ wait
 if command -v starship &>/dev/null; then
   skip "Starship ($(starship --version 2>/dev/null | head -1))"
 else
-  curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+  curl -fsSL https://starship.rs/install.sh | sudo sh -s -- --yes
   ok "Starship installed"
 fi
 
