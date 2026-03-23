@@ -99,10 +99,10 @@ info "Installing/updating Sciwall in venv..."
 # ---------------------------------------------------------------------------
 # Validate theme availability
 # ---------------------------------------------------------------------------
-if "$VENV_DIR/bin/sciwall" --list-themes 2>/dev/null | grep -qiF "$SCIWALL_THEME"; then
+if "$VENV_DIR/bin/generate-wallpapers" --list-themes 2>/dev/null | grep -qiF "$SCIWALL_THEME"; then
   : # theme found
 else
-  AVAILABLE="$("$VENV_DIR/bin/sciwall" --list-themes 2>/dev/null || echo "(unavailable)")"
+  AVAILABLE="$("$VENV_DIR/bin/generate-wallpapers" --list-themes 2>/dev/null || echo "(unavailable)")"
   warn "Theme '$SCIWALL_THEME' not found in Sciwall. Available: $AVAILABLE"
   warn "Proceeding anyway — Sciwall will report an error if the theme is truly missing."
 fi
@@ -114,7 +114,7 @@ OUT_DIR="$WALLPAPER_ROOT/$SCIWALL_THEME"
 mkdir -p "$OUT_DIR"
 
 info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
-"$VENV_DIR/bin/sciwall" \
+"$VENV_DIR/bin/generate-wallpapers" \
   --theme "$SCIWALL_THEME" \
   --out-dir "$OUT_DIR" \
   --missing-only \
