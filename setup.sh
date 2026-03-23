@@ -63,10 +63,30 @@ PY
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-info()  { echo -e "\033[1;34m==>\033[0m $*"; }
-ok()    { echo -e "\033[1;32m OK\033[0m $*"; }
+_PHASE_START=""
+info()  { _PHASE_START="${EPOCHREALTIME}"; echo -e "\033[1;34m==>\033[0m $*"; }
+ok()    {
+  local _elapsed=""
+  if [[ -n "$_PHASE_START" ]]; then
+    _elapsed="$(python3 -c "print(f' \033[2m({float(\"${EPOCHREALTIME}\")-float(\"${_PHASE_START}\"):.1f}s)\033[0m')" 2>/dev/null || true)"
+    _PHASE_START=""
+  fi
+  echo -e "\033[1;32m OK\033[0m $*${_elapsed}"
+}
 warn()  { echo -e "\033[1;33mWRN\033[0m $*"; }
 skip()  { echo -e "\033[1;36mSKP\033[0m $* (already installed)"; }
+
+# ---------------------------------------------------------------------------
+# Sciwall wallpaper generation — start immediately in background.
+# Theme is already validated above; no other phase is a prerequisite.
+# Output is captured to a log; we wait for it at Phase 14c.
+# ---------------------------------------------------------------------------
+SCIWALL_LOG="$(mktemp --suffix=.sciwall.log)"
+bash "$REPO_DIR/scripts/generate-wallpapers.sh" \
+  --theme "${THEME_NAME}-${THEME_FLAVOR}" \
+  >"$SCIWALL_LOG" 2>&1 &
+SCIWALL_PID=$!
+info "Sciwall wallpaper generation started in background (PID $SCIWALL_PID)"
 
 # Clone to a fixed /tmp path, wiping any previous partial clone.
 clone_fresh() { rm -rf "$1"; GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$2" "$1"; }
@@ -500,12 +520,13 @@ kwriteconfig6 --file kwinrc --group Plugins --key scaleEnabled false
 ok "Magic Lamp minimize effect enabled"
 
 # ---------------------------------------------------------------------------
-# Phase 7b — kwin-better-blur (force blur behind any semi-transparent window)
+# Phase 7b + 7c — kwin-better-blur & Klassy (apt deps merged; cmake in parallel)
 # ---------------------------------------------------------------------------
-info "Phase 7b · kwin-better-blur"
+info "Phase 7b + 7c · kwin-better-blur + Klassy build deps"
 
-# Build dependencies — kwin-dev alone is not enough; list missing KF6 components
-# explicitly. Package names mirror the CMake find_package component names.
+# Single apt call covers both builds — avoids acquiring the dpkg lock twice.
+# 7b needs: kwin-dev, KF6 stack, xcb libs
+# 7c adds:  qt6-base-dev, qt6-declarative-dev, libkirigami-dev
 sudo apt install -y \
   kwin-dev extra-cmake-modules \
   libkf6configwidgets-dev \
@@ -525,11 +546,14 @@ sudo apt install -y \
   libxcb-shm0-dev \
   libkf6coreaddons-dev \
   libkf6iconthemes-dev \
-  libqt6svg6-dev
+  libqt6svg6-dev \
+  qt6-base-dev \
+  qt6-declarative-dev \
+  libkirigami-dev
 
-# Select blur plugin based on installed Plasma version:
-#   Plasma < 6.4 → kwin-better-blur v1.3.6 (taj-ny pinned — last pre-6.4 release)
-#   Plasma ≥ 6.4 → D3SOX/kwin-forceblur  (maintained active fork; same plugin ID)
+# ---- Phase 7b: resolve source repo based on installed Plasma version ----
+# Plasma < 6.4 → kwin-better-blur v1.3.6 (taj-ny pinned — last pre-6.4 release)
+# Plasma ≥ 6.4 → D3SOX/kwin-forceblur  (maintained active fork; same plugin ID)
 PLASMA_VER=$(plasmashell --version 2>/dev/null | grep -oP '\d+\.\d+' | head -1 || echo "6.0")
 PLASMA_MAJOR=$(cut -d. -f1 <<< "$PLASMA_VER")
 PLASMA_MINOR=$(cut -d. -f2 <<< "$PLASMA_VER")
@@ -543,80 +567,54 @@ else
   info "Plasma ${PLASMA_VER} < 6.4 — using kwin-better-blur v1.3.6 (pinned)"
 fi
 
-BETTERBLUR_BUILD="$(mktemp -d)"
+BB_BUILD="$(mktemp -d)"
+BB_LOG="$(mktemp --suffix=.betterblur.log)"
 rm -rf /tmp/kwin-better-blur
 # shellcheck disable=SC2086
 git clone --depth=1 ${BETTERBLUR_BRANCH} "$BETTERBLUR_REPO" /tmp/kwin-better-blur
-cmake -S /tmp/kwin-better-blur -B "$BETTERBLUR_BUILD" \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=/usr
-cmake --build "$BETTERBLUR_BUILD" -j"$(nproc)"
-sudo cmake --install "$BETTERBLUR_BUILD"
-rm -rf /tmp/kwin-better-blur "$BETTERBLUR_BUILD"
 
-# Enable the effect — plugin ID from metadata.json: kwin4_effect_better_blur
-kwriteconfig6 --file kwinrc --group Plugins --key kwin4_effect_better_blurEnabled true
-# Blur all windows EXCEPT Plasma panels (plasmashell).
-# BlurMatching=false + BlurNonMatching=true + WindowList=plasmashell → everything
-# gets blur EXCEPT the shell itself, keeping the top bar fully transparent.
-kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurAll false
-kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurMatching false
-kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurNonMatching true
-kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key WindowList plasmashell
-ok "kwin-better-blur installed and enabled (blur all except plasmashell)"
-
-# ---------------------------------------------------------------------------
-# Phase 7c — Klassy window decoration
-# ---------------------------------------------------------------------------
-info "Phase 7c · Klassy window decoration"
-
-# Klassy: polished KWin decoration with Klassy-circle buttons and per-titlebar
-# opacity support. Most-used third-party KWin decoration in 2025 KDE rices.
-# Build deps reuse Phase 7b's kwin-dev / kdecorations3-dev stack plus 3 extras
-# added to that apt block (libkf6coreaddons-dev, libkf6iconthemes-dev, libqt6svg6-dev).
-# Upstream also requires Qt6 Quick + Kirigami dev files on Debian/Ubuntu.
-sudo apt install -y \
-  qt6-base-dev \
-  qt6-declarative-dev \
-  libkirigami-dev
-
+# ---- Phase 7c: clone Klassy (skip if already installed) ----
+KLASSY_SKIP=0
+KLASSY_BUILD=""
+KLASSY_LOG=""
 if find /usr/lib -maxdepth 5 -name "*klassy*" -name "*.so" 2>/dev/null | grep -q .; then
   skip "Klassy (already installed)"
+  KLASSY_SKIP=1
 else
   KLASSY_BUILD="$(mktemp -d)"
+  KLASSY_LOG="$(mktemp --suffix=.klassy.log)"
   clone_fresh /tmp/klassy https://github.com/paulmcauley/klassy
-  cmake -S /tmp/klassy -B "$KLASSY_BUILD" \
+fi
+
+# ---- Background both cmake builds ----
+# Each gets half the cores to avoid CPU/RAM contention between the two builds.
+HALF_JOBS=$(( $(nproc) / 2 + 1 ))
+
+(
+  cmake -S /tmp/kwin-better-blur -B "$BB_BUILD" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
-    -DBUILD_QT5=OFF \
-    -DBUILD_QT6=ON
-  cmake --build "$KLASSY_BUILD" -j"$(nproc)"
-  sudo cmake --install "$KLASSY_BUILD"
-  rm -rf /tmp/klassy "$KLASSY_BUILD"
-  ok "Klassy built and installed"
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build "$BB_BUILD" -j"$HALF_JOBS"
+  sudo cmake --install "$BB_BUILD"
+) >"$BB_LOG" 2>&1 &
+BB_PID=$!
+info "Phase 7b · kwin-better-blur building in background (PID $BB_PID)"
+
+if [[ "$KLASSY_SKIP" -eq 0 ]]; then
+  (
+    cmake -S /tmp/klassy -B "$KLASSY_BUILD" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
+      -DBUILD_QT5=OFF \
+      -DBUILD_QT6=ON
+    cmake --build "$KLASSY_BUILD" -j"$HALF_JOBS"
+    sudo cmake --install "$KLASSY_BUILD"
+  ) >"$KLASSY_LOG" 2>&1 &
+  KLASSY_PID=$!
+  info "Phase 7c · Klassy building in background (PID $KLASSY_PID)"
 fi
-
-# Apply Klassy as the active KWin window decoration
-kwriteconfig6 --file kwinrc \
-  --group "org.kde.kdecoration2" --key "library" "org.kde.klassy"
-kwriteconfig6 --file kwinrc \
-  --group "org.kde.kdecoration2" --key "theme"   "@Default"
-
-# Configure klassyrc — Klassy circles (ButtonIconStyle=0), corner radius 2.5
-# (≈12 px at 96 dpi, matching the KWin rounded-corners effect).
-# Titlebar opacity mirrors Kitty/Dolphin (90 % active, 85 % inactive) so
-# kwin-better-blur can show the frosted-glass effect behind the titlebar.
-kwriteconfig6 --file klassyrc --group Windeco --key ButtonIconStyle               0
-kwriteconfig6 --file klassyrc --group Windeco --key CornerRadius                  2.5
-kwriteconfig6 --file klassyrc --group Windeco --key ActiveWindowTitleBarOpacity   90
-kwriteconfig6 --file klassyrc --group Windeco --key InactiveWindowTitleBarOpacity 85
-
-# Signal KWin to reload its configuration immediately (no-op when headless).
-if [[ -n "${XDG_CURRENT_DESKTOP:-}" ]]; then
-  qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
-fi
-ok "Klassy decoration applied (circles, 2.5 px corners, 90/85 % titlebar opacity)"
+# Phases 8–11b run while both cmake builds proceed; see wait block before Phase 14.
 
 # ---------------------------------------------------------------------------
 # Phase 8 — Krohnkite tiling script
@@ -745,17 +743,18 @@ if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
-# Plugins
+# Plugins — clone all three in parallel (independent repos, disjoint target dirs)
 OMZ_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 [[ -d "$OMZ_CUSTOM/zsh-syntax-highlighting" ]] || \
   git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
-    "$OMZ_CUSTOM/zsh-syntax-highlighting"
+    "$OMZ_CUSTOM/zsh-syntax-highlighting" &
 [[ -d "$OMZ_CUSTOM/zsh-autosuggestions" ]] || \
   git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git \
-    "$OMZ_CUSTOM/zsh-autosuggestions"
+    "$OMZ_CUSTOM/zsh-autosuggestions" &
 [[ -d "$OMZ_CUSTOM/zsh-history-substring-search" ]] || \
   git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search.git \
-    "$OMZ_CUSTOM/zsh-history-substring-search"
+    "$OMZ_CUSTOM/zsh-history-substring-search" &
+wait
 
 # Starship
 if command -v starship &>/dev/null; then
@@ -874,6 +873,46 @@ ok "Catppuccin Mocha CSS theme written to ~/.config/tidal-hifi/catppuccin-mocha.
 warn "Manual step: Open tidal-hifi → Settings → Theming → choose ~/.config/tidal-hifi/catppuccin-mocha.css"
 
 # ---------------------------------------------------------------------------
+# Phase 7b + 7c (cont.) — Wait for cmake builds, then apply KWin config
+# ---------------------------------------------------------------------------
+info "Phase 7b + 7c · Waiting for cmake builds (PIDs: $BB_PID${KLASSY_PID:+ $KLASSY_PID})..."
+
+if wait "$BB_PID"; then
+  rm -rf /tmp/kwin-better-blur "$BB_BUILD"
+  # Enable the effect — plugin ID from metadata.json: kwin4_effect_better_blur
+  kwriteconfig6 --file kwinrc --group Plugins --key kwin4_effect_better_blurEnabled true
+  # Blur all windows EXCEPT Plasma panels (plasmashell).
+  kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurAll false
+  kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurMatching false
+  kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key BlurNonMatching true
+  kwriteconfig6 --file kwinrc --group Effect-kwin4_effect_better_blur --key WindowList plasmashell
+  ok "kwin-better-blur installed and enabled (blur all except plasmashell)"
+else
+  warn "kwin-better-blur build failed — see $BB_LOG"
+fi
+
+if [[ "$KLASSY_SKIP" -eq 0 ]]; then
+  if wait "$KLASSY_PID"; then
+    rm -rf /tmp/klassy "$KLASSY_BUILD"
+    # Apply Klassy as the active KWin window decoration
+    kwriteconfig6 --file kwinrc \
+      --group "org.kde.kdecoration2" --key "library" "org.kde.klassy"
+    kwriteconfig6 --file kwinrc \
+      --group "org.kde.kdecoration2" --key "theme"   "@Default"
+    # Klassy circles (ButtonIconStyle=0), corner radius 2.5, 90/85 % opacity
+    kwriteconfig6 --file klassyrc --group Windeco --key ButtonIconStyle               0
+    kwriteconfig6 --file klassyrc --group Windeco --key CornerRadius                  2.5
+    kwriteconfig6 --file klassyrc --group Windeco --key ActiveWindowTitleBarOpacity   90
+    kwriteconfig6 --file klassyrc --group Windeco --key InactiveWindowTitleBarOpacity 85
+    [[ -n "${XDG_CURRENT_DESKTOP:-}" ]] && \
+      qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+    ok "Klassy decoration applied (circles, 2.5 px corners, 90/85 % titlebar opacity)"
+  else
+    warn "Klassy build failed — see $KLASSY_LOG"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Phase 14 — Dotfiles (dotbot)
 # ---------------------------------------------------------------------------
 info "Phase 14 · Dotfiles (dotbot)"
@@ -888,6 +927,17 @@ bash "$REPO_DIR/scripts/theme-switch.sh" \
   --accent "$THEME_ACCENT" \
   --non-interactive
 ok "Theme applied via scripts/theme-switch.sh (${THEME_NAME}/${THEME_FLAVOR}/${THEME_ACCENT})"
+
+# ---------------------------------------------------------------------------
+# Phase 14c — Wait for background Sciwall wallpaper generation (Phase 9c)
+# ---------------------------------------------------------------------------
+info "Phase 14c · Waiting for Sciwall wallpaper generation (PID $SCIWALL_PID)..."
+if wait "$SCIWALL_PID"; then
+  ok "Sciwall wallpapers ready for ${THEME_NAME}-${THEME_FLAVOR}"
+else
+  warn "Sciwall wallpaper generation failed — see $SCIWALL_LOG"
+  warn "Falling back to any pre-committed wallpapers."
+fi
 
 # Desktop wallpaper rotation — applied by setup-first-login.sh on first login (needs plasmashell)
 

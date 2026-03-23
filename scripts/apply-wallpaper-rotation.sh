@@ -7,7 +7,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WALLPAPER_ROOT_DIR="${REPO_DIR}/images/wallpaper-rotation"
 THEME_STATE_FILE="${THEME_STATE_FILE:-$HOME/.config/linux-setup/theme-state.json}"
 WALLPAPER_SET="${WALLPAPER_SET:-}"
-SLIDE_INTERVAL_SECONDS="${SLIDE_INTERVAL_SECONDS:-7200}"
+SLIDE_INTERVAL_SECONDS="${SLIDE_INTERVAL_SECONDS:-300}"
 
 # Resolve active theme from --theme arg if WALLPAPER_SET not set via env
 if [[ -z "$WALLPAPER_SET" ]]; then
@@ -36,14 +36,31 @@ except Exception:
     print("")
     raise SystemExit(0)
 
-print(payload.get("theme", ""))
+theme  = payload.get("theme",  "")
+flavor = payload.get("flavor", "")
+# Prefer "{theme}-{flavor}" (Sciwall naming) when set; fall back to bare theme name.
+if theme and flavor:
+    print(f"{theme}-{flavor}")
+elif theme:
+    print(theme)
+else:
+    print("")
 PY
 )"
 fi
 
 WALLPAPER_DIR="$WALLPAPER_ROOT_DIR"
-if [[ -n "$WALLPAPER_SET" && -d "$WALLPAPER_ROOT_DIR/$WALLPAPER_SET" ]]; then
-  WALLPAPER_DIR="$WALLPAPER_ROOT_DIR/$WALLPAPER_SET"
+if [[ -n "$WALLPAPER_SET" ]]; then
+  # Try "{theme}-{flavor}" first (Sciwall output), then bare theme name.
+  if [[ -d "$WALLPAPER_ROOT_DIR/$WALLPAPER_SET" ]]; then
+    WALLPAPER_DIR="$WALLPAPER_ROOT_DIR/$WALLPAPER_SET"
+  else
+    # Strip flavor suffix and try bare theme name (legacy wallpaper sets)
+    _bare_theme="${WALLPAPER_SET%%-*}"
+    if [[ -d "$WALLPAPER_ROOT_DIR/$_bare_theme" ]]; then
+      WALLPAPER_DIR="$WALLPAPER_ROOT_DIR/$_bare_theme"
+    fi
+  fi
 fi
 
 if command -v qdbus6 >/dev/null 2>&1; then
@@ -56,8 +73,9 @@ else
 fi
 
 first_image="$(
-  find "$WALLPAPER_DIR" -maxdepth 1 -type f \
+  find "$WALLPAPER_DIR" -type f \
     \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) \
+    ! -name '*-preview.*' \
     | sort \
     | head -n 1
 )"
