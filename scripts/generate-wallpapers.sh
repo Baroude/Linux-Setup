@@ -112,15 +112,17 @@ fi
 # the entire run (e.g. reaction-diffusion can exhaust VM RAM).
 # Falls back to a single invocation if --list-types is not supported.
 # ---------------------------------------------------------------------------
+# Sciwall creates a <theme>/ subfolder inside --out-dir, so pass WALLPAPER_ROOT
+# directly so the final layout is wallpaper-rotation/<theme>/type/file.png.
 OUT_DIR="$WALLPAPER_ROOT/$SCIWALL_THEME"
-mkdir -p "$OUT_DIR"
+mkdir -p "$WALLPAPER_ROOT"
 
 # If caller already passed --type, honour it directly (single run)
 if [[ " ${EXTRA_ARGS[*]-} " == *" --type "* ]]; then
   info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
   "$VENV_DIR/bin/generate-wallpapers" \
     --theme "$SCIWALL_THEME" \
-    --out-dir "$OUT_DIR" \
+    --out-dir "$WALLPAPER_ROOT" \
     --missing-only \
     "${EXTRA_ARGS[@]}"
   ok "Wallpapers ready in: $OUT_DIR"
@@ -138,7 +140,7 @@ if [[ -n "$SCIWALL_TYPES" ]]; then
     info "  → $_type"
     if ! "$VENV_DIR/bin/generate-wallpapers" \
         --theme "$SCIWALL_THEME" \
-        --out-dir "$OUT_DIR" \
+        --out-dir "$WALLPAPER_ROOT" \
         --missing-only \
         --type "$_type" \
         "${EXTRA_ARGS[@]}"; then
@@ -152,7 +154,7 @@ else
   info "Generating wallpapers (theme: $SCIWALL_THEME → $OUT_DIR)..."
   "$VENV_DIR/bin/generate-wallpapers" \
     --theme "$SCIWALL_THEME" \
-    --out-dir "$OUT_DIR" \
+    --out-dir "$WALLPAPER_ROOT" \
     --missing-only \
     "${EXTRA_ARGS[@]}"
 fi
