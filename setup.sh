@@ -741,7 +741,7 @@ ok "Kitty config directory ready (dotbot will link kitty/kitty.conf)"
 info "Phase 11 · Zsh + oh-my-zsh + Starship"
 
 # Change shell to zsh
-[[ "$(getent passwd "$USER" | cut -d: -f7)" != "/bin/zsh" ]] && chsh -s /bin/zsh
+[[ "$(getent passwd "$USER" | cut -d: -f7)" != "/bin/zsh" ]] && sudo usermod -s /bin/zsh "$USER"
 
 # oh-my-zsh (non-interactive)
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
