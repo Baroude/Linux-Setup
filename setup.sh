@@ -74,6 +74,15 @@ warn()  { echo -e "\033[1;33mWRN\033[0m $*"; }
 skip()  { echo -e "\033[1;36mSKP\033[0m $* (already installed)"; }
 
 # ---------------------------------------------------------------------------
+# Sudo keepalive — refresh credentials every 60 s so long phases (cmake builds,
+# Flatpak downloads) don't hit a re-prompt mid-run.
+# ---------------------------------------------------------------------------
+sudo -v
+while true; do sudo -v; sleep 60; done &
+SUDO_KEEPALIVE_PID=$!
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+
+# ---------------------------------------------------------------------------
 # Sciwall wallpaper generation — start immediately in background.
 # Theme is already validated above; no other phase is a prerequisite.
 # Output is captured to a log; we wait for it at Phase 14c.
