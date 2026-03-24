@@ -51,7 +51,7 @@ _sddm_write_where_is_my_conf() {
   surface0="$(theme_context_get "tokens.SURFACE0")"
   red="$(theme_context_get "tokens.RED")"
 
-  local font blur_radius input_radius input_border_width wrong_border_radius show_user show_user_real_name
+  local font blur_radius input_radius input_border_width wrong_border_radius show_user show_user_real_name password_font_size users_font_size
   font="$(theme_context_get "sddm_config.font")"
   blur_radius="$(theme_context_get "sddm_config.blur_radius")"
   input_radius="$(theme_context_get "sddm_config.password_input_radius")"
@@ -59,6 +59,8 @@ _sddm_write_where_is_my_conf() {
   wrong_border_radius="$(theme_context_get "sddm_config.wrong_password_border_radius")"
   show_user="$(theme_context_get "sddm_config.show_user")"
   show_user_real_name="$(theme_context_get "sddm_config.show_user_real_name")"
+  password_font_size="$(theme_context_get "sddm_config.password_font_size")"
+  users_font_size="$(theme_context_get "sddm_config.users_font_size")"
 
   local bg_image_key
   bg_image_key="$(theme_context_get "sddm_config.background_image")"
@@ -96,6 +98,8 @@ _sddm_write_where_is_my_conf() {
     echo "wrongPasswordBorderRadius=${wrong_border_radius}"
     [[ -n "$show_user" ]] && echo "showUsersByDefault=${show_user}"
     [[ -n "$show_user_real_name" ]] && echo "showUserRealNameByDefault=${show_user_real_name}"
+    [[ -n "$password_font_size" ]] && echo "passwordFontSize=${password_font_size}"
+    [[ -n "$users_font_size" ]] && echo "usersFontSize=${users_font_size}"
     [[ -n "$bg_line" ]] && echo "$bg_line"
   } > "$tmp_conf"
   sudo install -m 644 "$tmp_conf" "${install_dir}/theme.conf.user"
