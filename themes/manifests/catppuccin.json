@@ -216,8 +216,11 @@
     "font": "JetBrains Mono Nerd Font",
     "blur_radius": "32",
     "password_input_radius": "8",
-    "password_input_border_width": "2",
-    "wrong_password_border_radius": "8"
+    "password_input_border_width": "3",
+    "wrong_password_border_radius": "8",
+    "show_user": "true",
+    "show_user_real_name": "false",
+    "background_image": "images/wallpaper-rotation/catppuccin/orbital-solar-system-mauve.png"
   },
   "grub_config": {
     "method": "catppuccin_git",

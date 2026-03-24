@@ -51,19 +51,26 @@ _sddm_write_where_is_my_conf() {
   surface0="$(theme_context_get "tokens.SURFACE0")"
   red="$(theme_context_get "tokens.RED")"
 
-  local font blur_radius input_radius input_border_width wrong_border_radius
+  local font blur_radius input_radius input_border_width wrong_border_radius show_user show_user_real_name
   font="$(theme_context_get "sddm_config.font")"
   blur_radius="$(theme_context_get "sddm_config.blur_radius")"
   input_radius="$(theme_context_get "sddm_config.password_input_radius")"
   input_border_width="$(theme_context_get "sddm_config.password_input_border_width")"
   wrong_border_radius="$(theme_context_get "sddm_config.wrong_password_border_radius")"
+  show_user="$(theme_context_get "sddm_config.show_user")"
+  show_user_real_name="$(theme_context_get "sddm_config.show_user_real_name")"
 
+  local bg_image_key
+  bg_image_key="$(theme_context_get "sddm_config.background_image")"
   local bg_src="${THEME_REPO_DIR}/images/evening-sky.png"
+  [[ -n "$bg_image_key" ]] && bg_src="${THEME_REPO_DIR}/${bg_image_key}"
   local bg_line=""
   if [[ -f "$bg_src" ]]; then
+    local bg_filename
+    bg_filename="$(basename "$bg_src")"
     theme_run "create sddm backgrounds dir" sudo mkdir -p "${install_dir}/backgrounds"
-    theme_run "copy sddm background" sudo cp "$bg_src" "${install_dir}/backgrounds/evening-sky.png"
-    bg_line="background=backgrounds/evening-sky.png"
+    theme_run "copy sddm background" sudo cp "$bg_src" "${install_dir}/backgrounds/${bg_filename}"
+    bg_line="background=backgrounds/${bg_filename}"
   fi
 
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
@@ -87,6 +94,8 @@ _sddm_write_where_is_my_conf() {
     echo "passwordInputRadius=${input_radius}"
     echo "passwordInputBorderWidth=${input_border_width}"
     echo "wrongPasswordBorderRadius=${wrong_border_radius}"
+    [[ -n "$show_user" ]] && echo "showUsersByDefault=${show_user}"
+    [[ -n "$show_user_real_name" ]] && echo "showUserRealNameByDefault=${show_user_real_name}"
     [[ -n "$bg_line" ]] && echo "$bg_line"
   } > "$tmp_conf"
   sudo cp "$tmp_conf" "${install_dir}/theme.conf.user"
