@@ -98,7 +98,7 @@ _sddm_write_where_is_my_conf() {
     [[ -n "$show_user_real_name" ]] && echo "showUserRealNameByDefault=${show_user_real_name}"
     [[ -n "$bg_line" ]] && echo "$bg_line"
   } > "$tmp_conf"
-  sudo cp "$tmp_conf" "${install_dir}/theme.conf.user"
+  sudo install -m 644 "$tmp_conf" "${install_dir}/theme.conf.user"
   rm -f "$tmp_conf"
 }
 
