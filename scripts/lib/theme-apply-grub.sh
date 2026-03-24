@@ -18,10 +18,20 @@ _grub_post_install() {
   local theme_txt="/usr/share/grub/themes/${target_name}/theme.txt"
   local grub_file="/etc/default/grub"
 
-  theme_run "set GRUB_THEME" \
-    sudo sed -i "s|^#\?GRUB_THEME=.*|GRUB_THEME=\"${theme_txt}\"|" "$grub_file"
-  theme_run "set GRUB_GFXMODE" \
-    sudo sed -i 's|^#\?GRUB_GFXMODE=.*|GRUB_GFXMODE=1920x1080|' "$grub_file"
+  if grep -q "^#\?GRUB_THEME=" "$grub_file"; then
+    theme_run "set GRUB_THEME" \
+      sudo sed -i "s|^#\?GRUB_THEME=.*|GRUB_THEME=\"${theme_txt}\"|" "$grub_file"
+  else
+    theme_run_shell "set GRUB_THEME" \
+      "echo 'GRUB_THEME=\"${theme_txt}\"' | sudo tee -a '${grub_file}' > /dev/null"
+  fi
+  if grep -q "^#\?GRUB_GFXMODE=" "$grub_file"; then
+    theme_run "set GRUB_GFXMODE" \
+      sudo sed -i 's|^#\?GRUB_GFXMODE=.*|GRUB_GFXMODE=1920x1080|' "$grub_file"
+  else
+    theme_run_shell "set GRUB_GFXMODE" \
+      "echo 'GRUB_GFXMODE=1920x1080' | sudo tee -a '${grub_file}' > /dev/null"
+  fi
   theme_run "update-grub" sudo update-grub
 }
 
