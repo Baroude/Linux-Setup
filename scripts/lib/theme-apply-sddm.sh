@@ -12,14 +12,20 @@ _sddm_sub() {
   printf '%s' "$pattern" | sed "s/\${flavor}/$flavor/g; s/\${accent}/$accent/g"
 }
 
-# Post-install: write sddm.conf.d activation file and optional wallpaper.
+# Write /etc/sddm.conf.d/10-theme.conf to activate the given theme.
+_sddm_activate() {
+  local target_name="$1"
+  theme_run "create sddm conf.d dir" sudo mkdir -p /etc/sddm.conf.d
+  theme_run_shell "activate sddm theme" \
+    "printf '[Theme]\nCurrent=${target_name}\n' | sudo tee /etc/sddm.conf.d/10-theme.conf > /dev/null"
+}
+
+# Post-install: write sddm.conf.d activation file and optional wallpaper (for simple themes).
 _sddm_post_install() {
   local target_name="$1"
   local install_dir="/usr/share/sddm/themes/${target_name}"
 
-  theme_run "create sddm conf.d dir" sudo mkdir -p /etc/sddm.conf.d
-  theme_run_shell "activate sddm theme" \
-    "printf '[Theme]\nCurrent=${target_name}\n' | sudo tee /etc/sddm.conf.d/10-theme.conf > /dev/null"
+  _sddm_activate "$target_name"
 
   local bg_src="${THEME_REPO_DIR}/images/evening-sky.png"
   if [[ -f "$bg_src" ]]; then
@@ -31,6 +37,60 @@ _sddm_post_install() {
     theme_run_shell "write sddm theme.conf.user" \
       "printf '[General]\nBackground=${bg_dir}/evening-sky.png\n' | sudo tee '${install_dir}/theme.conf.user' > /dev/null"
   fi
+}
+
+# Write a full theme.conf.user for where_is_my_sddm_theme using Catppuccin palette tokens.
+_sddm_write_where_is_my_conf() {
+  local target_name="$1"
+  local install_dir="/usr/share/sddm/themes/${target_name}"
+
+  local base text accent surface0 red
+  base="$(theme_context_get "tokens.BASE")"
+  text="$(theme_context_get "tokens.TEXT")"
+  accent="$(theme_context_get "tokens.ACCENT")"
+  surface0="$(theme_context_get "tokens.SURFACE0")"
+  red="$(theme_context_get "tokens.RED")"
+
+  local font blur_radius input_radius input_border_width wrong_border_radius
+  font="$(theme_context_get "sddm_config.font")"
+  blur_radius="$(theme_context_get "sddm_config.blur_radius")"
+  input_radius="$(theme_context_get "sddm_config.password_input_radius")"
+  input_border_width="$(theme_context_get "sddm_config.password_input_border_width")"
+  wrong_border_radius="$(theme_context_get "sddm_config.wrong_password_border_radius")"
+
+  local bg_src="${THEME_REPO_DIR}/images/evening-sky.png"
+  local bg_line=""
+  if [[ -f "$bg_src" ]]; then
+    theme_run "create sddm backgrounds dir" sudo mkdir -p "${install_dir}/backgrounds"
+    theme_run "copy sddm background" sudo cp "$bg_src" "${install_dir}/backgrounds/evening-sky.png"
+    bg_line="background=backgrounds/evening-sky.png"
+  fi
+
+  if [[ "${THEME_DRY_RUN}" == "1" ]]; then
+    echo "[dry-run] write sddm theme.conf.user (base=${base} text=${text} accent=${accent})"
+    return 0
+  fi
+
+  local tmp_conf
+  tmp_conf="$(mktemp)"
+  {
+    echo "[General]"
+    echo "backgroundFill=${base}"
+    echo "basicTextColor=${text}"
+    echo "passwordCursorColor=${accent}"
+    echo "passwordInputBackground=${surface0}"
+    echo "passwordTextColor=${text}"
+    echo "wrongPasswordBorderColor=${red}"
+    echo "passwordInputBorderColor=${accent}"
+    echo "font=${font}"
+    echo "blurRadius=${blur_radius}"
+    echo "passwordInputRadius=${input_radius}"
+    echo "passwordInputBorderWidth=${input_border_width}"
+    echo "wrongPasswordBorderRadius=${wrong_border_radius}"
+    [[ -n "$bg_line" ]] && echo "$bg_line"
+  } > "$tmp_conf"
+  sudo cp "$tmp_conf" "${install_dir}/theme.conf.user"
+  rm -f "$tmp_conf"
 }
 
 theme_apply_sddm_adapter() {
@@ -66,6 +126,7 @@ theme_apply_sddm_adapter() {
         sudo mv "${tmp_dir}/${target_name}" /usr/share/sddm/themes/
         rm -rf "$tmp_dir"
       fi
+      _sddm_post_install "$target_name"
       ;;
 
     git_sddm)
@@ -82,6 +143,26 @@ theme_apply_sddm_adapter() {
         theme_run "install sddm theme" sudo cp -r "/tmp/theme-sddm/${theme_subdir}" "/usr/share/sddm/themes/${target_name}"
       fi
       [[ "${THEME_DRY_RUN}" == "1" ]] || rm -rf /tmp/theme-sddm
+      _sddm_post_install "$target_name"
+      ;;
+
+    where_is_my_sddm)
+      local upstream_repo upstream_subdir
+      upstream_repo="$(theme_context_get "sddm_config.upstream_repo")"
+      upstream_subdir="$(theme_context_get "sddm_config.upstream_subdir")"
+      target_name="$(theme_context_get "sddm_config.target_name")"
+
+      theme_clone_fresh /tmp/theme-sddm "$upstream_repo"
+      theme_run "remove old sddm theme" sudo rm -rf "/usr/share/sddm/themes/${target_name}"
+      if [[ "$upstream_subdir" == "." ]]; then
+        theme_run "install sddm theme" sudo cp -r /tmp/theme-sddm "/usr/share/sddm/themes/${target_name}"
+      else
+        theme_run "install sddm theme" sudo cp -r "/tmp/theme-sddm/${upstream_subdir}" "/usr/share/sddm/themes/${target_name}"
+      fi
+      [[ "${THEME_DRY_RUN}" == "1" ]] || rm -rf /tmp/theme-sddm
+
+      _sddm_activate "$target_name"
+      _sddm_write_where_is_my_conf "$target_name"
       ;;
 
     *)
@@ -90,6 +171,5 @@ theme_apply_sddm_adapter() {
       ;;
   esac
 
-  _sddm_post_install "$target_name"
   theme_info "SDDM adapter completed"
 }

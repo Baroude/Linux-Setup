@@ -209,10 +209,15 @@
     "org.kde.plasma.lock_logout": "red"
   },
   "sddm_config": {
-    "method": "catppuccin_release",
-    "repo": "catppuccin/sddm",
-    "zip_pattern": "catppuccin-${flavor}-${accent}-sddm.zip",
-    "target_name_pattern": "catppuccin-${flavor}-${accent}"
+    "method": "where_is_my_sddm",
+    "upstream_repo": "https://github.com/stepanzubkov/where-is-my-sddm-theme",
+    "upstream_subdir": "where_is_my_sddm_theme",
+    "target_name": "where_is_my_sddm_theme",
+    "font": "JetBrains Mono Nerd Font",
+    "blur_radius": "32",
+    "password_input_radius": "8",
+    "password_input_border_width": "2",
+    "wrong_password_border_radius": "8"
   },
   "grub_config": {
     "method": "catppuccin_git",
