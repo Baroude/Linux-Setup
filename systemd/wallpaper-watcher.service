@@ -1,0 +1,13 @@
+[Unit]
+Description=KDE wallpaper change → matugen hook
+After=graphical-session.target
+Requires=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/linux-setup/wallpaper-watcher-wrapper.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
