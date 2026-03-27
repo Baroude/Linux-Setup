@@ -2,7 +2,8 @@
 # wallpaper-apply.sh — Run matugen on the current KDE wallpaper and live-reload
 # all themed components (KDE color scheme, kitty, Panel Colorizer, btop, SDDM).
 #
-# Called by kde-material-you-colors as on_change_hook (no args), or directly:
+# Called by wallpaper-watcher.service on every wallpaperChanged D-Bus signal,
+# or directly:
 #   wallpaper-apply.sh                     (reads wallpaper from Plasma config)
 #   wallpaper-apply.sh --wallpaper <path>  (use explicit path)
 
@@ -62,7 +63,7 @@ mkdir -p "$MATUGEN_CACHE"
 # matugen resolves template input_path relative to CWD → run from repo root
 (
   cd "$REPO_DIR"
-  "$MATUGEN_BIN" image "$WALL_PATH" --config "$MATUGEN_CFG"
+  "$MATUGEN_BIN" image "$WALL_PATH" --config "$MATUGEN_CFG" --source-color-index 0
 ) || { theme_err "matugen failed — theming aborted"; exit 1; }
 
 theme_info "matugen palette generated"

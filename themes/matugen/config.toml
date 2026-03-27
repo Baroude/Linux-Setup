@@ -1,0 +1,49 @@
+# matugen config for linux-setup wallpaper rotation.
+# Invoked by scripts/wallpaper-next.sh after each wallpaper change.
+# Run from REPO_DIR so relative input_path values resolve correctly.
+
+[config]
+# Always use the dark variant regardless of wallpaper brightness.
+mode = "dark"
+# tonal_spot: Material 3 palette with primary + secondary + tertiary hues.
+scheme_type = "tonal_spot"
+
+# ── Output templates ──────────────────────────────────────────────────────────
+
+[templates.kde]
+input_path  = "templates/kde.colors"
+output_path = "~/.local/share/color-schemes/MatugenDynamic.colors"
+
+[templates.kitty]
+input_path  = "templates/kitty.conf"
+output_path = "~/.config/kitty/theme.conf"
+
+[templates.rofi]
+input_path  = "templates/rofi-colors.rasi"
+output_path = "~/.config/rofi/colors/matugen.rasi"
+
+[templates.fzf]
+input_path  = "templates/fzf-colors.zsh"
+output_path = "~/.config/fzf/colors.zsh"
+
+[templates.btop]
+input_path  = "templates/btop.theme"
+output_path = "~/.config/btop/themes/matugen.theme"
+
+[templates.starship]
+input_path  = "templates/starship.toml"
+output_path = "~/.config/starship.toml"
+
+[templates.tidal]
+input_path  = "templates/tidal-hifi.css"
+output_path = "~/.config/tidal-hifi/active.css"
+
+[templates.panel-colorizer]
+input_path  = "templates/panel-colorizer.json"
+output_path = "~/.config/linux-setup/panel-colorizer-global.json"
+
+# SDDM needs sudo to install — write to staging path.
+# wallpaper-next.sh moves it with `sudo install` via a narrow sudoers rule.
+[templates.sddm]
+input_path  = "templates/sddm-theme.conf"
+output_path = "~/.cache/matugen/sddm-theme.conf"
