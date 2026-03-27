@@ -2,13 +2,13 @@
   "globalSettings": {
     "panel": {
       "normal": {
-        "enabled": true,
+        "enabled": false,
         "blurBehind": false,
         "backgroundColor": {
-          "enabled": true,
+          "enabled": false,
           "sourceType": 0,
           "custom": "{{ colors.surface_container_lowest.dark.hex }}",
-          "alpha": 0.85,
+          "alpha": 0,
           "list": []
         }
       }

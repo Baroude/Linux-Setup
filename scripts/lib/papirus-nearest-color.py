@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 
-PAPIRUS_PLACES = "/usr/share/icons/Papirus-Dark/16x16/places"
+PAPIRUS_BASE = "/usr/share/icons/Papirus-Dark"
 PAPIRUS_FOLDERS_BIN = os.path.expanduser("~/.local/bin/papirus-folders")
 
 
@@ -26,13 +26,24 @@ def dist(a: str, b: str) -> float:
     return math.sqrt((ra - rb) ** 2 + (ga - gb) ** 2 + (ba - bb) ** 2)
 
 
-def main_color(name: str) -> str | None:
-    """Extract the most saturated (most folder-like) hex from a folder SVG."""
-    svg = os.path.join(PAPIRUS_PLACES, f"folder-{name}.svg")
+def places_dir(size: int = 22) -> str:
+    return os.path.join(PAPIRUS_BASE, f"{size}x{size}", "places")
+
+
+def main_color(name: str, size: int = 22) -> str | None:
+    """Extract the most saturated (most folder-like) hex from a folder SVG.
+    Returns None for CSS-injected (themed) variants like breeze/adwaita/yaru."""
+    svg = os.path.join(places_dir(size), f"folder-{name}.svg")
     if not os.path.isfile(svg):
         return None
+    # Resolve symlinks — if it points to another color variant, use that file
+    svg = os.path.realpath(svg)
     with open(svg, encoding="utf-8", errors="replace") as f:
         content = f.read()
+    # CSS-injected variants (breeze, adwaita, nordic, yaru…) inherit color from
+    # the desktop theme rather than encoding a real hex — skip them entirely.
+    if "ColorScheme" in content:
+        return None
     hexes = set(re.findall(r"#[0-9a-fA-F]{6}", content, re.I))
     best, best_sat = None, 0
     for h in hexes:
@@ -48,8 +59,8 @@ def main_color(name: str) -> str | None:
     return best
 
 
-def available_colors() -> list[tuple[str, str]]:
-    """Return [(name, hex), …] for all Papirus-Dark folder color names."""
+def available_colors(size: int = 22) -> list[tuple[str, str]]:
+    """Return [(name, hex), …] for all Papirus-Dark folder color names at given size."""
     try:
         result = subprocess.run(
             [PAPIRUS_FOLDERS_BIN, "-l", "-t", "Papirus-Dark"],
@@ -60,7 +71,7 @@ def available_colors() -> list[tuple[str, str]]:
         names = []
     pairs = []
     for name in names:
-        c = main_color(name)
+        c = main_color(name, size)
         if c:
             pairs.append((name, c))
     return pairs
@@ -73,6 +84,12 @@ def nearest(target: str, colors: list[tuple[str, str]]) -> str:
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "#cba6f7"
-    colors = available_colors()
+    args = sys.argv[1:]
+    size = 22
+    if "--size" in args:
+        idx = args.index("--size")
+        size = int(args[idx + 1])
+        args = args[:idx] + args[idx + 2:]
+    target = args[0] if args else "#cba6f7"
+    colors = available_colors(size)
     print(nearest(target, colors))
