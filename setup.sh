@@ -82,9 +82,6 @@ while true; do sudo true; sleep 60; done &
 SUDO_KEEPALIVE_PID=$!
 trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 
-SCIWALL_LOG=""
-SCIWALL_PID=""
-
 # Clone to a fixed /tmp path, wiping any previous partial clone.
 clone_fresh() { rm -rf "$1"; GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$2" "$1"; }
 
@@ -144,7 +141,9 @@ sudo apt install -y \
   fzf zoxide \
   imagemagick doxygen \
   fastfetch \
-  plasma-systemmonitor
+  plasma-systemmonitor \
+  cava \
+  python3-websockets
 
 # Rofi launcher package varies across distributions/releases.
 if apt-cache show rofi-wayland >/dev/null 2>&1; then
@@ -174,17 +173,6 @@ fi
 ok "APT base packages installed"
 
 # ---------------------------------------------------------------------------
-# Sciwall wallpaper generation — start after Phase 1 so python3-venv is present.
-# Runs in background while the remaining phases proceed.
-# ---------------------------------------------------------------------------
-SCIWALL_LOG="$(mktemp --suffix=.sciwall.log)"
-bash "$REPO_DIR/scripts/generate-wallpapers.sh" \
-  --theme "${THEME_NAME}-${THEME_FLAVOR}" \
-  >"$SCIWALL_LOG" 2>&1 &
-SCIWALL_PID=$!
-info "Sciwall wallpaper generation started in background (PID $SCIWALL_PID)"
-
-# ---------------------------------------------------------------------------
 # Phase 1b — Node.js LTS (needed for Neovim LSP tools)
 # ---------------------------------------------------------------------------
 info "Phase 1b · Node.js LTS"
@@ -192,10 +180,15 @@ info "Phase 1b · Node.js LTS"
 if command -v node &>/dev/null; then
   skip "Node.js ($(node --version))"
 else
-  NODE_SETUP="$(mktemp)"
+  NODE_SETUP="$(mktemp --suffix=.sh)"
   curl -fsSL https://deb.nodesource.com/setup_lts.x -o "$NODE_SETUP"
+  chmod 600 "$NODE_SETUP"
+  if ! grep -q "nodesource" "$NODE_SETUP"; then
+    rm -f "$NODE_SETUP"
+    die "NodeSource setup script failed content sanity check; aborting"
+  fi
   sudo bash "$NODE_SETUP"
-  rm "$NODE_SETUP"
+  rm -f "$NODE_SETUP"
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
   ok "Node.js LTS installed ($(node --version))"
 fi
@@ -261,7 +254,7 @@ if ! command -v eza &>/dev/null; then
   sudo mkdir -p /etc/apt/keyrings
   wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
     | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-  echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
+  echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] https://deb.gierens.de stable main" \
     | sudo tee /etc/apt/sources.list.d/gierens.list
   sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
   sudo apt update -y
@@ -311,6 +304,48 @@ fi
 info "CLI theming is applied later by scripts/theme-switch.sh (Phase 14b)"
 
 ok "Modern CLI tools installed"
+
+# ---------------------------------------------------------------------------
+# Phase 1e — matugen + whdl binaries
+# ---------------------------------------------------------------------------
+info "Phase 1e · matugen + whdl"
+
+LOCAL_BIN="${HOME}/.local/bin"
+mkdir -p "$LOCAL_BIN"
+
+# matugen — Google Material You M3 palette extractor + template renderer
+MATUGEN_BIN="${LOCAL_BIN}/matugen"
+if [[ -x "$MATUGEN_BIN" ]]; then
+  skip "matugen (already installed)"
+else
+  MATUGEN_TAG="$(gh_latest_tag InioX/matugen || true)"
+  if [[ -z "$MATUGEN_TAG" ]]; then
+    warn "Could not resolve matugen release tag — skipping. Re-run to retry."
+  else
+    curl -fLo "$MATUGEN_BIN" \
+      "https://github.com/InioX/matugen/releases/download/${MATUGEN_TAG}/matugen-x86_64-unknown-linux-gnu"
+    chmod +x "$MATUGEN_BIN"
+    ok "matugen ${MATUGEN_TAG} installed"
+  fi
+fi
+
+# whdl — Wallhaven downloader CLI
+WHDL_BIN="${LOCAL_BIN}/whdl"
+if [[ -x "$WHDL_BIN" ]]; then
+  skip "whdl (already installed)"
+else
+  WHDL_TAG="$(gh_latest_tag momeemt/whdl || true)"
+  if [[ -z "$WHDL_TAG" ]]; then
+    warn "Could not resolve whdl release tag — skipping. Re-run to retry."
+  else
+    curl -fLo "$WHDL_BIN" \
+      "https://github.com/momeemt/whdl/releases/download/${WHDL_TAG}/whdl-x86_64-unknown-linux-gnu"
+    chmod +x "$WHDL_BIN"
+    ok "whdl ${WHDL_TAG} installed"
+  fi
+fi
+
+ok "matugen + whdl ready"
 
 # ---------------------------------------------------------------------------
 # Phase 2 — Fonts
@@ -729,6 +764,20 @@ rm -f "$PC_TMP"
 ok "Panel Colorizer ${PC_VERSION} installed"
 
 # ---------------------------------------------------------------------------
+# Phase 9c — Kurve audio visualizer widget
+# ---------------------------------------------------------------------------
+info "Phase 9c · Kurve audio visualizer"
+
+KURVE_VERSION="3.5.0"
+KURVE_TMP="$(mktemp --suffix=.plasmoid)"
+curl -fsSL -o "$KURVE_TMP" \
+  "https://github.com/luisbocanegra/kurve/releases/download/v${KURVE_VERSION}/Kurve-v${KURVE_VERSION}.plasmoid"
+kpackagetool6 --type Plasma/Applet --install "$KURVE_TMP" 2>/dev/null \
+  || kpackagetool6 --type Plasma/Applet --upgrade "$KURVE_TMP"
+rm -f "$KURVE_TMP"
+ok "Kurve ${KURVE_VERSION} installed"
+
+# ---------------------------------------------------------------------------
 # Phase 10 — Kitty terminal config
 # ---------------------------------------------------------------------------
 info "Phase 10 · Kitty config"
@@ -746,8 +795,11 @@ info "Phase 11 · Zsh + oh-my-zsh + Starship"
 
 # oh-my-zsh (non-interactive)
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-  RUNZSH=no CHSH=no sh -c \
-    "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  _omz_installer="$(mktemp --suffix=.sh)"
+  curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -o "$_omz_installer"
+  chmod 600 "$_omz_installer"
+  RUNZSH=no CHSH=no sh "$_omz_installer"
+  rm -f "$_omz_installer"
 fi
 
 # Plugins — clone all three in parallel (independent repos, disjoint target dirs)
@@ -768,7 +820,11 @@ _OMZ_PIDS=()
 if command -v starship &>/dev/null; then
   skip "Starship ($(starship --version 2>/dev/null | head -1))"
 else
-  curl -fsSL https://starship.rs/install.sh | sudo sh -s -- --yes
+  _starship_installer="$(mktemp --suffix=.sh)"
+  curl -fsSL https://starship.rs/install.sh -o "$_starship_installer"
+  chmod 600 "$_starship_installer"
+  sudo sh "$_starship_installer" --yes
+  rm -f "$_starship_installer"
   ok "Starship installed"
 fi
 
@@ -925,8 +981,11 @@ fi
 # ---------------------------------------------------------------------------
 info "Phase 14 · Dotfiles (dotbot)"
 
-"$REPO_DIR/install"
-ok "Base dotfiles linked (zshrc, zshenv, kitty, gitconfig, nvim, fastfetch, envvars)"
+if "$REPO_DIR/install"; then
+  ok "Base dotfiles linked (zshrc, zshenv, kitty, gitconfig, nvim, fastfetch, envvars)"
+else
+  warn "Some dotfiles links failed — check output above (likely a pre-existing file)"
+fi
 
 info "Phase 14b · Theme switch apply"
 bash "$REPO_DIR/scripts/theme-switch.sh" \
@@ -937,14 +996,57 @@ bash "$REPO_DIR/scripts/theme-switch.sh" \
 ok "Theme applied via scripts/theme-switch.sh (${THEME_NAME}/${THEME_FLAVOR}/${THEME_ACCENT})"
 
 # ---------------------------------------------------------------------------
-# Phase 14c — Wait for background Sciwall wallpaper generation (Phase 9c)
+# Phase 14c — Download wallpaper pool
 # ---------------------------------------------------------------------------
-info "Phase 14c · Waiting for Sciwall wallpaper generation (PID $SCIWALL_PID)..."
-if wait "$SCIWALL_PID"; then
-  ok "Sciwall wallpapers ready for ${THEME_NAME}-${THEME_FLAVOR}"
+info "Phase 14c · Downloading wallpaper pool"
+if bash "$REPO_DIR/scripts/wallpaper-fetch.sh"; then
+  ok "Wallpaper pool ready"
 else
-  warn "Sciwall wallpaper generation failed — see $SCIWALL_LOG"
-  warn "Falling back to any pre-committed wallpapers."
+  warn "wallpaper-fetch.sh encountered errors — some sources may be missing"
+fi
+
+# ---------------------------------------------------------------------------
+# Phase 14d — Install wallpaper rotation systemd user timer
+# ---------------------------------------------------------------------------
+info "Phase 14d · Wallpaper rotation systemd timer"
+
+SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
+LINUX_SETUP_CONF_DIR="${HOME}/.config/linux-setup"
+mkdir -p "$SYSTEMD_USER_DIR" "$LINUX_SETUP_CONF_DIR"
+
+cp "$REPO_DIR/systemd/wallpaper-rotation.service" "$SYSTEMD_USER_DIR/"
+cp "$REPO_DIR/systemd/wallpaper-rotation.timer"   "$SYSTEMD_USER_DIR/"
+
+# Wrapper avoids embedding a variable repo path in the unit file
+WRAPPER="${LINUX_SETUP_CONF_DIR}/wallpaper-next-wrapper.sh"
+cat > "$WRAPPER" <<WRAPPER_EOF
+#!/bin/bash
+exec "${REPO_DIR}/scripts/wallpaper-next.sh"
+WRAPPER_EOF
+chmod +x "$WRAPPER"
+
+systemctl --user daemon-reload
+systemctl --user enable --now wallpaper-rotation.timer
+ok "wallpaper-rotation.timer enabled"
+
+# ---------------------------------------------------------------------------
+# Phase 14e — SDDM sudoers rule (passwordless install of theme.conf.user)
+# ---------------------------------------------------------------------------
+info "Phase 14e · SDDM sudoers rule"
+
+SDDM_THEME_NAME="$(grep '^Current=' /etc/sddm.conf.d/10-theme.conf 2>/dev/null \
+  | cut -d= -f2 | tr -d '[:space:]' || true)"
+
+if [[ -z "$SDDM_THEME_NAME" ]]; then
+  warn "SDDM theme not configured yet — skipping sudoers rule (run after Phase 12)"
+else
+  SUDOERS_FILE="/etc/sudoers.d/99-wallpaper-sddm"
+  SDDM_DEST="/usr/share/sddm/themes/${SDDM_THEME_NAME}/theme.conf.user"
+  SDDM_SRC="${HOME}/.cache/matugen/sddm-theme.conf"
+  SUDOERS_LINE="${USER} ALL=(root) NOPASSWD: /usr/bin/install -m 644 ${SDDM_SRC} ${SDDM_DEST}"
+  echo "$SUDOERS_LINE" | sudo tee "$SUDOERS_FILE" >/dev/null
+  sudo chmod 440 "$SUDOERS_FILE"
+  ok "SDDM sudoers rule written: ${SUDOERS_FILE}"
 fi
 
 # Desktop wallpaper rotation — applied by setup-first-login.sh on first login (needs plasmashell)

@@ -3,6 +3,19 @@
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/theme-common.sh"
 
+# Validate a single path component (no traversal, no metacharacters, non-empty).
+_grub_validate_path_component() {
+  local value="$1" label="$2"
+  if [[ -z "$value" ]]; then
+    theme_err "${label} is empty; aborting"
+    return 1
+  fi
+  if [[ "$value" == *".."* || "$value" == "/"* || "$value" =~ [[:space:]\;\&\|\`\$\(\)\<\>\!\*\?] ]]; then
+    theme_err "Unsafe ${label} '${value}': contains path traversal or shell metacharacters; aborting"
+    return 1
+  fi
+}
+
 # Substitute ${flavor} and ${accent} tokens in a pattern string.
 _grub_sub() {
   local pattern="$1"
@@ -55,7 +68,11 @@ theme_apply_grub_adapter() {
       theme_subdir="$(_grub_sub "$theme_subdir_pattern")"
       target_name="$(_grub_sub "$target_name_pattern")"
 
+      _grub_validate_path_component "$target_name" "target_name" || return 1
+      _grub_validate_path_component "$theme_subdir" "theme_subdir" || return 1
+
       theme_clone_fresh /tmp/theme-grub "$repo"
+      theme_run "ensure grub themes dir" sudo mkdir -p /usr/share/grub/themes
       theme_run "remove old grub theme" sudo rm -rf "/usr/share/grub/themes/${target_name}"
       theme_run "install grub theme" \
         sudo cp -r "/tmp/theme-grub/${theme_subdir}" "/usr/share/grub/themes/${target_name}"
@@ -68,7 +85,11 @@ theme_apply_grub_adapter() {
       theme_subdir="$(theme_context_get "grub_config.theme_subdir")"
       target_name="$(theme_context_get "grub_config.target_name")"
 
+      _grub_validate_path_component "$target_name" "target_name" || return 1
+      [[ "$theme_subdir" != "." ]] && _grub_validate_path_component "$theme_subdir" "theme_subdir"
+
       theme_clone_fresh /tmp/theme-grub "$repo"
+      theme_run "ensure grub themes dir" sudo mkdir -p /usr/share/grub/themes
       theme_run "remove old grub theme" sudo rm -rf "/usr/share/grub/themes/${target_name}"
       if [[ "$theme_subdir" == "." ]]; then
         theme_run "install grub theme" \

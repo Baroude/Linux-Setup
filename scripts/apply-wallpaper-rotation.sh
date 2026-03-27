@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# apply-wallpaper-rotation.sh â€” Configure KDE desktop slideshow wallpaper.
+# apply-wallpaper-rotation.sh — Configure KDE desktop slideshow wallpaper.
+#
+# DEPRECATED: Wallpaper rotation is now handled by scripts/wallpaper-next.sh,
+# driven by a systemd user timer (wallpaper-rotation.timer, every 30 min).
+# This script is kept for reference and backwards compatibility only.
 
 set -euo pipefail
 

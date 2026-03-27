@@ -17,8 +17,9 @@ sleep 8
 # Configure dock (bottom floating pill) and top bar
 bash "$REPO_DIR/scripts/configure-dock.sh"
 
-# Apply desktop wallpaper rotation. If slideshow setup fails, keep a static fallback.
-if ! bash "$REPO_DIR/scripts/apply-wallpaper-rotation.sh"; then
+# Pick first wallpaper and run matugen to theme all components.
+# Falls back to static wallpaper if the pool or matugen binary is not yet available.
+if ! bash "$REPO_DIR/scripts/wallpaper-next.sh" --first-login; then
   plasma-apply-wallpaperimage "$REPO_DIR/images/evening-sky.png"
 fi
 

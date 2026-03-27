@@ -108,6 +108,24 @@ else
     fi
 fi
 
+# ── Kurve — resolve accent color and install state ─────────────────────────
+KURVE_INSTALLED=0
+has_plasmoid "luisbocanegra.audio.visualizer" && KURVE_INSTALLED=1
+[[ "$KURVE_INSTALLED" -eq 1 ]] && echo "Kurve detected — will add to top bar" \
+    || echo "Kurve not installed — skipping (install Phase 9c and re-run)"
+
+_KURVE_COLOR="#cba6f7"   # Catppuccin Mocha Mauve fallback
+if readarray -t _KURVE_TRIPLET < <(theme_read_state_selection 2>/dev/null); then
+    _kt="${_KURVE_TRIPLET[0]:-}"; _kf="${_KURVE_TRIPLET[1]:-}"; _ka="${_KURVE_TRIPLET[2]:-}"
+    if [[ -n "$_kt" && -n "$_kf" && -n "$_ka" ]]; then
+        _kctx="$(theme_build_context_json "$_kt" "$_kf" "$_ka" 2>/dev/null || true)"
+        [[ -n "$_kctx" ]] && _KURVE_COLOR="$(python3 -c \
+            'import json,sys; print(json.load(sys.stdin).get("accent_hex","#cba6f7"))' \
+            <<<"$_kctx" 2>/dev/null || echo '#cba6f7')"
+    fi
+fi
+echo "Kurve bar color: ${_KURVE_COLOR}"
+
 # ── Apply panel layout via Plasma JS ───────────────────────────────────────
 # Double-quoted string so bash variables (LAUNCHERS, TITLE_WIDGET_ID) expand into JS.
 # JS strings use single quotes to avoid conflict.
@@ -217,6 +235,24 @@ top.addWidget('org.kde.plasma.panelspacer');    // right flex → pushes right g
 top.addWidget('org.kde.plasma.weather');
 top.addWidget('org.kde.plasma.appmenu');
 top.addWidget('org.kde.plasma.mediacontroller');
+
+// Kurve — audio visualizer (bars next to media controller)
+if (${KURVE_INSTALLED}) {
+    var kurve = top.addWidget('luisbocanegra.audio.visualizer');
+    kurve.currentConfigGroup = ['General'];
+    kurve.writeConfig('barCount',       '20');
+    kurve.writeConfig('barWidth',       '3');
+    kurve.writeConfig('barGap',         '2');
+    kurve.writeConfig('roundedBars',    'true');
+    kurve.writeConfig('visualizerStyle','0');
+    kurve.writeConfig('hideWhenIdle',   'true');
+    kurve.writeConfig('idleTimer',      '3');
+    kurve.writeConfig('length',         '140');
+    kurve.writeConfig('centeredBars',   'true');
+    var _kurveColors = '{"enabled":true,"sourceType":0,"custom":"${_KURVE_COLOR}","alpha":1,"saturationEnabled":false,"lightnessEnabled":false}';
+    kurve.writeConfig('barColors',      _kurveColors);
+    kurve.writeConfig('waveFillColors', _kurveColors);
+}
 
 // Unified metrics island: CPU %, RAM %, CPU temperature (icon-only labels)
 var metrics = top.addWidget('org.kde.plasma.systemmonitor');

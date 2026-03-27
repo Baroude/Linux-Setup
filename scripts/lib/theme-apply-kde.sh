@@ -242,11 +242,13 @@ _kde_install_papirus() {
   if [[ "${THEME_DRY_RUN}" == "1" ]]; then
     echo "[dry-run] papirus-folders -C ${papirus_folder} --theme Papirus-Dark"
   else
-    curl -fLo /tmp/papirus-folders \
+    _papirus_tmpdir="$(mktemp -d)"
+    chmod 700 "${_papirus_tmpdir}"
+    curl -fLo "${_papirus_tmpdir}/papirus-folders" \
       "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders"
-    chmod +x /tmp/papirus-folders
-    /tmp/papirus-folders -C "$papirus_folder" --theme Papirus-Dark
-    rm -f /tmp/papirus-folders
+    chmod 700 "${_papirus_tmpdir}/papirus-folders"
+    "${_papirus_tmpdir}/papirus-folders" -C "$papirus_folder" --theme Papirus-Dark
+    rm -rf "${_papirus_tmpdir}"
   fi
 }
 
@@ -282,18 +284,6 @@ theme_apply_kde_adapter() {
 
   theme_render_template "${THEME_REPO_DIR}/themes/templates/gtk-3.0-settings.ini.tpl" \
     "$HOME/.config/gtk-3.0/settings.ini"
-
-  # Update desktop wallpaper rotation to the theme-specific folder (requires live session)
-  if [[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]]; then
-    if [[ "${THEME_DRY_RUN}" == "1" ]]; then
-      echo "[dry-run] apply-wallpaper-rotation.sh --theme=${theme}"
-    else
-      bash "${THEME_LIB_DIR}/../apply-wallpaper-rotation.sh" "--theme=${theme}" \
-        || theme_warn "Wallpaper rotation update failed; will apply on next login"
-    fi
-  else
-    theme_info "No desktop session detected; wallpaper rotation deferred to next login"
-  fi
 
   theme_info "KDE/Kvantum/GTK/icons adapter completed"
 }
