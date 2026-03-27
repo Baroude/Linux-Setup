@@ -1,0 +1,11 @@
+[Unit]
+Description=Matugen wallpaper rotation — every 30 minutes
+After=graphical-session.target
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

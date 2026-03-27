@@ -1,0 +1,8 @@
+[Unit]
+Description=Matugen wallpaper rotation
+After=graphical-session.target
+Requires=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/.config/linux-setup/wallpaper-next-wrapper.sh
