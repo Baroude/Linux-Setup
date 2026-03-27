@@ -1049,39 +1049,64 @@ kwriteconfig6 --file kscreenlockerrc \
 ok "Lock screen wallpaper applied (evening-sky.png)"
 
 # ---------------------------------------------------------------------------
-# Phase 14f — kde-material-you-colors (organic wallpaper → theme daemon)
+# Phase 14e-b — papirus-folders (dynamic Dolphin folder accent colors)
 # ---------------------------------------------------------------------------
-info "Phase 14f · kde-material-you-colors"
+info "Phase 14e-b · papirus-folders"
 
-pipx install kde-material-you-colors --force 2>/dev/null \
-  || pipx upgrade kde-material-you-colors 2>/dev/null \
-  || warn "kde-material-you-colors install via pipx failed — skipping"
-
-KMYC_CFG_DIR="${HOME}/.config/kde-material-you-colors"
-mkdir -p "$KMYC_CFG_DIR"
-
-cat > "${KMYC_CFG_DIR}/config.conf" << KMYC_EOF
-# kde-material-you-colors config — managed by linux-setup
-# on_change_hook fires on every wallpaper change; our script runs matugen
-# and live-reloads kitty, Panel Colorizer, btop, and SDDM.
-on_change_hook = ${REPO_DIR}/scripts/wallpaper-apply.sh
-KMYC_EOF
-
-if systemctl --user enable --now kde-material-you-colors.service 2>/dev/null; then
-  ok "kde-material-you-colors daemon enabled and started"
+PAPIRUS_FOLDERS_BIN="${HOME}/.local/bin/papirus-folders"
+if [[ ! -x "$PAPIRUS_FOLDERS_BIN" ]]; then
+  curl -fLo "$PAPIRUS_FOLDERS_BIN" \
+    "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders"
+  chmod 755 "$PAPIRUS_FOLDERS_BIN"
+  ok "papirus-folders installed → ${PAPIRUS_FOLDERS_BIN}"
 else
-  warn "kde-material-you-colors systemd service not found — will start on next login via autostart"
-  # Fallback: register as a Plasma autostart entry
+  skip "papirus-folders already installed"
+fi
+
+PAPIRUS_SUDOERS="/etc/sudoers.d/99-wallpaper-papirus"
+PAPIRUS_SUDOERS_LINE="${USER} ALL=(root) NOPASSWD: ${PAPIRUS_FOLDERS_BIN}"
+if [[ ! -f "$PAPIRUS_SUDOERS" ]] || ! grep -qF "$PAPIRUS_SUDOERS_LINE" "$PAPIRUS_SUDOERS" 2>/dev/null; then
+  echo "$PAPIRUS_SUDOERS_LINE" | sudo tee "$PAPIRUS_SUDOERS" >/dev/null
+  sudo chmod 440 "$PAPIRUS_SUDOERS"
+  ok "papirus-folders sudoers rule written: ${PAPIRUS_SUDOERS}"
+else
+  skip "papirus-folders sudoers rule already set"
+fi
+
+# ---------------------------------------------------------------------------
+# Phase 14f — wallpaper-watcher (event-driven wallpaper → theme hook)
+# ---------------------------------------------------------------------------
+info "Phase 14f · wallpaper-watcher service"
+
+# Runtime deps: python3-dbus for D-Bus bindings, python3-gi for GLib mainloop
+apt-get install -y python3-dbus python3-gi 2>/dev/null \
+  || warn "python3-dbus / python3-gi install failed — wallpaper-watcher may not work"
+
+# Wrapper script avoids embedding an absolute repo path in the unit file
+WATCHER_WRAPPER="${LINUX_SETUP_CONF_DIR}/wallpaper-watcher-wrapper.sh"
+cat > "$WATCHER_WRAPPER" << WRAPPER_EOF
+#!/usr/bin/env bash
+exec python3 ${REPO_DIR}/scripts/lib/wallpaper-watcher.py
+WRAPPER_EOF
+chmod +x "$WATCHER_WRAPPER"
+
+cp "$REPO_DIR/systemd/wallpaper-watcher.service" "$SYSTEMD_USER_DIR/"
+systemctl --user daemon-reload
+
+if systemctl --user enable --now wallpaper-watcher.service 2>/dev/null; then
+  ok "wallpaper-watcher.service enabled and started"
+else
+  warn "wallpaper-watcher.service could not be started — will launch on next login via autostart"
   AUTOSTART_DIR="${HOME}/.config/autostart"
   mkdir -p "$AUTOSTART_DIR"
-  cat > "${AUTOSTART_DIR}/kde-material-you-colors.desktop" << AUTOSTART_EOF
+  cat > "${AUTOSTART_DIR}/wallpaper-watcher.desktop" << AUTOSTART_EOF
 [Desktop Entry]
-Name=KDE Material You Colors
-Exec=${HOME}/.local/bin/kde-material-you-colors
+Name=Wallpaper Watcher
+Exec=${WATCHER_WRAPPER}
 Type=Application
 X-KDE-autostart-phase=1
 AUTOSTART_EOF
-  ok "kde-material-you-colors registered as Plasma autostart entry"
+  ok "wallpaper-watcher registered as Plasma autostart entry"
 fi
 
 warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kscreenlockerrc, kwinrulesrc)."

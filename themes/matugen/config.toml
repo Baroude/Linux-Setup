@@ -46,6 +46,10 @@ output_path = "~/.config/linux-setup/panel-colorizer-global.json"
 input_path  = "templates/palette.json"
 output_path = "~/.cache/matugen/palette.json"
 
+[templates.nvim]
+input_path  = "templates/nvim.vim"
+output_path = "~/.config/nvim/colors/matugen.vim"
+
 # SDDM needs sudo to install — write to staging path.
 # wallpaper-next.sh moves it with `sudo install` via a narrow sudoers rule.
 [templates.sddm]

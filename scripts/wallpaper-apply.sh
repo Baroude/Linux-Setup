@@ -39,8 +39,9 @@ import re, os
 conf = os.path.expanduser('~/.config/plasma-org.kde.plasma.desktop-appletsrc')
 with open(conf) as f:
     content = f.read()
-m = re.search(r'Image=file://([^\n,]+)', content)
-print(unquote(m.group(1).strip()) if m else '')
+m = re.search(r'Image=(?:file://)?([^\n,]+)', content)
+raw = m.group(1).strip() if m else ''
+print(unquote(raw) if raw else '')
 " 2>/dev/null)"
 fi
 
@@ -119,6 +120,47 @@ if [[ -f "${HOME}/.config/linux-setup/panel-colorizer-global.json" ]]; then
     theme_warn "Panel Colorizer reload deferred (applet not ready)"
   fi
 fi
+
+# ── Reload Papirus-Dark folder colors ────────────────────────────────────────
+_reload_papirus() {
+  local palette="${HOME}/.cache/matugen/palette.json"
+  local papirus_bin="${HOME}/.local/bin/papirus-folders"
+  local nearest_py="${SCRIPT_DIR}/lib/papirus-nearest-color.py"
+
+  [[ -f "$palette" ]] || { theme_warn "Papirus: palette.json missing — skipping"; return 0; }
+  [[ -x "$papirus_bin" ]] || { theme_warn "Papirus: papirus-folders not installed — skipping"; return 0; }
+  [[ -f "$nearest_py" ]] || { theme_warn "Papirus: nearest-color script missing — skipping"; return 0; }
+
+  local primary color_name
+  primary="$(python3 -c "import json; print(json.load(open('$palette'))['primary'])" 2>/dev/null)"
+  [[ -n "$primary" ]] || { theme_warn "Papirus: could not read primary color"; return 0; }
+
+  color_name="$(python3 "$nearest_py" "$primary" 2>/dev/null)"
+  [[ -n "$color_name" ]] || { theme_warn "Papirus: nearest-color returned empty"; return 0; }
+
+  theme_info "Papirus folder color: ${primary} → ${color_name}"
+  if sudo "$papirus_bin" -C "$color_name" -t Papirus-Dark --once 2>/dev/null; then
+    kbuildsycoca6 --noincremental 2>/dev/null || true
+    theme_info "Papirus-Dark folder colors updated"
+  else
+    theme_warn "Papirus: papirus-folders failed (check sudoers rule)"
+  fi
+}
+_reload_papirus
+
+# ── Reload running nvim instances ────────────────────────────────────────────
+_reload_nvim() {
+  local nvim_colors="${HOME}/.config/nvim/colors/matugen.vim"
+  [[ -f "$nvim_colors" ]] || return 0
+  local found=0
+  for _sock in /run/user/${UID}/nvim.*.0 /tmp/nvim*/nvim.*.0; do
+    [[ -S "$_sock" ]] || continue
+    nvim --server "$_sock" --remote-expr 'execute("colorscheme matugen")' 2>/dev/null &
+    found=1
+  done
+  [[ "$found" -eq 1 ]] && theme_info "nvim colorscheme reloaded" || true
+}
+_reload_nvim
 
 # ── Update btop color_theme ───────────────────────────────────────────────────
 BTOP_CONF="${HOME}/.config/btop/btop.conf"
