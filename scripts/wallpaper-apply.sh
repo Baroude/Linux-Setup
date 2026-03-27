@@ -92,14 +92,17 @@ import json, sys
 with open(sys.argv[1]) as f:
     p = json.load(f)
 widget_colors = {
-    "org.kde.plasma.pager":                p["secondary_container"],
-    "org.kde.plasma.digitalclock":         p["primary_container"],
-    "org.kde.plasma.systemtray":           p["secondary_container"],
-    "org.kde.plasma.appmenu":              p["tertiary_container"],
-    "org.kde.plasma.mediacontroller":      p["tertiary_container"],
-    "org.kde.plasma.weather":              p["tertiary_container"],
-    "org.kde.plasma.battery":              p["secondary_container"],
-    "luisbocanegra.audio.visualizer":      p["secondary_container"],
+    "org.kde.plasma.pager":                [p["secondary"],  p["on_secondary"]],
+    "org.kde.plasma.digitalclock":         [p["primary"],    p["on_primary"]],
+    "org.kde.plasma.systemtray":           [p["secondary"],  p["on_secondary"]],
+    "org.kde.plasma.appmenu":              [p["tertiary"],   p["on_tertiary"]],
+    "org.kde.plasma.mediacontroller":      [p["tertiary"],   p["on_tertiary"]],
+    "org.kde.plasma.weather":              [p["tertiary"],   p["on_tertiary"]],
+    "org.kde.plasma.battery":              [p["secondary"],  p["on_secondary"]],
+    "luisbocanegra.audio.visualizer":      [p["secondary"],  p["on_secondary"]],
+    "com.github.antroids.application-title-bar": [p["secondary"], p["on_secondary"]],
+    "org.kde.plasma.systemmonitor":        [p["secondary"],  p["on_secondary"]],
+    "org.kde.plasma.lock_logout":          [p["secondary"],  p["on_secondary"]],
 }
 print(json.dumps(widget_colors))
 PY

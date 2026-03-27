@@ -161,7 +161,11 @@ for widget in top_widgets:
         continue
     ov_name = override_name(name)
     if ov_name not in overrides:
-        overrides[ov_name] = make_color_override(widget_colors[name])
+        val = widget_colors[name]
+        if isinstance(val, list):
+            overrides[ov_name] = make_color_override(val[0], val[1])
+        else:
+            overrides[ov_name] = make_color_override(val)
     add_association(int(wid), name, ov_name)
 
 co = {

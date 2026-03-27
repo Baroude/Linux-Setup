@@ -20,14 +20,14 @@
         "backgroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "{{ colors.primary_container.dark.hex }}",
+          "custom": "{{ colors.primary.dark.hex }}",
           "alpha": 1,
           "list": []
         },
         "foregroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "{{ colors.on_primary_container.dark.hex }}",
+          "custom": "{{ colors.on_primary.dark.hex }}",
           "alpha": 1,
           "lightnessValue": 0.5,
           "saturationValue": 0.5,
