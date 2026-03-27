@@ -132,7 +132,8 @@ sudo apt install -y \
   zsh vim \
   build-essential cmake ninja-build \
   clangd g++ pkg-config \
-  python3-pip python3-venv python3.13-venv \
+  python3-pip python3-venv python3.13-venv pipx \
+  libdbus-1-dev libglib2.0-dev \
   wl-clipboard \
   xdg-utils \
   qt6-style-kvantum \
@@ -1046,6 +1047,42 @@ kwriteconfig6 --file kscreenlockerrc \
   --group Greeter --group Wallpaper --group "org.kde.image" --group General \
   --key Image "file://$REPO_DIR/images/evening-sky.png"
 ok "Lock screen wallpaper applied (evening-sky.png)"
+
+# ---------------------------------------------------------------------------
+# Phase 14f — kde-material-you-colors (organic wallpaper → theme daemon)
+# ---------------------------------------------------------------------------
+info "Phase 14f · kde-material-you-colors"
+
+pipx install kde-material-you-colors --force 2>/dev/null \
+  || pipx upgrade kde-material-you-colors 2>/dev/null \
+  || warn "kde-material-you-colors install via pipx failed — skipping"
+
+KMYC_CFG_DIR="${HOME}/.config/kde-material-you-colors"
+mkdir -p "$KMYC_CFG_DIR"
+
+cat > "${KMYC_CFG_DIR}/config.conf" << KMYC_EOF
+# kde-material-you-colors config — managed by linux-setup
+# on_change_hook fires on every wallpaper change; our script runs matugen
+# and live-reloads kitty, Panel Colorizer, btop, and SDDM.
+on_change_hook = ${REPO_DIR}/scripts/wallpaper-apply.sh
+KMYC_EOF
+
+if systemctl --user enable --now kde-material-you-colors.service 2>/dev/null; then
+  ok "kde-material-you-colors daemon enabled and started"
+else
+  warn "kde-material-you-colors systemd service not found — will start on next login via autostart"
+  # Fallback: register as a Plasma autostart entry
+  AUTOSTART_DIR="${HOME}/.config/autostart"
+  mkdir -p "$AUTOSTART_DIR"
+  cat > "${AUTOSTART_DIR}/kde-material-you-colors.desktop" << AUTOSTART_EOF
+[Desktop Entry]
+Name=KDE Material You Colors
+Exec=${HOME}/.local/bin/kde-material-you-colors
+Type=Application
+X-KDE-autostart-phase=1
+AUTOSTART_EOF
+  ok "kde-material-you-colors registered as Plasma autostart entry"
+fi
 
 warn "Run './install -c install-plasma.conf.yaml' to also link plasma/ configs (kwinrc, kscreenlockerrc, kwinrulesrc)."
 warn "Skip this before major KDE upgrades."

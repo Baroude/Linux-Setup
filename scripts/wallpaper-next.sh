@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# wallpaper-next.sh — Pick a random dark wallpaper, set it in KDE Plasma,
-# run matugen to generate a dynamic color palette, then live-reload all
-# themed components (kitty, KDE color scheme, Panel Colorizer, btop, SDDM…).
+# wallpaper-next.sh — Pick a random wallpaper and set it in KDE Plasma.
+# Theming (matugen + live reloads) is handled organically by
+# kde-material-you-colors which detects the change and calls wallpaper-apply.sh.
 #
 # Usage:
 #   wallpaper-next.sh              (normal invocation — from systemd timer)
-#   wallpaper-next.sh --first-login (called by setup-first-login.sh; skips session guard)
+#   wallpaper-next.sh --first-login (skips session guard; applies theme directly
+#                                    since kde-material-you-colors may not be running yet)
 #
-# Dependencies: matugen (~/.local/bin/matugen), qdbus6 or qdbus,
-#               plasma-apply-colorscheme, kvantummanager, kitty (optional),
-#               python3-websockets + cava (for Kurve widget, already installed)
+# Dependencies: qdbus6 or qdbus, python3
 
 set -euo pipefail
 
@@ -27,10 +26,6 @@ WALL_DIR="${MATUGEN_WALL_DIR:-${HOME}/.local/share/wallpapers/ricing}"
 STATE_DIR="${HOME}/.local/state"
 STATE_FILE="${STATE_DIR}/wallpaper-current"
 STATE_JSON="${STATE_DIR}/wallpaper-next-state.json"
-MATUGEN_BIN="${HOME}/.local/bin/matugen"
-MATUGEN_CFG="${REPO_DIR}/themes/matugen/config.toml"
-MATUGEN_CACHE="${HOME}/.cache/matugen"
-
 # ── Flags ─────────────────────────────────────────────────────────────────────
 FIRST_LOGIN=0
 for _arg in "$@"; do
@@ -105,81 +100,6 @@ DBUS_CMD="$(_theme_panel_dbus_cmd)"
 
 theme_info "Wallpaper set in Plasma"
 
-# ── Run matugen ───────────────────────────────────────────────────────────────
-mkdir -p "$MATUGEN_CACHE"
-
-# matugen resolves template input_path relative to CWD → run from repo root
-(
-  cd "$REPO_DIR"
-  "$MATUGEN_BIN" image "$NEXT_WALL" --config "$MATUGEN_CFG"
-) || { theme_err "matugen failed — theming aborted"; exit 1; }
-
-theme_info "matugen palette generated"
-
-# ── Apply KDE color scheme ────────────────────────────────────────────────────
-if command -v plasma-apply-colorscheme &>/dev/null; then
-  plasma-apply-colorscheme MatugenDynamic 2>/dev/null \
-    || theme_warn "plasma-apply-colorscheme failed (scheme may need one login first)"
-  theme_info "KDE color scheme: MatugenDynamic"
-fi
-
-# ── Reload kitty ──────────────────────────────────────────────────────────────
-# SIGUSR1 triggers kitty to reload kitty.conf (which includes theme.conf).
-pkill -USR1 kitty 2>/dev/null || true
-theme_info "kitty reloaded"
-
-# ── Reload Panel Colorizer ────────────────────────────────────────────────────
-# matugen already wrote the new panel-colorizer-global.json.
-# Reuse theme_panel_apply_live from theme-apply-panel.sh with the rendered file.
-PANEL_PRESET_FILE="${HOME}/.config/linux-setup/panel-colorizer-global.json"
-if [[ -f "$PANEL_PRESET_FILE" ]]; then
-  export PANEL_PRESET_FILE
-  export PANEL_WIDGET_COLORS_JSON="{}"  # per-widget overrides handled by the preset file
-  if theme_apply_panel_adapter 2>/dev/null; then
-    theme_info "Panel Colorizer reloaded"
-  else
-    theme_warn "Panel Colorizer reload deferred (applet not ready)"
-  fi
-fi
-
-# ── Update btop color_theme ───────────────────────────────────────────────────
-BTOP_CONF="${HOME}/.config/btop/btop.conf"
-if [[ -f "$BTOP_CONF" ]]; then
-  if grep -q '^color_theme' "$BTOP_CONF"; then
-    sed -i -E 's|^color_theme\s*=.*|color_theme = "matugen"|' "$BTOP_CONF"
-  else
-    printf '\ncolor_theme = "matugen"\ntheme_background = False\n' >> "$BTOP_CONF"
-  fi
-  theme_info "btop: color_theme set to matugen"
-fi
-
-# ── Update SDDM theme.conf.user (needs sudo) ──────────────────────────────────
-# matugen writes the rendered config to ~/.cache/matugen/sddm-theme.conf.
-# A narrow sudoers rule (written by setup.sh Phase 14e) allows passwordless
-# `sudo install` to the SDDM theme directory only.
-_reload_sddm() {
-  local staging="${MATUGEN_CACHE}/sddm-theme.conf"
-  local sddm_sys_conf="/etc/sddm.conf.d/10-theme.conf"
-
-  [[ -f "$staging" ]] || { theme_warn "SDDM: staging file missing — skipping"; return 0; }
-  [[ -f "$sddm_sys_conf" ]] || { theme_warn "SDDM: not configured at ${sddm_sys_conf} — skipping"; return 0; }
-
-  local theme_name
-  theme_name="$(grep '^Current=' "$sddm_sys_conf" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')"
-  if [[ -z "$theme_name" ]]; then
-    theme_warn "SDDM: Current= not found in ${sddm_sys_conf} — skipping"
-    return 0
-  fi
-
-  local dest="/usr/share/sddm/themes/${theme_name}/theme.conf.user"
-  if sudo install -m 644 "$staging" "$dest" 2>/dev/null; then
-    theme_info "SDDM theme.conf.user updated (${theme_name})"
-  else
-    theme_warn "SDDM: sudo install failed — check /etc/sudoers.d/99-wallpaper-sddm"
-  fi
-}
-_reload_sddm
-
 # ── Save state ────────────────────────────────────────────────────────────────
 mkdir -p "$STATE_DIR"
 echo "$NEXT_WALL" > "$STATE_FILE"
@@ -189,7 +109,19 @@ python3 - "$NEXT_WALL" "$TIMESTAMP" "$STATE_JSON" <<'PY'
 import json, sys
 wall, ts, out = sys.argv[1:]
 with open(out, "w", encoding="utf-8") as f:
-    json.dump({"wallpaper": wall, "timestamp": ts, "matugen_ok": True}, f, indent=2)
+    json.dump({"wallpaper": wall, "timestamp": ts}, f, indent=2)
 PY
 
-theme_info "Done. State saved to ${STATE_JSON}"
+theme_info "State saved to ${STATE_JSON}"
+
+# ── Apply theme on first login ────────────────────────────────────────────────
+# On normal runs kde-material-you-colors detects the wallpaper change and
+# calls wallpaper-apply.sh organically. On --first-login that daemon may not
+# be running yet, so we call it directly.
+if [[ "$FIRST_LOGIN" -eq 1 ]]; then
+  theme_info "First login: applying theme directly"
+  bash "${SCRIPT_DIR}/wallpaper-apply.sh" --wallpaper "$NEXT_WALL" \
+    || theme_warn "wallpaper-apply.sh failed on first login"
+fi
+
+theme_info "Done."
