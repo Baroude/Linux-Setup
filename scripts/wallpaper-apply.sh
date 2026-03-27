@@ -80,11 +80,13 @@ pkill -USR1 kitty 2>/dev/null || true
 theme_info "kitty reloaded"
 
 # ── Reload Panel Colorizer ────────────────────────────────────────────────────
+# matugen already generated panel-colorizer-global.json; skip theme_apply_panel_adapter
+# (which would overwrite it with the Catppuccin template via theme_panel_prepare_assets).
 PANEL_PRESET_FILE="${HOME}/.config/linux-setup/panel-colorizer-global.json"
 if [[ -f "$PANEL_PRESET_FILE" ]]; then
-  export PANEL_PRESET_FILE
-  export PANEL_WIDGET_COLORS_JSON="{}"
-  if theme_apply_panel_adapter 2>/dev/null; then
+  if [[ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+    theme_warn "No active desktop session detected; panel apply deferred"
+  elif theme_panel_apply_live 0 2>/dev/null; then
     theme_info "Panel Colorizer reloaded"
   else
     theme_warn "Panel Colorizer reload deferred (applet not ready)"
