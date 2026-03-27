@@ -1,0 +1,8 @@
+#!/bin/bash
+# Fix Papirus-Dark 16x16 folder.svg (CSS-injected, skipped by papirus-folders).
+# Called by wallpaper-apply.sh with sudo after papirus-folders runs.
+color="${1:?color argument required}"
+src="/usr/share/icons/Papirus-Dark/16x16/places/folder-${color}.svg"
+dst="/usr/share/icons/Papirus-Dark/16x16/places/folder.svg"
+[[ -f "$src" ]] || { echo "papirus-fix-16: folder-${color}.svg not found"; exit 1; }
+ln -sf "folder-${color}.svg" "$dst"

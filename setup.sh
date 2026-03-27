@@ -1063,14 +1063,23 @@ else
   skip "papirus-folders already installed"
 fi
 
-PAPIRUS_SUDOERS="/etc/sudoers.d/99-wallpaper-papirus"
-PAPIRUS_SUDOERS_LINE="${USER} ALL=(root) NOPASSWD: ${PAPIRUS_FOLDERS_BIN}"
-if [[ ! -f "$PAPIRUS_SUDOERS" ]] || ! grep -qF "$PAPIRUS_SUDOERS_LINE" "$PAPIRUS_SUDOERS" 2>/dev/null; then
-  echo "$PAPIRUS_SUDOERS_LINE" | sudo tee "$PAPIRUS_SUDOERS" >/dev/null
-  sudo chmod 440 "$PAPIRUS_SUDOERS"
-  ok "papirus-folders sudoers rule written: ${PAPIRUS_SUDOERS}"
+PAPIRUS_FIX16_BIN="${HOME}/.local/bin/papirus-fix-16"
+if [[ ! -x "$PAPIRUS_FIX16_BIN" ]]; then
+  install -m 755 "${SCRIPT_DIR}/scripts/lib/papirus-fix-16" "$PAPIRUS_FIX16_BIN"
+  ok "papirus-fix-16 installed → ${PAPIRUS_FIX16_BIN}"
 else
-  skip "papirus-folders sudoers rule already set"
+  skip "papirus-fix-16 already installed"
+fi
+
+PAPIRUS_SUDOERS="/etc/sudoers.d/99-wallpaper-papirus"
+PAPIRUS_SUDOERS_CONTENT="${USER} ALL=(root) NOPASSWD: ${PAPIRUS_FOLDERS_BIN}
+${USER} ALL=(root) NOPASSWD: ${PAPIRUS_FIX16_BIN}"
+if [[ ! -f "$PAPIRUS_SUDOERS" ]] || ! grep -qF "$PAPIRUS_FIX16_BIN" "$PAPIRUS_SUDOERS" 2>/dev/null; then
+  printf '%s\n' "$PAPIRUS_SUDOERS_CONTENT" | sudo tee "$PAPIRUS_SUDOERS" >/dev/null
+  sudo chmod 440 "$PAPIRUS_SUDOERS"
+  ok "papirus sudoers rules written: ${PAPIRUS_SUDOERS}"
+else
+  skip "papirus sudoers rules already set"
 fi
 
 # ---------------------------------------------------------------------------

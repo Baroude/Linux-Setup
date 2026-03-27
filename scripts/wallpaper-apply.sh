@@ -143,6 +143,9 @@ _reload_papirus() {
   sudo "$papirus_bin" -C "$color_name" -t Papirus-Dark --once 2>/dev/null || ok=0
   # Papirus-Dark inherits 32x32+ from base Papirus; update it too so all sizes match
   sudo "$papirus_bin" -C "$color_name" -t Papirus --once 2>/dev/null || true
+  # 16x16 uses CSS injection and is skipped by papirus-folders — fix manually
+  local fix16_bin="${HOME}/.local/bin/papirus-fix-16"
+  [[ -x "$fix16_bin" ]] && sudo "$fix16_bin" "$color_name" 2>/dev/null || true
   if [[ "$ok" -eq 1 ]]; then
     kbuildsycoca6 --noincremental 2>/dev/null || true
     theme_info "Papirus-Dark folder colors updated"

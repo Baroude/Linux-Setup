@@ -10,9 +10,9 @@ endif
 let g:colors_name = "matugen"
 
 " ── Core UI ───────────────────────────────────────────────────────────────────
-hi Normal             guifg={{ colors.on_background.dark.hex }}   guibg={{ colors.background.dark.hex }}
+hi Normal             guifg={{ colors.on_background.dark.hex }}   guibg=NONE
 hi NormalFloat        guifg={{ colors.on_surface.dark.hex }}       guibg={{ colors.surface.dark.hex }}
-hi NormalNC           guifg={{ colors.on_surface_variant.dark.hex }} guibg={{ colors.background.dark.hex }}
+hi NormalNC           guifg={{ colors.on_surface_variant.dark.hex }} guibg=NONE
 
 hi Cursor             guifg={{ colors.background.dark.hex }}       guibg={{ colors.primary.dark.hex }}
 hi CursorLine         guibg={{ colors.surface.dark.hex }}
