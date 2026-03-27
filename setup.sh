@@ -322,26 +322,16 @@ else
   if [[ -z "$MATUGEN_TAG" ]]; then
     warn "Could not resolve matugen release tag — skipping. Re-run to retry."
   else
-    curl -fLo "$MATUGEN_BIN" \
-      "https://github.com/InioX/matugen/releases/download/${MATUGEN_TAG}/matugen-x86_64-unknown-linux-gnu"
-    chmod +x "$MATUGEN_BIN"
-    ok "matugen ${MATUGEN_TAG} installed"
-  fi
-fi
-
-# whdl — Wallhaven downloader CLI
-WHDL_BIN="${LOCAL_BIN}/whdl"
-if [[ -x "$WHDL_BIN" ]]; then
-  skip "whdl (already installed)"
-else
-  WHDL_TAG="$(gh_latest_tag momeemt/whdl || true)"
-  if [[ -z "$WHDL_TAG" ]]; then
-    warn "Could not resolve whdl release tag — skipping. Re-run to retry."
-  else
-    curl -fLo "$WHDL_BIN" \
-      "https://github.com/momeemt/whdl/releases/download/${WHDL_TAG}/whdl-x86_64-unknown-linux-gnu"
-    chmod +x "$WHDL_BIN"
-    ok "whdl ${WHDL_TAG} installed"
+    # Releases ship a tarball containing a single 'matugen' binary
+    MATUGEN_VER="${MATUGEN_TAG#v}"
+    if curl -fL \
+        "https://github.com/InioX/matugen/releases/download/${MATUGEN_TAG}/matugen-${MATUGEN_VER}-x86_64.tar.gz" \
+        | tar -xz -C "$LOCAL_BIN" matugen; then
+      chmod +x "$MATUGEN_BIN"
+      ok "matugen ${MATUGEN_TAG} installed"
+    else
+      warn "matugen download/extract failed — skipping"
+    fi
   fi
 fi
 
