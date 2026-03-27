@@ -6,7 +6,7 @@
 # Always use the dark variant regardless of wallpaper brightness.
 mode = "dark"
 # tonal_spot: Material 3 palette with primary + secondary + tertiary hues.
-scheme_type = "tonal_spot"
+scheme_type = "vibrant"
 
 # ── Output templates ──────────────────────────────────────────────────────────
 
