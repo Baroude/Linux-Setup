@@ -2,13 +2,13 @@
   "globalSettings": {
     "panel": {
       "normal": {
-        "enabled": false,
+        "enabled": true,
         "blurBehind": false,
         "backgroundColor": {
-          "enabled": false,
+          "enabled": true,
           "sourceType": 0,
-          "custom": "{{ colors.background.dark.hex }}",
-          "alpha": 1,
+          "custom": "{{ colors.surface_container_lowest.dark.hex }}",
+          "alpha": 0.85,
           "list": []
         }
       }
@@ -20,14 +20,14 @@
         "backgroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "{{ colors.surface_variant.dark.hex }}",
+          "custom": "{{ colors.primary_container.dark.hex }}",
           "alpha": 1,
           "list": []
         },
         "foregroundColor": {
           "enabled": true,
           "sourceType": 0,
-          "custom": "{{ colors.background.dark.hex }}",
+          "custom": "{{ colors.on_primary_container.dark.hex }}",
           "alpha": 1,
           "lightnessValue": 0.5,
           "saturationValue": 0.5,

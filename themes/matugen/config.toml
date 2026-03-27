@@ -42,6 +42,10 @@ output_path = "~/.config/tidal-hifi/active.css"
 input_path  = "templates/panel-colorizer.json"
 output_path = "~/.config/linux-setup/panel-colorizer-global.json"
 
+[templates.palette]
+input_path  = "templates/palette.json"
+output_path = "~/.cache/matugen/palette.json"
+
 # SDDM needs sudo to install — write to staging path.
 # wallpaper-next.sh moves it with `sudo install` via a narrow sudoers rule.
 [templates.sddm]

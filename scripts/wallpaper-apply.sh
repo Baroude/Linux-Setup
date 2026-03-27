@@ -82,8 +82,32 @@ theme_info "kitty reloaded"
 # ── Reload Panel Colorizer ────────────────────────────────────────────────────
 # matugen already generated panel-colorizer-global.json; skip theme_apply_panel_adapter
 # (which would overwrite it with the Catppuccin template via theme_panel_prepare_assets).
-PANEL_PRESET_FILE="${HOME}/.config/linux-setup/panel-colorizer-global.json"
-if [[ -f "$PANEL_PRESET_FILE" ]]; then
+PALETTE_FILE="${HOME}/.cache/matugen/palette.json"
+if [[ -f "$PALETTE_FILE" ]]; then
+  # Build per-widget accent colors from the matugen palette.
+  # Maps KDE widget type names → background hex; panel-colorizer-apply.py
+  # derives a readable foreground from the global template's foregroundColor spec.
+  THEME_PANEL_WIDGET_COLORS_JSON="$(python3 - "$PALETTE_FILE" <<'PY'
+import json, sys
+with open(sys.argv[1]) as f:
+    p = json.load(f)
+widget_colors = {
+    "org.kde.plasma.pager":                p["secondary_container"],
+    "org.kde.plasma.digitalclock":         p["primary_container"],
+    "org.kde.plasma.systemtray":           p["secondary_container"],
+    "org.kde.plasma.appmenu":              p["tertiary_container"],
+    "org.kde.plasma.mediacontroller":      p["tertiary_container"],
+    "org.kde.plasma.weather":              p["tertiary_container"],
+    "org.kde.plasma.battery":              p["secondary_container"],
+    "luisbocanegra.audio.visualizer":      p["secondary_container"],
+}
+print(json.dumps(widget_colors))
+PY
+  )"
+  export THEME_PANEL_WIDGET_COLORS_JSON
+fi
+
+if [[ -f "${HOME}/.config/linux-setup/panel-colorizer-global.json" ]]; then
   if [[ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
     theme_warn "No active desktop session detected; panel apply deferred"
   elif theme_panel_apply_live 0 2>/dev/null; then
