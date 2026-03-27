@@ -61,11 +61,11 @@ hi Comment            guifg={{ colors.outline.dark.hex }}          gui=italic
 hi Constant           guifg={{ colors.tertiary.dark.hex }}
 hi String             guifg={{ colors.on_tertiary_container.dark.hex }}
 hi Character          guifg={{ colors.on_tertiary_container.dark.hex }}
-hi Number             guifg={{ colors.secondary.dark.hex }}
-hi Boolean            guifg={{ colors.tertiary.dark.hex }}
-hi Float              guifg={{ colors.secondary.dark.hex }}
+hi Number             guifg={{ colors.on_primary_container.dark.hex }}
+hi Boolean            guifg={{ colors.on_primary_container.dark.hex }}
+hi Float              guifg={{ colors.on_primary_container.dark.hex }}
 hi Identifier         guifg={{ colors.on_surface.dark.hex }}
-hi Function           guifg={{ colors.secondary.dark.hex }}        gui=bold
+hi Function           guifg={{ colors.tertiary.dark.hex }}          gui=bold
 hi Statement          guifg={{ colors.primary.dark.hex }}
 hi Conditional        guifg={{ colors.primary.dark.hex }}
 hi Repeat             guifg={{ colors.primary.dark.hex }}
@@ -77,10 +77,10 @@ hi PreProc            guifg={{ colors.tertiary.dark.hex }}
 hi Include            guifg={{ colors.tertiary.dark.hex }}
 hi Define             guifg={{ colors.tertiary.dark.hex }}
 hi Macro              guifg={{ colors.tertiary.dark.hex }}
-hi Type               guifg={{ colors.tertiary.dark.hex }}
-hi StorageClass       guifg={{ colors.tertiary.dark.hex }}
-hi Structure          guifg={{ colors.tertiary.dark.hex }}
-hi Typedef            guifg={{ colors.tertiary.dark.hex }}
+hi Type               guifg={{ colors.secondary.dark.hex }}
+hi StorageClass       guifg={{ colors.secondary.dark.hex }}
+hi Structure          guifg={{ colors.secondary.dark.hex }}
+hi Typedef            guifg={{ colors.secondary.dark.hex }}
 hi Special            guifg={{ colors.secondary.dark.hex }}
 hi SpecialChar        guifg={{ colors.on_tertiary_container.dark.hex }}
 hi Tag                guifg={{ colors.primary.dark.hex }}
@@ -118,10 +118,10 @@ hi Removed            guifg={{ colors.error.dark.hex }}
 hi @variable                    guifg={{ colors.on_surface.dark.hex }}
 hi @variable.builtin            guifg={{ colors.tertiary.dark.hex }}
 hi @variable.parameter          guifg={{ colors.on_surface_variant.dark.hex }}
-hi @constant.builtin            guifg={{ colors.tertiary.dark.hex }}        gui=bold
+hi @constant.builtin            guifg={{ colors.on_primary_container.dark.hex }} gui=bold
 hi @string.escape               guifg={{ colors.on_tertiary_container.dark.hex }} gui=bold
-hi @function.builtin            guifg={{ colors.secondary.dark.hex }}       gui=bold
-hi @constructor                 guifg={{ colors.tertiary.dark.hex }}
+hi @function.builtin            guifg={{ colors.tertiary.dark.hex }}        gui=bold
+hi @constructor                 guifg={{ colors.secondary.dark.hex }}
 hi @attribute                   guifg={{ colors.tertiary.dark.hex }}
 hi @module                      guifg={{ colors.on_surface.dark.hex }}
 hi @punctuation.bracket         guifg={{ colors.on_surface_variant.dark.hex }}

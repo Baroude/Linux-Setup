@@ -139,7 +139,11 @@ _reload_papirus() {
   [[ -n "$color_name" ]] || { theme_warn "Papirus: nearest-color returned empty"; return 0; }
 
   theme_info "Papirus folder color: ${primary} → ${color_name}"
-  if sudo "$papirus_bin" -C "$color_name" -t Papirus-Dark --once 2>/dev/null; then
+  local ok=1
+  sudo "$papirus_bin" -C "$color_name" -t Papirus-Dark --once 2>/dev/null || ok=0
+  # Papirus-Dark inherits 32x32+ from base Papirus; update it too so all sizes match
+  sudo "$papirus_bin" -C "$color_name" -t Papirus --once 2>/dev/null || true
+  if [[ "$ok" -eq 1 ]]; then
     kbuildsycoca6 --noincremental 2>/dev/null || true
     theme_info "Papirus-Dark folder colors updated"
   else
