@@ -89,39 +89,36 @@ ssh mathias@$VM_IP "bash -lc 'some command'"
 
 ### End-to-end test run
 
+The VM has the git repo at `~/Documents/Linux-Setup`. Pull and run from there.
+
 ```bash
 # 1. Get VM IP
 VM_IP=$(& $VMRUN -T ws getGuestIPAddress $VMX)
 
-# 2. Push latest repo to VM
-rsync -av --exclude='.git' \
-  "C:\Users\Mathias\Documents\Linux-Setup/" \
-  mathias@$VM_IP:~/.dotfiles/
+# 2. Pull latest branch on VM
+ssh mathias@$VM_IP "git -C ~/Documents/Linux-Setup fetch && git -C ~/Documents/Linux-Setup checkout feat/matugen-walls && git -C ~/Documents/Linux-Setup pull"
 
-# 3. Run setup.sh end-to-end
-ssh mathias@$VM_IP "cd ~/.dotfiles && bash setup.sh"
+# 3. Run setup.sh end-to-end (stream output)
+ssh mathias@$VM_IP "cd ~/Documents/Linux-Setup && bash setup.sh 2>&1" | tee setup-run.log
 
-# 4. Watch live output (alternative — stream over SSH)
-ssh mathias@$VM_IP "cd ~/.dotfiles && bash setup.sh 2>&1" | tee setup-run.log
-
-# 5. Revert to clean snapshot between runs
-& $VMRUN -T ws revertToSnapshot $VMX "clean-state"
+# 4. Revert to clean snapshot between runs
+& $VMRUN -T ws revertToSnapshot $VMX "Pre-setup"
 ```
 
 ### Testing individual scripts
 
 ```bash
 # Wallpaper pipeline
-ssh mathias@$VM_IP "bash ~/.dotfiles/scripts/wallpaper-fetch.sh"
-ssh mathias@$VM_IP "bash ~/.dotfiles/scripts/wallpaper-next.sh --first-login"
-ssh mathias@$VM_IP "bash ~/.dotfiles/scripts/wallpaper-apply.sh"
+ssh mathias@$VM_IP "bash ~/Documents/Linux-Setup/scripts/wallpaper-fetch.sh"
+ssh mathias@$VM_IP "bash ~/Documents/Linux-Setup/scripts/wallpaper-next.sh --first-login"
+ssh mathias@$VM_IP "bash ~/Documents/Linux-Setup/scripts/wallpaper-apply.sh"
 
 # Check watcher service
 ssh mathias@$VM_IP "systemctl --user status wallpaper-watcher.service"
 ssh mathias@$VM_IP "journalctl --user -u wallpaper-watcher.service -f"
 
 # Dotbot only
-ssh mathias@$VM_IP "cd ~/.dotfiles && ./install"
+ssh mathias@$VM_IP "cd ~/Documents/Linux-Setup && ./install"
 ```
 
 ## setup.sh phases (summary)
