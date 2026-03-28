@@ -933,7 +933,7 @@ fi
 
 PAPIRUS_FIX16_BIN="${HOME}/.local/bin/papirus-fix-16"
 if [[ ! -x "$PAPIRUS_FIX16_BIN" ]]; then
-  install -m 755 "${SCRIPT_DIR}/scripts/lib/papirus-fix-16" "$PAPIRUS_FIX16_BIN"
+  install -m 755 "${REPO_DIR}/scripts/lib/papirus-fix-16" "$PAPIRUS_FIX16_BIN"
   ok "papirus-fix-16 installed → ${PAPIRUS_FIX16_BIN}"
 else
   skip "papirus-fix-16 already installed"
