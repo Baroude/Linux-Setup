@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# setup.sh — KDE Plasma 6 · Catppuccin (modular) · Debian 13 · Wayland
+# setup.sh — KDE Plasma 6 · Debian 13 · Wayland
+# Dynamic theme via matugen (Material You palette from wallpaper).
 # Run as your normal user (sudo available). Idempotent — safe to re-run.
 
 set -euo pipefail
@@ -379,95 +380,6 @@ kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "General" --key "fixed" 
 kwriteconfig6 --file "$HOME/.config/kdeglobals" --group "WM"      --key "activeFont"          "$INTER_FONT"
 ok "Inter set as KDE system font"
 
-# ---------------------------------------------------------------------------
-# Phase 3 — Modular theme apply moved to theme-switch (Phase 14b)
-# ---------------------------------------------------------------------------
-info "Phase 3 · Theme apply deferred to scripts/theme-switch.sh (Phase 14b)"
-
-# ---------------------------------------------------------------------------
-# Phase 6 — Dock icon assets (catppuccin-vibes)
-# ---------------------------------------------------------------------------
-info "Phase 6 · Dock icon assets"
-
-# catppuccin-vibes dock icons — downloaded once and used by pinned launchers.
-# so the four pinned launchers show catppuccin-styled icons in the dock.
-VIBES_DIR="$HOME/.local/share/icons/catppuccin-vibes"
-mkdir -p "$VIBES_DIR"
-VIBES_BASE="https://raw.githubusercontent.com/generalentropy/catppuccin-vibes/main/icons/catppuccin-vibrant"
-VIBES_ICONS=(apps-vibrant terminal-vibrant folder-vibrant browser-vibrant music-vibrant)
-VIBES_MISSING=()
-for _icon in "${VIBES_ICONS[@]}"; do
-  if [[ ! -s "$VIBES_DIR/${_icon}.svg" ]]; then
-    VIBES_MISSING+=("$_icon")
-  fi
-done
-
-if (( ${#VIBES_MISSING[@]} == 0 )); then
-  skip "catppuccin-vibes SVGs"
-else
-  for _icon in "${VIBES_MISSING[@]}"; do
-    curl -fLo "$VIBES_DIR/${_icon}.svg" "${VIBES_BASE}/${_icon}.svg"
-  done
-  ok "catppuccin-vibes SVGs downloaded to $VIBES_DIR"
-fi
-
-# .desktop overrides — freedesktop spec: ~/.local/share/applications/ takes
-# precedence over /usr/share/applications/ for icon resolution in icontasks.
-LOCAL_APPS="$HOME/.local/share/applications"
-mkdir -p "$LOCAL_APPS"
-
-# Kitty
-if [[ -f /usr/share/applications/kitty.desktop ]]; then
-  cp /usr/share/applications/kitty.desktop "$LOCAL_APPS/kitty.desktop"
-  sed -i "s|^Icon=.*|Icon=$VIBES_DIR/terminal-vibrant.svg|" "$LOCAL_APPS/kitty.desktop"
-fi
-
-# Dolphin
-if [[ -f /usr/share/applications/org.kde.dolphin.desktop ]]; then
-  cp /usr/share/applications/org.kde.dolphin.desktop "$LOCAL_APPS/org.kde.dolphin.desktop"
-  sed -i "s|^Icon=.*|Icon=$VIBES_DIR/folder-vibrant.svg|" "$LOCAL_APPS/org.kde.dolphin.desktop"
-fi
-
-# Firefox — Debian ships firefox-esr.desktop; override whichever is present
-for _ff in firefox.desktop firefox-esr.desktop; do
-  if [[ -f /usr/share/applications/$_ff ]]; then
-    cp /usr/share/applications/$_ff "$LOCAL_APPS/$_ff"
-    sed -i "s|^Icon=.*|Icon=$VIBES_DIR/browser-vibrant.svg|" "$LOCAL_APPS/$_ff"
-  fi
-done
-ok "catppuccin-vibes .desktop overrides created for Kitty / Dolphin / Firefox"
-
-# ---------------------------------------------------------------------------
-# Phase 6b - Firefox theme (Catppuccin Mocha Mauve)
-# ---------------------------------------------------------------------------
-info "Phase 6b · Firefox theme"
-
-FIREFOX_THEME_URL="https://github.com/catppuccin/firefox/releases/download/old/catppuccin_mocha_mauve.xpi"
-FIREFOX_THEME_ID="{76aabc99-c1a8-4c1e-832b-d4f2941d5a7a}"
-FIREFOX_THEME_TMP="$(mktemp --suffix=.xpi)"
-FIREFOX_THEME_INSTALLED=0
-
-if curl -fsSL -o "$FIREFOX_THEME_TMP" "$FIREFOX_THEME_URL"; then
-  for _ff_root in /usr/lib/firefox /usr/lib/firefox-esr; do
-    if [[ -d "$_ff_root" ]]; then
-      sudo mkdir -p "$_ff_root/distribution/extensions"
-      sudo install -m 0644 "$FIREFOX_THEME_TMP" \
-        "$_ff_root/distribution/extensions/${FIREFOX_THEME_ID}.xpi"
-      FIREFOX_THEME_INSTALLED=1
-    fi
-  done
-  rm -f "$FIREFOX_THEME_TMP"
-
-  if [[ "$FIREFOX_THEME_INSTALLED" -eq 1 ]]; then
-    ok "Catppuccin Mocha Mauve Firefox theme installed"
-    warn "Manual step: if Firefox keeps the default look, open Add-ons and Themes and select 'Catppuccin Mocha - Mauve'."
-  else
-    warn "Firefox not found under /usr/lib/firefox or /usr/lib/firefox-esr; skipped theme install."
-  fi
-else
-  rm -f "$FIREFOX_THEME_TMP"
-  warn "Could not download Catppuccin Firefox theme; skipped."
-fi
 
 # ---------------------------------------------------------------------------
 # Phase 7 — KWin blur
@@ -849,7 +761,7 @@ mkdir -p "$TIDAL_DESKTOP_DIR"
 cat > "$TIDAL_DESKTOP_DIR/com.mastermindzh.tidal-hifi.desktop" << 'EOF'
 [Desktop Entry]
 Name=TIDAL Hi-Fi
-Comment=Tidal music streaming (Catppuccin Mocha)
+Comment=Tidal music streaming
 Exec=flatpak run com.mastermindzh.tidal-hifi -- --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations,WaylandLinuxDmabuf --enable-wayland-ime
 Icon=com.mastermindzh.tidal-hifi
 Terminal=false
@@ -857,75 +769,31 @@ Type=Application
 Categories=AudioVideo;Audio;Music;Player;
 StartupWMClass=tidal-hifi
 EOF
-# Patch icon to catppuccin-vibes music SVG (Phase 6 downloads it)
-VIBES_MUSIC="$HOME/.local/share/icons/catppuccin-vibes/music-vibrant.svg"
-[[ -f "$VIBES_MUSIC" ]] && \
-  sed -i "s|^Icon=.*|Icon=$VIBES_MUSIC|" "$TIDAL_DESKTOP_DIR/com.mastermindzh.tidal-hifi.desktop"
 ok "tidal-hifi .desktop override written (Wayland flags)"
 
-# Catppuccin Mocha CSS theme for tidal-hifi
-# Load via: tidal-hifi → Settings → Theming → choose this file
-TIDAL_THEME_DIR="$HOME/.config/tidal-hifi"
-mkdir -p "$TIDAL_THEME_DIR"
-cat > "$TIDAL_THEME_DIR/catppuccin-mocha.css" << 'ENDCSS'
-/* Catppuccin Mocha theme for tidal-hifi
-   Load via: Settings > Theming > "Choose theme file"
-   Palette: Base #1e1e2e  Mantle #181825  Crust #11111b
-            Surface0 #313244  Text #cdd6f4  Mauve #cba6f7 */
-:root {
-  --ctp-base:    #1e1e2e;
-  --ctp-mantle:  #181825;
-  --ctp-crust:   #11111b;
-  --ctp-surface0:#313244;
-  --ctp-surface1:#45475a;
-  --ctp-text:    #cdd6f4;
-  --ctp-subtext0:#a6adc8;
-  --ctp-mauve:   #cba6f7;
-  --ctp-peach:   #fab387;
-  --ctp-green:   #a6e3a1;
-  --ctp-red:     #f38ba8;
-  --ctp-blue:    #89b4fa;
-}
-#react-root, body, .nowPlaying, .mainContent, .main-content {
-  background-color: var(--ctp-base) !important;
-  color: var(--ctp-text) !important;
-}
-nav, [class*="sidebar"], [class*="NavigationMenu"] {
-  background-color: var(--ctp-mantle) !important;
-}
-[class*="playbackControls"], [class*="footer"], #footerPlayer {
-  background-color: var(--ctp-crust) !important;
-  border-top: 1px solid var(--ctp-surface0) !important;
-}
-[class*="progressBar"] [role="progressbar"],
-[class*="progressBar"] [class*="bar"] {
-  background-color: var(--ctp-mauve) !important;
-}
-button[class*="playButton"], [class*="button--primary"] {
-  background-color: var(--ctp-mauve) !important;
-  color: var(--ctp-base) !important;
-}
-a, [class*="title"], [class*="trackName"] {
-  color: var(--ctp-text) !important;
-}
-a:hover { color: var(--ctp-mauve) !important; }
-[class*="isPlaying"], [class*="active"] { color: var(--ctp-mauve) !important; }
-[class*="card"], [class*="modal"], [class*="dialog"], [class*="dropdown"] {
-  background-color: var(--ctp-surface0) !important;
-  border: 1px solid var(--ctp-surface1) !important;
-}
-input, [class*="search"] {
-  background-color: var(--ctp-surface0) !important;
-  color: var(--ctp-text) !important;
-  border-color: var(--ctp-surface1) !important;
-}
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--ctp-mantle); }
-::-webkit-scrollbar-thumb { background: var(--ctp-surface1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--ctp-mauve); }
-ENDCSS
-ok "Catppuccin Mocha CSS theme written to ~/.config/tidal-hifi/catppuccin-mocha.css"
-warn "Manual step: Open tidal-hifi → Settings → Theming → choose ~/.config/tidal-hifi/catppuccin-mocha.css"
+# ---------------------------------------------------------------------------
+# Phase 11c — pywalfox (Firefox dynamic colors via matugen/pywal palette)
+# ---------------------------------------------------------------------------
+info "Phase 11c · pywalfox"
+
+if python3 -c "import pywalfox" &>/dev/null; then
+  skip "pywalfox (already installed)"
+else
+  pip3 install --user pywalfox \
+    && ok "pywalfox installed" \
+    || warn "pywalfox install failed — Firefox dynamic theming unavailable"
+fi
+
+# Set up native messaging host so the Firefox extension can talk to pywalfox.
+if command -v pywalfox &>/dev/null; then
+  pywalfox install 2>/dev/null \
+    && ok "pywalfox native messaging host installed" \
+    || warn "pywalfox native messaging setup failed"
+fi
+
+# Ensure ~/.cache/wal/ exists for matugen to write colors.json into.
+mkdir -p "$HOME/.cache/wal"
+ok "pywalfox ready (install Firefox extension manually to activate)"
 
 # ---------------------------------------------------------------------------
 # Phase 7b + 7c (cont.) — Wait for cmake builds, then apply KWin config
@@ -1136,9 +1004,6 @@ echo ""
 echo " Manual steps remaining:"
 echo "   1. Configure Krohnkite gaps/keybinds in System Settings → KWin Scripts"
 echo "   2. Restart session to apply SDDM + all env vars"
-echo "   3. Tidal: open tidal-hifi → Settings → Theming →"
-echo "      choose ~/.config/tidal-hifi/catppuccin-mocha.css"
-echo "   4. Firefox: Add-ons and Themes → select 'Catppuccin Mocha - Mauve' if needed"
 echo ""
 echo " Optional: link plasma configs after reviewing compatibility:"
 echo "   ./install -c install-plasma.conf.yaml"

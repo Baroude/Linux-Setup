@@ -50,6 +50,45 @@ output_path = "~/.cache/matugen/palette.json"
 input_path  = "templates/nvim.vim"
 output_path = "~/.config/nvim/colors/matugen.vim"
 
+# qt5ct / qt6ct color palette — for Qt apps that bypass KDE/Kvantum and read qtXct directly.
+# Activate once in qt5ct/qt6ct settings: Appearance → Color scheme → matugen.
+# After that, apps pick up the new palette on each launch automatically.
+[templates.qt5ct]
+input_path  = "templates/qtct-colors.conf"
+output_path = "~/.config/qt5ct/colors/matugen.conf"
+
+[templates.qt6ct]
+input_path  = "templates/qtct-colors.conf"
+output_path = "~/.config/qt6ct/colors/matugen.conf"
+
+# Firefox dynamic colors via pywalfox extension + native messaging host.
+# Requires: pip install pywalfox && pywalfox install (once), then install the
+# Firefox extension. wallpaper-apply.sh runs `pywalfox update` on each change.
+[templates.pywalfox]
+input_path  = "templates/pywalfox-colors.json"
+output_path = "~/.cache/wal/colors.json"
+
+# Kvantum Qt theme — two files required: kvconfig (colors/layout) + svg (shapes).
+# kvantum.kvconfig root config must point to theme=matugen (set by setup.sh).
+# Qt apps pick up the new theme on next launch.
+[templates.kvantum_kvconfig]
+input_path  = "templates/kvantum-colors.kvconfig"
+output_path = "~/.config/Kvantum/matugen/matugen.kvconfig"
+
+[templates.kvantum_svg]
+input_path  = "templates/kvantum-colors.svg"
+output_path = "~/.config/Kvantum/matugen/matugen.svg"
+
+# GTK 3 + 4 color overrides — applied on top of the installed base theme (adw-gtk3-dark).
+# GTK apps pick up the new colors on next launch; no live-reload needed.
+[templates.gtk3]
+input_path  = "templates/gtk.css"
+output_path = "~/.config/gtk-3.0/gtk.css"
+
+[templates.gtk4]
+input_path  = "templates/gtk.css"
+output_path = "~/.config/gtk-4.0/gtk.css"
+
 # SDDM needs sudo to install — write to staging path.
 # wallpaper-next.sh moves it with `sudo install` via a narrow sudoers rule.
 [templates.sddm]

@@ -175,6 +175,27 @@ _reload_nvim() {
 }
 _reload_nvim
 
+# ── Reload Firefox via pywalfox (written by matugen above) ───────────────────
+if command -v pywalfox &>/dev/null; then
+  pywalfox update 2>/dev/null \
+    && theme_info "pywalfox: Firefox colors updated" \
+    || theme_warn "pywalfox update failed"
+fi
+
+# ── Activate Kvantum matugen theme ───────────────────────────────────────────
+# matugen wrote ~/.config/Kvantum/matugen/matugen.{kvconfig,svg} above.
+# Tell kvantummanager to use the matugen theme so it takes effect on next Qt launch.
+if command -v kvantummanager &>/dev/null; then
+  kvantummanager --set matugen 2>/dev/null \
+    && theme_info "Kvantum theme set to matugen" \
+    || theme_warn "kvantummanager --set failed"
+fi
+
+# ── GTK 3 + 4 color overrides (written by matugen above) ─────────────────────
+if [[ -f "${HOME}/.config/gtk-4.0/gtk.css" ]]; then
+  theme_info "GTK 3/4 colors updated (applies on next app launch)"
+fi
+
 # ── Update btop color_theme ───────────────────────────────────────────────────
 BTOP_CONF="${HOME}/.config/btop/btop.conf"
 if [[ -f "$BTOP_CONF" ]]; then

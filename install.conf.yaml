@@ -5,6 +5,10 @@
     - ~/.config/fastfetch
     - ~/.config/plasma-workspace/env
     - ~/.config/Kvantum
+    - ~/.config/Kvantum/matugen
+    - ~/.config/qt5ct/colors
+    - ~/.config/qt6ct/colors
+    - ~/.cache/wal
 
 - link:
     # Shell — force: oh-my-zsh creates ~/.zshrc as a real file during install
@@ -39,10 +43,9 @@
     # Note: ~/.config/Kvantum/kvantum.kvconfig is theme-managed (written by kvantummanager via
     # scripts/theme-switch.sh). Do not link it here — ./install would overwrite the active theme.
 
-    # GTK theming — force: may exist from system or previous gtk install
-    ~/.config/gtk-4.0/gtk.css:
-      path: gtk/gtk-4.0-gtk.css
-      force: true
+    # Note: ~/.config/gtk-3.0/gtk.css and ~/.config/gtk-4.0/gtk.css are
+    # matugen-managed (written by scripts/wallpaper-apply.sh). Do not link them
+    # here — ./install would overwrite the live-generated color overrides.
 
     # Wayland / Plasma environment variables
     ~/.config/plasma-workspace/env/envvars.sh:

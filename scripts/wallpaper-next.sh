@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # wallpaper-next.sh — Pick a random wallpaper and set it in KDE Plasma.
-# Theming (matugen + live reloads) is handled organically by
-# kde-material-you-colors which detects the change and calls wallpaper-apply.sh.
+# Uses the setWallpaper D-Bus method (not evaluateScript) so the
+# wallpaperChanged signal fires; wallpaper-watcher.service picks that up
+# and calls wallpaper-apply.sh to run matugen + live-reload all components.
 #
 # Usage:
 #   wallpaper-next.sh              (normal invocation — from systemd timer)
 #   wallpaper-next.sh --first-login (skips session guard; applies theme directly
-#                                    since kde-material-you-colors may not be running yet)
+#                                    in case wallpaper-watcher is not yet running)
 #
-# Dependencies: qdbus6 or qdbus, python3
+# Dependencies: python3, python3-dbus
 
 set -euo pipefail
 
@@ -18,8 +19,6 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 
 # shellcheck disable=SC1091
 source "${LIB_DIR}/theme-common.sh"
-# shellcheck disable=SC1091
-source "${LIB_DIR}/theme-apply-panel.sh"
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 WALL_DIR="${MATUGEN_WALL_DIR:-${HOME}/.local/share/wallpapers/ricing}"
@@ -85,18 +84,26 @@ done
 theme_info "Wallpaper: ${NEXT_WALL}"
 
 # ── Set wallpaper in Plasma ───────────────────────────────────────────────────
-WALL_URI="$(python3 -c "from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_uri())" "$NEXT_WALL")"
-
-DBUS_CMD="$(_theme_panel_dbus_cmd)"
-
-"$DBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \
-  "var desktopsList = desktops();
-   for (var i = 0; i < desktopsList.length; i++) {
-     var d = desktopsList[i];
-     d.wallpaperPlugin = 'org.kde.image';
-     d.currentConfigGroup = Array('Wallpaper', 'org.kde.image', 'General');
-     d.writeConfig('Image', '${WALL_URI}');
-   }" >/dev/null 2>&1 || theme_warn "Plasma D-Bus wallpaper set failed (session may not be ready)"
+# setWallpaper (unlike evaluateScript) emits the wallpaperChanged D-Bus signal,
+# which wallpaper-watcher.service catches to trigger matugen + theme reload.
+# Loop over all screens so multi-monitor setups are fully covered.
+python3 - "$NEXT_WALL" <<'PY' || theme_warn "Plasma D-Bus setWallpaper failed (session may not be ready)"
+import dbus, sys
+wall = sys.argv[1]
+bus = dbus.SessionBus()
+iface = dbus.Interface(
+    bus.get_object("org.kde.plasmashell", "/PlasmaShell"),
+    "org.kde.PlasmaShell",
+)
+screen = 0
+while True:
+    try:
+        iface.setWallpaper("org.kde.image", {"Image": wall}, dbus.UInt32(screen))
+        screen += 1
+    except dbus.DBusException:
+        break
+sys.exit(0 if screen > 0 else 1)
+PY
 
 theme_info "Wallpaper set in Plasma"
 
@@ -115,9 +122,9 @@ PY
 theme_info "State saved to ${STATE_JSON}"
 
 # ── Apply theme on first login ────────────────────────────────────────────────
-# On normal runs kde-material-you-colors detects the wallpaper change and
-# calls wallpaper-apply.sh organically. On --first-login that daemon may not
-# be running yet, so we call it directly.
+# On normal runs wallpaper-watcher.service catches the wallpaperChanged signal
+# and calls wallpaper-apply.sh. On --first-login the service may not yet be
+# running (race with graphical-session.target), so we call it directly.
 if [[ "$FIRST_LOGIN" -eq 1 ]]; then
   theme_info "First login: applying theme directly"
   bash "${SCRIPT_DIR}/wallpaper-apply.sh" --wallpaper "$NEXT_WALL" \
