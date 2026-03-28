@@ -74,6 +74,9 @@ if command -v plasma-apply-colorscheme &>/dev/null; then
   plasma-apply-colorscheme MatugenDynamic 2>/dev/null \
     || theme_warn "plasma-apply-colorscheme failed (scheme may need one login first)"
   theme_info "KDE color scheme: MatugenDynamic"
+  # Tell KWin to re-read the decoration colors (Klassy title bar + buttons)
+  qdbus6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+  theme_info "KWin decoration reloaded (Klassy)"
 fi
 
 # ── Reload kitty ──────────────────────────────────────────────────────────────
